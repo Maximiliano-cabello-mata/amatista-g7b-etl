@@ -1,0 +1,3 @@
+# Lo que necesitan g7b_lago y sus tareas programadas (no Zyte: Zyte usa requirements.txt).
+azure-storage-blob>=12.20,<13
+scrapinghub>=2.4,<3

@@ -1,0 +1,43 @@
+name: Zyte al lago
+
+# Copia cada noche a Azure (bronce) los trabajos terminados en Zyte.
+# Necesita los secretos ZYTE_API_KEY y AZURE_LAGO_URL (infra/azure/LEEME.md).
+on:
+  schedule:
+    - cron: "17 9 * * *"  # 09:17 UTC = 03:17 en la Ciudad de México
+  workflow_dispatch:
+    inputs:
+      simulacro:
+        description: "Solo listar lo que copiaría"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zyte-a-lago
+  cancel-in-progress: false
+
+jobs:
+  copiar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lago.txt
+      - name: Copiar de Zyte al lago
+        env:
+          ZYTE_API_KEY: ${{ secrets.ZYTE_API_KEY }}
+          ZYTE_PROJECT_ID: ${{ vars.ZYTE_PROJECT_ID || '883618' }}
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          SIMULACRO: ${{ inputs.simulacro }}
+        run: |
+          if [ "$SIMULACRO" = "true" ]; then
+            python -m g7b_lago.zyte_a_lago --simulacro
+          else
+            python -m g7b_lago.zyte_a_lago
+          fi

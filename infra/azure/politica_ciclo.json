@@ -1,0 +1,22 @@
+{
+  "rules": [
+    {
+      "enabled": true,
+      "name": "bronce-a-cool-a-los-30-dias",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": { "blobTypes": ["blockBlob"], "prefixMatch": ["lago/bronce/"] },
+        "actions": { "baseBlob": { "tierToCool": { "daysAfterModificationGreaterThan": 30 } } }
+      }
+    },
+    {
+      "enabled": true,
+      "name": "borrar-temporales-a-los-7-dias",
+      "type": "Lifecycle",
+      "definition": {
+        "filters": { "blobTypes": ["blockBlob"], "prefixMatch": ["lago/tmp/"] },
+        "actions": { "baseBlob": { "delete": { "daysAfterModificationGreaterThan": 7 } } }
+      }
+    }
+  ]
+}

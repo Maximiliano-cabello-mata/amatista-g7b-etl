@@ -1,0 +1,2 @@
+-r requirements-lago.txt
+pytest>=8
