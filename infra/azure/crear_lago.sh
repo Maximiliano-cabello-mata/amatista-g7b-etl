@@ -9,6 +9,7 @@
 # Al final imprime AZURE_LAGO_URL. Cópiala a Doppler y a los secretos de
 # GitHub. No la pegues en ningún chat ni la subas a Git.
 set -euo pipefail
+trap 'echo "ERROR: el script se detuvo en la línea $LINENO. Copia el mensaje de arriba (sin llaves) para revisarlo." >&2' ERR
 
 GRUPO="${GRUPO:-g7b}"
 UBICACION="${UBICACION:-mexicocentral}"
@@ -22,7 +23,8 @@ if [ -z "${CUENTA:-}" ]; then
   # Reusar la cuenta del grupo si ya existe; si no, crear un nombre nuevo (único en todo Azure).
   CUENTA="$(az storage account list -g "$GRUPO" --query "[?tags.proyecto=='g7b'].name | [0]" -o tsv 2>/dev/null || true)"
   if [ -z "$CUENTA" ]; then
-    CUENTA="g7blago$(tr -dc 'a-z0-9' </dev/urandom | head -c 6)"
+    # Sin tuberías: con pipefail, "tr ... | head" termina el script en silencio.
+    CUENTA="g7blago$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
   fi
 fi
 echo "== Cuenta de almacenamiento: $CUENTA (grupo $GRUPO, región $UBICACION)"
