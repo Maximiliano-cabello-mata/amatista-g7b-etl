@@ -1,9 +1,32 @@
+# Entornos y configuración local
 .env
+.venv/
 venv/
+ENV/
+
+# Empaquetado de Python y Zyte (shub)
+build/
+dist/
+*.egg-info/
+.eggs/
+.scrapy/
+
+# Caché de Python y pruebas
 __pycache__/
-*.log
-*.csv
-*.json
-.DS_Store
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Salidas locales (resultados de la sonda y de "scrapy crawl -o" en la raíz)
 resultados/
-!infra/azure/politica_ciclo.json
+/*.json
+/*.jl
+/*.csv
+*.log
+
+# Sistema e IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

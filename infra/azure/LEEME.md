@@ -94,6 +94,7 @@ Estos son los secretos que usan las tareas programadas:
 |---|---|---|
 | `AZURE_LAGO_URL` | La llave del lago | Paso 3 |
 | `ZYTE_API_KEY` | La llave de tu cuenta de Zyte | Panel de Zyte › tu cuenta › API key |
+| `MONGO_URI` | La cadena del usuario de MongoDB que **solo escribe** en `conocimiento_3d` | MongoDB Atlas › Database Access (crear el usuario) › Connect |
 
 1. **GitHub** (lo que usan las tareas programadas): en el repo, **Settings** › **Secrets and variables** › **Actions** › **New repository secret**. Crea los dos secretos. En la pestaña **Variables**, crea `ZYTE_PROJECT_ID` con el valor `883618`.
 2. **Doppler** (la copia central de todas las llaves, plan 7.2): crea el proyecto `g7b` y guarda ahí los mismos dos valores, más `MONGO_URI`. Más adelante, la integración de Doppler con GitHub puede sincronizarlos sola.
@@ -160,11 +161,7 @@ Esto invalida todas las llaves que imprimió el script. Después vuelve a correr
 
 Con la PR fusionada y los secretos del paso 5:
 
-1. **Desplegar la araña nueva en Zyte**, desde tu PC, en la carpeta del repo:
-
-```bash
-shub deploy
-```
+1. **Las arañas se despliegan solas en Zyte:** la tarea **Desplegar a Zyte** corre las pruebas y despliega con cada push a `main` que toque las arañas. La primera vez, córrela a mano (Actions › **Desplegar a Zyte** › Run workflow). En Zyte, quita `ITEM_PIPELINES` de los Raw Settings: ahora vive en `settings.py`.
 
 2. **Probar en simulacro:** Actions › **Vigilar fuentes** › Run workflow, con "simulacro" marcado. Debe listar arXiv, Stack Exchange y el manual de Blender, sin errores.
 3. **Correrla de verdad:** lo mismo, sin marcar "simulacro". Después corre **Zyte al lago** y **Procesar bronce** con "Evaluar sin escribir" marcado, para ver cuánto acepta y cuánto rechaza el embudo antes de escribir en plata.

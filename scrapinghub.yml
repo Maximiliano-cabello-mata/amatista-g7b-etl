@@ -1,2 +1,6 @@
 projects:
-  TU_PROJECT_ID: 883618
+  default: 883618
+stacks:
+  default: scrapy:2.11
+requirements:
+  file: requirements.txt

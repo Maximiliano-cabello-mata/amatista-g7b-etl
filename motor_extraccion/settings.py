@@ -1,87 +1,38 @@
-# Scrapy settings for motor_extraccion project
-#
-# For simplicity, this file contains only settings considered important or
-# commonly used. You can find more settings consulting the documentation:
-#
-#     https://docs.scrapy.org/en/latest/topics/settings.html
-#     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
+# Configuración de Scrapy para G7B (local y en Zyte Scrapy Cloud).
+# Los pipelines se declaran aquí: ya no hace falta pegarlos en los Raw Settings de Zyte.
+import os
+
+try:  # .env local, para correr en tu PC; en Zyte las variables vienen de sus ajustes
+    from dotenv import load_dotenv
+
+    load_dotenv()
+except ImportError:
+    pass
 
 BOT_NAME = "motor_extraccion"
-
 SPIDER_MODULES = ["motor_extraccion.spiders"]
 NEWSPIDER_MODULE = "motor_extraccion.spiders"
 
-ADDONS = {}
+USER_AGENT = "G7B-bot/0.1 (+https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl)"
 
-
-# Crawl responsibly by identifying yourself (and your website) on the user-agent
-#USER_AGENT = "motor_extraccion (+http://www.yourdomain.com)"
-
-# Obey robots.txt rules
+# Respeto a los servidores: robots.txt, una petición a la vez por dominio y velocidad adaptable.
 ROBOTSTXT_OBEY = True
-
-# Concurrency and throttling settings
-#CONCURRENT_REQUESTS = 16
 CONCURRENT_REQUESTS_PER_DOMAIN = 1
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 1.0
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 1.0
+AUTOTHROTTLE_MAX_DELAY = 10.0
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
+HTTPCACHE_ENABLED = False
 
-# Disable cookies (enabled by default)
-#COOKIES_ENABLED = False
+# Las arañas guardan lo crudo en Zyte y de ahí pasa al lago (zyte_a_lago); el embudo filtra después.
+# MongoPipeline solo escribe para arañas con guardar_en_mongo = True (ninguna de las actuales).
+ITEM_PIPELINES = {
+    "motor_extraccion.pipelines.MongoPipeline": 300,
+}
 
-# Disable Telnet Console (enabled by default)
-#TELNETCONSOLE_ENABLED = False
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DATABASE = os.getenv("MONGO_DATABASE", "conocimiento_3d")
+MONGO_COLLECTION = os.getenv("MONGO_COLLECTION", "documentos")
 
-# Override the default request headers:
-#DEFAULT_REQUEST_HEADERS = {
-#    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-#    "Accept-Language": "en",
-#}
-
-# Enable or disable spider middlewares
-# See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
-#SPIDER_MIDDLEWARES = {
-#    "motor_extraccion.middlewares.MotorExtraccionSpiderMiddleware": 543,
-#}
-
-# Enable or disable downloader middlewares
-# See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    "motor_extraccion.middlewares.MotorExtraccionDownloaderMiddleware": 543,
-#}
-
-# Enable or disable extensions
-# See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    "scrapy.extensions.telnet.TelnetConsole": None,
-#}
-
-# Configure item pipelines
-# See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
-#ITEM_PIPELINES = {
-#    "motor_extraccion.pipelines.MotorExtraccionPipeline": 300,
-#}
-
-# Enable and configure the AutoThrottle extension (disabled by default)
-# See https://docs.scrapy.org/en/latest/topics/autothrottle.html
-#AUTOTHROTTLE_ENABLED = True
-# The initial download delay
-#AUTOTHROTTLE_START_DELAY = 5
-# The maximum download delay to be set in case of high latencies
-#AUTOTHROTTLE_MAX_DELAY = 60
-# The average number of requests Scrapy should be sending in parallel to
-# each remote server
-#AUTOTHROTTLE_TARGET_CONCURRENCY = 1.0
-# Enable showing throttling stats for every response received:
-#AUTOTHROTTLE_DEBUG = False
-
-# Enable and configure HTTP caching (disabled by default)
-# See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
-#HTTPCACHE_ENABLED = True
-#HTTPCACHE_EXPIRATION_SECS = 0
-#HTTPCACHE_DIR = "httpcache"
-#HTTPCACHE_IGNORE_HTTP_CODES = []
-#HTTPCACHE_STORAGE = "scrapy.extensions.httpcache.FilesystemCacheStorage"
-
-# Set settings whose default value is deprecated to a future-proof value
 FEED_EXPORT_ENCODING = "utf-8"

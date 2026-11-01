@@ -44,7 +44,13 @@ def a_documento(registro, lago, fuente):
     url = registro.get("url") or registro.get("enlace")
     metadatos = {k: registro[k] for k in ("fecha", "autores", "autor", "autor_respuesta", "etiquetas", "categorias")
                  if registro.get(k)}
-    if "html" in registro:
+    if "contenido" in registro:  # araña estructurada de manuales (manual_sphinx, blender_docs)
+        texto = registro["contenido"]
+        metadatos.update({k: registro[k] for k in ("version", "seccion", "programa", "operadores_bpy")
+                          if registro.get(k)})
+        if registro.get("propiedades"):
+            metadatos["propiedades"] = len(registro["propiedades"])
+    elif "html" in registro:
         texto = tx.extraer_html(registro["html"], url)
     elif "texto_html" in registro:
         texto = tx.extraer_html(registro["texto_html"], url)

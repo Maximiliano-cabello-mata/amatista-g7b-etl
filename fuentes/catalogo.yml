@@ -15,7 +15,8 @@
 #
 # extractor:
 #   directo           el sensor ya trae el contenido (feed o API): va directo a bronce
-#   zyte              lanza la araña "paginas" en Zyte con las URLs detectadas
+#   zyte              lanza una araña en Zyte: "paginas" (genérica, con las URLs detectadas) o la que
+#                     diga zyte.arana (p. ej. blender_docs), con zyte.argumentos
 #   descarga          descarga el archivo (PDF) a bronce
 #
 # preguntas: las del plan (docs/PLAN.md, sección 3) que esta fuente ayuda a responder.
@@ -71,9 +72,9 @@ fuentes:
       url: "https://docs.blender.org/manual/en/latest/"
     extractor: zyte
     zyte:
-      seguir: true             # recorre el manual completo desde esa página
-      prefijo: "https://docs.blender.org/manual/en/latest/"
-      max_paginas: 3000
+      arana: blender_docs      # araña estructurada: secciones completas, propiedades y código, varias versiones
+      argumentos:
+        max_paginas: 3000
     frecuencia_horas: 168
     dominios: [docs.blender.org]
     activa: true

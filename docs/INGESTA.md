@@ -67,7 +67,9 @@ La tarea **Vigilar fuentes** corre cada 6 horas. A cada fuente vigilable a la qu
 1. Le corre su sensor.
 2. Si hay algo nuevo, lanza su extractor:
    - **`directo`:** lo que trajo el sensor (feed o API) va directo a `bronce/<fuente>/<fecha>/`.
-   - **`zyte`:** lanza en Zyte la araña genérica `paginas` (`motor_extraccion/spiders/paginas.py`) con las URLs. Puede recorrer todo un prefijo, como el manual completo, con un tope de páginas. Sus resultados llegan a bronce con **Zyte al lago**. Esta araña no escribe en MongoDB: el crudo va al lago.
+   - **`zyte`:** lanza una araña en Zyte. Sus resultados llegan a bronce con **Zyte al lago**, y ninguna escribe en MongoDB: el crudo va al lago.
+     - **`paginas`** (genérica): guarda la página tal como llegó, con las URLs que detectó el sensor.
+     - **`blender_docs`** (especializada, sobre `manual_sphinx`): recorre secciones completas del manual en cuatro versiones (5.2, 4.5, 3.6 y 2.79). Por página guarda los títulos en orden, cada propiedad con su nombre y descripción, los bloques de código y las llamadas `bpy.*`. Las secciones elegidas responden las preguntas del plan: rendimiento (Cycles, EEVEE, preferencias del sistema, solución de problemas), equivalencias (mapas de teclas) y cómo se hace (scripting, mallas, modificadores, nodos). La misma araña sirve para otros manuales hechos con Sphinx, como el de Godot.
    - **`descarga`:** descarga cada archivo (PDF, hasta 50 MB) a bronce, junto con un índice de lo descargado.
 3. Guarda el estado de cada sensor (ETag, huellas, IDs vistos) en `control/sensores.json`, y la bitácora de la corrida en `control/vigilancia/`.
 
@@ -96,6 +98,8 @@ La tarea **Procesar bronce** corre cada noche. Cada registro nuevo de bronce pas
 - Comparaciones.
 - En foros, los votos (hasta 2 puntos) y la respuesta aceptada (1 punto).
 
+**Publicación a MongoDB (oro):** lo aceptado se publica en `conocimiento_3d.documentos` (`g7b_ingesta/publicar.py`). Hay un documento por URL y solo se reescribe si su contenido cambió. La publicación se detiene si la base pasa de 400 MB, antes de llenar la capa gratuita.
+
 **Salidas:**
 - **`plata/aceptados/` y `plata/revision/`:** el documento con su licencia, su atribución y el resultado del embudo (preguntas, puntajes, señales).
 - **`plata/rechazados/`:** solo la URL, la etapa, el motivo y los puntajes, **sin el texto**.
@@ -111,4 +115,5 @@ Regla del plan: 20 registros al azar de lo aceptado. Si más de 3 son basura, **
 - **Los umbrales son iniciales.** Se ajustan con la revisión humana y con los conteos de `control/embudo.json`.
 - **El historial de Stack Exchange** (preguntas antiguas muy votadas) no llega por la API, porque el sensor solo mira el último mes. Llegará por los volcados públicos del sitio, como fuente aparte.
 - **PDF de artículos:** el extractor `descarga` y la lectura de PDF existen y están probados en código. Ninguna fuente activa los usa todavía, porque en arXiv solo se guardan metadatos.
-- **Probado** con datos de ejemplo y contra Azurite (26 pruebas). **No probado** contra los sitios reales: la primera corrida de **Vigilar fuentes** se hace con "simulacro" marcado.
+- **Probado** con datos de ejemplo, contra Azurite y con MongoDB simulado (mongomock): 34 pruebas. **No probado** contra los sitios reales, porque el entorno donde se escribió no tiene salida a esos sitios: la primera corrida de **Vigilar fuentes** se hace con "simulacro" marcado, y la de `blender_docs` conviene lanzarla en Zyte con `max_paginas` bajo.
+- **Las rutas del manual cambian entre versiones.** Las que no existen en una versión dan 404 y aparecen en las estadísticas del trabajo en Zyte; ahí se ajusta la lista de secciones de `blender_docs`.

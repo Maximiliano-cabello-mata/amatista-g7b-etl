@@ -87,7 +87,7 @@ def test_cadena_completa(lago):
     assert not any("error" in b for b in bitacora), bitacora
     assert por_fuente["blender-manual"]["accion"].startswith("zyte: trabajo 883618/2/")
     arana, argumentos = zyte.lanzados[0]
-    assert arana == "paginas" and argumentos["fuente"] == "blender-manual" and argumentos["seguir"] == "1"
+    assert arana == "blender_docs" and argumentos == {"fuente": "blender-manual", "max_paginas": "3000"}
 
     # Recién revisadas: no se vuelven a revisar hasta que les toque.
     assert vigilar(catalogo, lago, obtener=obtener_falso, zyte=zyte, ahora=AHORA, salida=lambda *_: None) == []
@@ -109,3 +109,42 @@ def test_cadena_completa(lago):
 
     # Lo ya procesado no se vuelve a procesar.
     assert procesar(lago, catalogo, cat.cargar_taxonomia(), salida=lambda *_: None) == {}
+
+
+def test_publicar_aceptados_en_mongo(lago):
+    import mongomock
+
+    from g7b_ingesta.procesar import procesar
+    from g7b_ingesta.publicar import COLECCION, publicar
+    from g7b_ingesta.vigilar import vigilar
+
+    catalogo = cat.cargar()
+    vigilar(catalogo, lago, obtener=obtener_falso, zyte=ZyteFalso(), proyecto_id="883618", ahora=AHORA,
+            salida=lambda *_: None)
+    procesar(lago, catalogo, cat.cargar_taxonomia(), salida=lambda *_: None)
+    base = mongomock.MongoClient()["conocimiento_3d"]
+    total = publicar(lago, base, salida=lambda *_: None)
+    assert (total["nuevo"], total["actualizado"]) == (2, 0)
+    foro = base[COLECCION].find_one({"url": "https://blender.stackexchange.com/q/9"})
+    assert foro["licencia"] == "CC-BY-SA-4.0" and "P1" in foro["preguntas"] and foro["creado_en"]
+    # Lo ya publicado no se vuelve a leer, y sin cambios no se reescribe.
+    assert publicar(lago, base, salida=lambda *_: None)["archivos"] == 0
+    assert base[COLECCION].count_documents({}) == 2
+
+
+def test_publicar_se_detiene_al_limite(lago):
+    from g7b_ingesta.publicar import publicar
+
+    class BaseLlena(dict):
+        def __missing__(self, nombre):
+            import mongomock
+
+            return mongomock.MongoClient()["x"][nombre]
+
+        def command(self, _):
+            return {"dataSize": 450 * 1024 * 1024}
+
+    lago.subir_jsonl_gz("bronce/x/2026-11-01/a.jsonl.gz", [{"a": 1}])
+    lago.subir_bytes("plata/aceptados/x/2026-11-01/a.jsonl.gz", lago.contenedor.download_blob(
+        "bronce/x/2026-11-01/a.jsonl.gz").readall())
+    assert publicar(lago, BaseLlena(), salida=lambda *_: None).get("detenido_por_tamano")

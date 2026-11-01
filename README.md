@@ -6,11 +6,10 @@ G7B reúne lo que se sabe (documentación de herramientas libres, técnicas publ
 
 **Estado:** andamio inicial.
 
-- `motor_extraccion/`: una araña de Scrapy que corre en Zyte y escribe en MongoDB Atlas.
+- `motor_extraccion/`: las arañas de Scrapy que corren en Zyte: `blender_docs` (el manual en varias versiones, estructurado), `manual_sphinx` (cualquier manual hecho con Sphinx) y `paginas` (genérica). Se despliegan solas con cada push a `main`.
 - `sonda/`: la sonda de rendimiento v0, que mide Blender en cualquier computadora ([cómo correrla](sonda/LEEME.md)).
 - `g7b_lago/`: el lago de datos en Azure: copia de Zyte al lago y subida de mediciones.
 - `fuentes/` y `g7b_ingesta/`: catálogo de fuentes, sensores, disparadores y el embudo de calidad ([cómo funciona](docs/INGESTA.md)).
-- `motor_extraccion/spiders/paginas.py`: la araña genérica que lanzan los disparadores.
 - `infra/`: [qué nube está lista y qué falta](infra/LEEME.md), y [cómo configurar Azure](infra/azure/LEEME.md).
 
 Lo siguiente es la fase F0 del plan.

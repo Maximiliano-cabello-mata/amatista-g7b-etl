@@ -46,12 +46,22 @@ def _procedencia(registro, fuente, detectado):
             json.dumps(registro, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()}}
 
 
-def lanzar_zyte(cliente, proyecto_id, fuente, urls):
+def argumentos_zyte(fuente, urls):
+    """La araña y sus argumentos (Zyte los pasa como texto: listas y dicts van en JSON)."""
     zyte = fuente.get("zyte") or {}
-    argumentos = {"fuente": fuente["id"], "urls": json.dumps(urls), "modo": fuente["modo"],
-                  "dominios": json.dumps(fuente["dominios"]), "seguir": "1" if zyte.get("seguir") else "0",
-                  "prefijo": zyte.get("prefijo", ""), "max_paginas": str(zyte.get("max_paginas", 200))}
-    trabajo = cliente.get_project(int(proyecto_id)).jobs.run("paginas", job_args=argumentos)
+    arana = zyte.get("arana", "paginas")
+    if arana == "paginas":
+        argumentos = {"urls": json.dumps(urls), "modo": fuente["modo"], "dominios": json.dumps(fuente["dominios"]),
+                      "seguir": "1" if zyte.get("seguir") else "0", "prefijo": zyte.get("prefijo", ""),
+                      "max_paginas": str(zyte.get("max_paginas", 200))}
+    else:  # araña especializada: sabe qué recorrer; el sensor solo avisó que hubo cambios
+        argumentos = {k: v if isinstance(v, str) else json.dumps(v) for k, v in (zyte.get("argumentos") or {}).items()}
+    return arana, {"fuente": fuente["id"], **argumentos}
+
+
+def lanzar_zyte(cliente, proyecto_id, fuente, urls):
+    arana, argumentos = argumentos_zyte(fuente, urls)
+    trabajo = cliente.get_project(int(proyecto_id)).jobs.run(arana, job_args=argumentos)
     return getattr(trabajo, "key", str(trabajo))
 
 
