@@ -76,6 +76,8 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print):
     pendientes = [r for r in lago.listar("bronce/")
                   if r.endswith(".jsonl.gz") and not r.startswith(EXCLUIR) and r not in procesados]
     total = Counter()
+    motivos = Counter()   # (estado, etapa, motivo) -> cuántos: para ajustar umbrales con datos
+    ejemplos = {}
     for ruta in sorted(pendientes):
         grupos = {ACEPTADO: [], REVISION: [], RECHAZADO: []}
         for registro in lago.leer_jsonl_gz(ruta):
@@ -100,6 +102,11 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print):
             conteos.setdefault(id_fuente, {}).setdefault(clave, 0)
             conteos[id_fuente][clave] += 1
             total[resultado["estado"]] += 1
+            if resultado["estado"] != ACEPTADO:
+                for motivo in resultado.get("motivos") or ["sin motivo"]:
+                    llave = (resultado["estado"], resultado["etapa"], _sin_numeros(motivo))
+                    motivos[llave] += 1
+                    ejemplos.setdefault(llave, doc.get("url"))
         resumen = {estado: len(docs) for estado, docs in grupos.items()}
         salida(f"{ruta}: " + ", ".join(f"{k} {v}" for k, v in resumen.items()))
         if simulacro:
@@ -115,7 +122,18 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print):
         lago.escribir_json(PROCESADOS, procesados)
         lago.escribir_json(INDICE, indice.como_dict())
         lago.escribir_json(CONTEOS, conteos)
+    if motivos:
+        salida("Motivos (rechazo y revisión), de más a menos frecuente:")
+        for (estado, etapa, motivo), n in motivos.most_common():
+            salida(f"  {n:4d}  {estado:9s} {etapa:11s} {motivo}   ej.: {ejemplos[(estado, etapa, motivo)]}")
     return dict(total)
+
+
+def _sin_numeros(motivo):
+    """Agrupa motivos que solo cambian en un número ("12 palabras", "30 palabras")."""
+    import re
+
+    return re.sub(r"\d+", "N", motivo)
 
 
 def _jsonl_gz(docs):
