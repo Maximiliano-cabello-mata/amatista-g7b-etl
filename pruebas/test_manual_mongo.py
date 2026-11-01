@@ -91,3 +91,13 @@ def test_pipeline_no_conecta_si_la_arana_no_lo_pide():
     pipeline.open_spider(BlenderDocsSpider())  # sin MONGO_URI y sin error: no lo necesita
     item = {"doc_id": "x"}
     assert pipeline.process_item(item, BlenderDocsSpider()) is item and pipeline.cliente is None
+
+
+def test_diagnostico_mongo():
+    from g7b_ingesta.publicar import diagnostico
+
+    cliente = mongomock.MongoClient()
+    base = cliente["conocimiento_3d"]
+    base["foros_crudos"].insert_many([{"a": 1}, {"a": 2}])
+    d = diagnostico(cliente, base)
+    assert d["mongo"] == "conectado" and d["colecciones"] == {"foros_crudos": 2}

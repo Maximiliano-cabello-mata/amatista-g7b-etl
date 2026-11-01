@@ -51,6 +51,16 @@ def tamano_mb(base):
         return 0.0
 
 
+def diagnostico(cliente, base):
+    """Comprueba la conexión antes de publicar: ping, tamaño y documentos por colección."""
+    cliente.admin.command("ping")
+    colecciones = {}
+    for nombre in sorted(base.list_collection_names()):
+        colecciones[nombre] = base[nombre].estimated_document_count()
+    return {"mongo": "conectado", "base": base.name, "tamano_mb": round(tamano_mb(base), 2),
+            "colecciones": colecciones}
+
+
 def publicar(lago, base, simulacro=False, limite_mb=LIMITE_MB, salida=print):
     publicados = lago.leer_json(PUBLICADOS, por_omision={}) or {}
     coleccion = base[COLECCION]
@@ -89,10 +99,11 @@ def main(argv=None):
         sys.exit("Falta MONGO_URI.")
     import pymongo
 
-    cliente = pymongo.MongoClient(os.environ["MONGO_URI"])
+    cliente = pymongo.MongoClient(os.environ["MONGO_URI"], serverSelectionTimeoutMS=15000)
     try:
-        total = publicar(Lago.desde_entorno(), cliente[os.environ.get("MONGO_DATABASE", "conocimiento_3d")],
-                         simulacro=o.simulacro)
+        base = cliente[os.environ.get("MONGO_DATABASE", "conocimiento_3d")]
+        print(json.dumps(diagnostico(cliente, base), ensure_ascii=False))
+        total = publicar(Lago.desde_entorno(), base, simulacro=o.simulacro)
     finally:
         cliente.close()
     print(json.dumps(total, ensure_ascii=False))
