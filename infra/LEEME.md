@@ -4,10 +4,10 @@ Cada nube cumple una capa del [plan](../docs/PLAN.md#72-un-servicio-por-capa). S
 
 | Orden | Servicio | Capa | Estado | Qué hacer | Cuándo |
 |---|---|---|---|---|---|
-| 1 | **Zyte** | Ingesta web | Conectado; la araña escribe en MongoDB | Nada por ahora. En F0 se reescribe la araña para traer el texto completo | Ya |
+| 1 | **Zyte** | Ingesta web | Conectado; `blender_docs` escribe en MongoDB | Desplegar la araña nueva `paginas` con `shub deploy`; la lanzan los disparadores y no escribe en MongoDB | Ya |
 | 2 | **MongoDB Atlas M0** | Conocimiento (oro) | Activo, capa gratuita | Crear dos usuarios de base de datos: uno que solo escribe y otro que solo lee (plan 7.2). **No activar los $50** | Ya |
 | 3 | **Azure** | Lago (bronce y plata) | Código listo y probado | Seguir [azure/LEEME.md](azure/LEEME.md): activar, correr el script, presupuesto y llaves | **Ahora** |
-| 4 | **GitHub Actions** | Reloj y tareas programadas | Archivos listos (`zyte_a_lago`, `pruebas`) | Fusionar la PR; crear los secretos `AZURE_LAGO_URL` y `ZYTE_API_KEY` y la variable `ZYTE_PROJECT_ID` | Junto con Azure |
+| 4 | **GitHub Actions** | Reloj y tareas programadas | Archivos listos: `vigilar` (cada 6 h), `zyte_a_lago` y `procesar` (cada noche), `pruebas` | Fusionar la PR; crear los secretos `AZURE_LAGO_URL` y `ZYTE_API_KEY` y la variable `ZYTE_PROJECT_ID` | Junto con Azure |
 | 5 | **Doppler** | Secretos | Sin activar | Proyecto `g7b` con `AZURE_LAGO_URL`, `ZYTE_API_KEY` y `MONGO_URI`. Quitar `MONGO_URI` de los Raw Settings de Zyte cuando la araña lo lea de otro lado | Junto con Azure |
 | 6 | **Sentry** | Vigilancia | Sin activar | Un monitor de tareas programadas para `zyte_a_lago` | F0, cuando la tarea ya corra |
 | 7 | **Deepnote** | Cuadernos de análisis | Sin activar | Conectar el lago y analizar Blender Open Data con DuckDB | F0 |

@@ -1,0 +1,40 @@
+name: Procesar bronce
+
+# Cada noche, después de "Zyte al lago": pasa lo nuevo de bronce por el embudo y lo deja en plata.
+on:
+  schedule:
+    - cron: "47 10 * * *"  # 10:47 UTC = 04:47 en la Ciudad de México
+  workflow_dispatch:
+    inputs:
+      simulacro:
+        description: "Evaluar sin escribir"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ingesta
+  cancel-in-progress: false
+
+jobs:
+  procesar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lago.txt
+      - name: Procesar
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          SIMULACRO: ${{ inputs.simulacro }}
+        run: |
+          if [ "$SIMULACRO" = "true" ]; then
+            python -m g7b_ingesta.procesar --simulacro
+          else
+            python -m g7b_ingesta.procesar
+          fi

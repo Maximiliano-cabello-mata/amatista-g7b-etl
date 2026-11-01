@@ -20,5 +20,11 @@ class MongoPipeline:
         return cls(mongo_uri=mongo_uri)
 
     def process_item(self, item, spider):
+        # Las arañas que guardan crudo para el lago (como "paginas") no escriben en MongoDB.
+        if not getattr(spider, "guardar_en_mongo", True):
+            return item
         self.db['foros_crudos'].insert_one(dict(item))
         return item
+
+    def close_spider(self, spider):
+        self.client.close()

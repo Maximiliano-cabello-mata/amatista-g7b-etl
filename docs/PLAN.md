@@ -44,6 +44,8 @@ No se trata de juntar mucho. Un dato entra a G7B solo si cumple las siete reglas
 
 ### Cómo se vigila la calidad
 
+El detalle de cómo se aplican estas reglas a cada documento (sensores, disparadores y el embudo de cinco etapas) está en [INGESTA.md](INGESTA.md).
+
 | Control | Cuándo | Qué hace si falla |
 |---|---|---|
 | Esquema (contratos de la sección 7.3) | Al entrar a la zona plata | El registro se queda en bronce, marcado con el motivo |

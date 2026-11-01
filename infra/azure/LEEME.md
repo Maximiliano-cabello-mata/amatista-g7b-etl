@@ -155,3 +155,19 @@ Esto invalida todas las llaves que imprimió el script. Después vuelve a correr
 
 - **Probado aquí:** el código del lago y las dos herramientas (`zyte_a_lago` y `subir_mediciones`), contra Azurite, el emulador oficial de Azure Storage. Las mismas pruebas corren en GitHub Actions con cada cambio.
 - **No probado:** el script `crear_lago.sh` en una cuenta real de Azure, porque no tengo acceso a la tuya. Se revisó solo su sintaxis. Si un paso falla, copia el mensaje de error (sin la llave) y lo corregimos.
+
+## Paso 9. Encender la ingesta
+
+Con la PR fusionada y los secretos del paso 5:
+
+1. **Desplegar la araña nueva en Zyte**, desde tu PC, en la carpeta del repo:
+
+```bash
+shub deploy
+```
+
+2. **Probar en simulacro:** Actions › **Vigilar fuentes** › Run workflow, con "simulacro" marcado. Debe listar arXiv, Stack Exchange y el manual de Blender, sin errores.
+3. **Correrla de verdad:** lo mismo, sin marcar "simulacro". Después corre **Zyte al lago** y **Procesar bronce** con "Evaluar sin escribir" marcado, para ver cuánto acepta y cuánto rechaza el embudo antes de escribir en plata.
+4. **Opcional:** el secreto `STACKEXCHANGE_KEY`, que se pide gratis en stackapps.com, sube la cuota de la API de Stack Exchange.
+
+Cómo funciona todo esto: [docs/INGESTA.md](../../docs/INGESTA.md).
