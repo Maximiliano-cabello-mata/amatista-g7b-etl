@@ -2,8 +2,8 @@
 # Crea el lago de datos de G7B en Azure. Se corre en Azure Cloud Shell (Bash),
 # que ya trae la CLI de Azure y la sesión iniciada: portal.azure.com › icono >_ .
 #
-#   bash crear_lago.sh                       # usa los valores por omisión
-#   UBICACION=southcentralus bash crear_lago.sh
+#   bash crear_lago.sh                       # prueba regiones cercanas hasta dar con una permitida
+#   UBICACION=southcentralus bash crear_lago.sh   # solo esa región
 #
 # Se puede correr más de una vez: lo que ya existe se deja como está.
 # Al final imprime AZURE_LAGO_URL. Cópiala a Doppler y a los secretos de
@@ -12,7 +12,8 @@ set -euo pipefail
 trap 'echo "ERROR: el script se detuvo en la línea $LINENO. Copia el mensaje de arriba (sin llaves) para revisarlo." >&2' ERR
 
 GRUPO="${GRUPO:-g7b}"
-UBICACION="${UBICACION:-mexicocentral}"
+# Azure for Students solo permite algunas regiones (distintas en cada cuenta); se prueban en orden.
+REGIONES="${UBICACION:-mexicocentral southcentralus centralus eastus2 eastus westus3 westus2 canadacentral brazilsouth}"
 CONTENEDOR="lago"
 AQUI="$(cd "$(dirname "$0")" && pwd)"
 
@@ -27,7 +28,7 @@ if [ -z "${CUENTA:-}" ]; then
     CUENTA="g7blago$(printf '%04x%04x' "$RANDOM" "$RANDOM")"
   fi
 fi
-echo "== Cuenta de almacenamiento: $CUENTA (grupo $GRUPO, región $UBICACION)"
+echo "== Cuenta de almacenamiento: $CUENTA (grupo $GRUPO)"
 
 echo "== Servicio de almacenamiento registrado en la suscripción (las nuevas no lo traen)"
 if [ "$(az provider show -n Microsoft.Storage --query registrationState -o tsv 2>/dev/null)" != "Registered" ]; then
@@ -35,14 +36,35 @@ if [ "$(az provider show -n Microsoft.Storage --query registrationState -o tsv 2
 fi
 
 echo "== Grupo de recursos"
-az group create -n "$GRUPO" -l "$UBICACION" --tags proyecto=g7b -o none
+if [ "$(az group exists -n "$GRUPO")" != "true" ]; then
+  az group create -n "$GRUPO" -l "${REGIONES%% *}" --tags proyecto=g7b -o none
+fi
 
 echo "== Cuenta de almacenamiento (LRS, privada, solo HTTPS, TLS 1.2)"
 if ! az storage account show -n "$CUENTA" -g "$GRUPO" -o none 2>/dev/null; then
-  az storage account create -n "$CUENTA" -g "$GRUPO" -l "$UBICACION" \
-    --sku Standard_LRS --kind StorageV2 --access-tier Hot \
-    --allow-blob-public-access false --min-tls-version TLS1_2 --https-only true \
-    --tags proyecto=g7b capa=lago -o none
+  CREADA=""
+  for REGION in $REGIONES; do
+    echo "   probando la región $REGION..."
+    if SALIDA="$(az storage account create -n "$CUENTA" -g "$GRUPO" -l "$REGION" \
+        --sku Standard_LRS --kind StorageV2 --access-tier Hot \
+        --allow-blob-public-access false --min-tls-version TLS1_2 --https-only true \
+        --tags proyecto=g7b capa=lago -o none 2>&1)"; then
+      CREADA="$REGION"
+      break
+    fi
+    if printf '%s' "$SALIDA" | grep -q "Disallowed"; then
+      echo "   $REGION no está permitida en tu suscripción"
+      continue
+    fi
+    printf '%s\n' "$SALIDA" >&2
+    exit 1
+  done
+  if [ -z "$CREADA" ]; then
+    echo "Ninguna de estas regiones está permitida: $REGIONES" >&2
+    echo "Prueba otra con: UBICACION=<region> bash crear_lago.sh  (az account list-locations -o table las lista)" >&2
+    exit 1
+  fi
+  echo "   creada en $CREADA"
 fi
 
 echo "== Papelera de 7 días para archivos y contenedores borrados"

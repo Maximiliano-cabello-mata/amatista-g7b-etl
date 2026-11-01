@@ -54,7 +54,7 @@ bash amatista-g7b-etl/infra/azure/crear_lago.sh
 
 (Cuando la PR se fusione a `main`, quita `-b claude/peaceful-tesla-ctqaps` del primer comando.)
 
-El script crea todo en la región **México Central** (`mexicocentral`) y al final imprime una línea así:
+El script crea todo en la primera región que tu cuenta permita (empieza por México Central) y al final imprime una línea así:
 
 ```text
 AZURE_LAGO_URL=https://g7blagoxxxxxx.blob.core.windows.net/lago?sv=...&sig=...
@@ -62,16 +62,16 @@ AZURE_LAGO_URL=https://g7blagoxxxxxx.blob.core.windows.net/lago?sv=...&sig=...
 
 **Ese valor es una llave.** Cópialo directo al paso 5. No lo pegues en ningún chat, ni en un issue, ni en un archivo del repo. Permite leer, agregar y escribir en el lago, **pero no borrar**, y vence en un año.
 
-**Si sale un error `RequestDisallowedByPolicy`:** las cuentas de estudiante solo permiten algunas regiones. Para ver cuáles:
+**Si tu cuenta no permite una región:** Azure for Students solo deja usar algunas regiones, distintas en cada cuenta. El script prueba solo, en orden, México Central y otras regiones cercanas (South Central US, Central US, East US 2...), y se queda con la primera permitida. En pantalla verás `... no está permitida en tu suscripción` hasta que una funcione. Si ninguna de la lista sirve, lista todas las regiones:
 
 ```bash
-az policy assignment list --query "[].parameters.listOfAllowedLocations.value" -o json
+az account list-locations -o table
 ```
 
-Elige una de la lista (por ejemplo `southcentralus`) y vuelve a correr el script con ella:
+Y prueba una a mano:
 
 ```bash
-UBICACION=southcentralus bash amatista-g7b-etl/infra/azure/crear_lago.sh
+UBICACION=westeurope bash amatista-g7b-etl/infra/azure/crear_lago.sh
 ```
 
 El script se puede correr varias veces: lo que ya existe se deja igual, y cada vez imprime una llave nueva. Úsalo así también cuando la llave esté por vencer.
