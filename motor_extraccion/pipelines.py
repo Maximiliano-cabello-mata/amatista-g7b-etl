@@ -1,13 +1,24 @@
-# Define your item pipelines here
-#
-# Don't forget to add your pipeline to the ITEM_PIPELINES setting
-# See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
+import os
+import pymongo
+from dotenv import load_dotenv
 
+load_dotenv()
 
-# useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
+class MongoPipeline:
+    def __init__(self, mongo_uri):
+        self.client = pymongo.MongoClient(mongo_uri)
+        self.db = self.client['conocimiento_3d']
 
+    @classmethod
+    def from_crawler(cls, crawler):
+        # 1. Busca en los Raw Settings de Zyte. 2. Si no lo encuentra, usa tu .env local
+        mongo_uri = crawler.settings.get('MONGO_URI') or os.getenv('MONGO_URI')
+        
+        if not mongo_uri:
+            raise ValueError("Falta MONGO_URI en Zyte o en tu archivo .env")
+            
+        return cls(mongo_uri=mongo_uri)
 
-class MotorExtraccionPipeline:
-    def process_item(self, item):
+    def process_item(self, item, spider):
+        self.db['foros_crudos'].insert_one(dict(item))
         return item
