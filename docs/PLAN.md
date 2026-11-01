@@ -36,7 +36,7 @@ No se trata de juntar mucho. Un dato entra a G7B solo si cumple las siete reglas
 
 1. **Tiene pregunta.** Responde al menos una pregunta del catálogo (sección 3). Si no hay pregunta, no se extrae.
 2. **Es de fuente primaria.** La documentación oficial le gana al tutorial; el artículo original le gana al resumen de un blog; una medición propia le gana a una opinión de foro.
-3. **Dice su versión.** "Blender 4.2 LTS", "Godot 4.3". Un dato sin versión no sirve en 3D: lo que era cierto en 2.79 hoy es falso.
+3. **Dice su versión.** "Blender 5.2 LTS", "Godot 4.3". Un dato sin versión no sirve en 3D: lo que era cierto en 2.79 hoy es falso.
 4. **Dice su licencia.** Si es abierta (CC BY, CC BY-SA, CC0, GPL), se guarda el texto completo. Si tiene derechos reservados, solo el enlace, los metadatos y un resumen propio. Si no se sabe, no entra.
 5. **Dice de dónde vino.** URL, fecha de extracción, araña o sonda que lo trajo, y huella (hash) del contenido.
 6. **No está repetido.** Se identifica por URL o por huella. Las corridas nuevas actualizan; no duplican.
@@ -46,7 +46,7 @@ No se trata de juntar mucho. Un dato entra a G7B solo si cumple las siete reglas
 
 | Control | Cuándo | Qué hace si falla |
 |---|---|---|
-| Esquema (contratos de la sección 6) | Al entrar a la zona plata | El registro se queda en bronce, marcado con el motivo |
+| Esquema (contratos de la sección 7.3) | Al entrar a la zona plata | El registro se queda en bronce, marcado con el motivo |
 | Licencia y versión obligatorias | Al entrar a plata | Igual |
 | Duplicados por huella | Al entrar a plata | Se descarta la copia |
 | Valores imposibles (por ejemplo, 900 cuadros por segundo en una gráfica integrada de 2012) | En las mediciones | Va a revisión, no a oro |
@@ -122,7 +122,7 @@ Para la sonda: modelos y texturas de Poly Haven (CC0) y archivos de demostració
 
 ## 5. Telemetría: de la computadora más vieja a la más potente
 
-Esta es la parte que nadie más tiene, y la que justifica G7B. Hay dos instrumentos, los dos construidos sobre lo que Blender ya trae.
+Esta es la parte que nadie más tiene, y la que justifica G7B. **Por ahora no hay telemetría de personas:** se empieza con lo que existe en internet y con computadoras propias y de la nube. Los laboratorios y las granjas de render de la universidad entran cuando haya acuerdos con profesores y alumnos (5.5). Todo se construye sobre lo que Blender ya trae.
 
 ### 5.1 Niveles de equipo
 
@@ -132,24 +132,38 @@ Esta es la parte que nadie más tiene, y la que justifica G7B. Hay dos instrumen
 | N1 | PC de 2012 a 2015: gráfica integrada antigua, 4 GB de RAM, disco mecánico | Blender LTS antiguo (2.93 o 3.6) con perfil mínimo |
 | N2 | PC modesta actual: gráfica integrada moderna (por ejemplo Ryzen 5 5600G), 8 a 16 GB | Blender actual con perfil ligero |
 | N3 | GPU dedicada de 4 a 8 GB | Blender completo, render EEVEE fluido |
-| N4 | GPU de 12 GB o más, estación de trabajo | Cycles, simulaciones, escenas pesadas |
-| Nube | Máquinas de Azure y ejecutores de GitHub Actions, sin GPU | Control: miden CPU y memoria de forma repetible |
+| N4 | GPU de 12 GB o más, estación de trabajo, granja de render | Cycles, simulaciones, escenas pesadas |
+| Nube | Azure y GitHub Actions (sin GPU); Google Colab (con GPU) | Control repetible de CPU; Colab da GPU de gama alta para N3 y N4 |
 
-### 5.2 Sonda de rendimiento (`g7b-sonda`)
+### 5.2 Etapas de la telemetría
 
-Un script de Python que se ejecuta **dentro de Blender**, sin software nuevo:
+| Etapa | Cuándo | De dónde salen los datos | Qué falta para empezar |
+|---|---|---|---|
+| **T0 Internet** | Desde F0 | Blender Open Data, la encuesta de hardware de Steam (agregada), requisitos y notas de versión de Blender, y benchmarks publicados con licencia abierta | Nada |
+| **T1 Tus computadoras** | Desde ahora | `g7b-sonda` en tus PCs: animación, edición, render, varias versiones de Blender | Nada: la sonda v0 ya existe (`sonda/`) |
+| **T2 Nube** | F1 | La sonda en Colab (GPU), en Azure y en ejecutores de GitHub Actions | Activar Azure; usar créditos de Colab |
+| **T3 Universidad** | Cuando haya acuerdos | La sonda en laboratorios y granjas de render de la universidad | Pláticas con profesores y responsables de laboratorio; permiso por escrito; explicar qué se mide (5.5) |
+| **T4 Uso real** | Después de T3 y con usuarios en Amatista | Telemetría de prácticas en el add-on (5.4) | Aviso de privacidad, consentimiento, gente usando Amatista |
 
-- **Huella del equipo:** modelo de CPU y núcleos, RAM, modelo de GPU, memoria de video, controlador, versión de OpenGL o Vulkan (`gpu.platform` de Blender), sistema operativo y versión de Blender. Sin nombre de usuario ni de equipo.
-- **Escenas estándar:** ligera, media y pesada (sección 4.6).
-- **Perfiles de ajustes:** de mínimo a completo (Workbench o sólido, Simplify, niveles de subdivisión, EEVEE, Cycles con pocas muestras más quitar el ruido).
-- **Mediciones:** tiempo de abrir la escena; cuadros por segundo de la vista 3D (necesita ventana); tiempo de operaciones de edición comunes; tiempo de render de un cuadro; memoria máxima; errores.
+Mientras no exista T3, **no hay datos propios de N1**: las conclusiones sobre computadoras viejas salen solo de Blender Open Data (que mide render, no la vista 3D) y de cualquier PC vieja que consigas. El reporte semanal lo dice así, sin inventar.
+
+### 5.3 Sonda de rendimiento (`g7b-sonda`) — v0 hecha
+
+Un script de Python que corre **dentro de Blender**, sin instalar ni descargar nada: la escena se genera ahí mismo. Instrucciones en [`sonda/LEEME.md`](../sonda/LEEME.md).
+
+- **Huella del equipo:** sistema operativo, modelo de CPU y núcleos, RAM, GPU que usa Blender para dibujar (`gpu.platform`) y GPU que puede usar Cycles. Sin nombre de usuario, nombre del equipo ni rutas.
+- **Escena estándar:** ligera, media o pesada: objetos con subdivisión y deformación animados, una luz y una cámara. Es igual en todas las computadoras.
+- **Perfiles de ajustes:** mínimo, ligero y completo (subdivisión, Simplify, muestras y resolución). Son los ajustes que el Corazón aplicaría.
+- **Pruebas:** edición de malla; primera evaluación de la escena; animación cuadro por cuadro; vista 3D (con ventana); render con Workbench, EEVEE y Cycles en CPU y en GPU.
+- **Calidad de la medición:** una corrida de calentamiento que se descarta, 3 repeticiones, mediana y variación. Lo que no se puede medir queda como `no_disponible` con el motivo. El JSON se guarda después de cada prueba.
 - **Dos modos:** sin ventana (`blender -b`), para render y edición en contenedores y en la nube; y con ventana, para la vista 3D en computadoras reales.
-- **Tres formas de correrla:** como botón "Medir mi equipo" en el add-on de Amatista; como script suelto para laboratorios (universidades, centros comunitarios); y en contenedor para la nube.
-- **Varias versiones de Blender** en N1 y N2, para responder P2.
+- **Varias versiones de Blender** en el mismo equipo, para responder P2.
+
+**Probado:** en un servidor Linux sin GPU con Blender 5.2.3 LTS, edición, animación y Cycles en CPU se repiten con menos de 4 % de diferencia entre corridas. **Falta probar** la vista 3D y las GPU en una computadora real; eso es lo primero de T1.
 
 No sustituye al benchmark oficial de Blender, que solo mide render: lo complementa con la vista 3D, la edición y los perfiles.
 
-### 5.3 Telemetría de uso en el add-on de Amatista
+### 5.4 Telemetría de uso en el add-on de Amatista (etapa T4, después)
 
 Eventos que ya existen en el Corazón (paso iniciado, paso cumplido, señal mostrada o perdida, tiempo en el paso, deshacer, errores), más muestras de cuadros por segundo y el nivel del equipo.
 
@@ -158,17 +172,73 @@ Eventos que ya existen en el Corazón (paso iniciado, paso cumplido, señal most
 - **Se publica solo agregado**, en grupos de al menos 5 equipos, para que nadie pueda identificarse.
 - Esta parte se programa en el repo `amatista`, no aquí. G7B solo define el contrato `g7b.evento/1` y recibe los datos.
 
-### 5.4 Metas de cobertura (12 semanas)
+### 5.5 Universidad: qué se necesita para medir en laboratorios y granjas (T3)
 
-- Al menos **30 equipos distintos medidos** con la sonda, con **al menos 5 por nivel** de N1 a N4.
-- Al menos 3 versiones de Blender medidas en N1 y N2.
-- Para conseguir equipos: tus propias PCs (la PC 4 con Ryzen 5 5600G es un N2 perfecto), laboratorios de la UTN, compañeros y familia, y la nube como control.
+Son pláticas que hay que hacer, así que mejor llegar con algo concreto:
 
-Sin cobertura de N1 no hay conclusiones sobre "computadoras viejas"; el reporte semanal lo dice claramente en vez de inventarlo.
+1. **A quién:** responsables de laboratorio, profesores de materias de 3D o animación y la coordinación de la carrera.
+2. **Qué se pide:** correr la sonda una vez en cada tipo de equipo, sin ventana o con ventana: unos minutos por equipo. No se instala nada de forma permanente.
+3. **Qué se mide y qué no:** solo hardware y tiempos (sección 5.3). Ningún dato de alumnos, cuentas, archivos ni red.
+4. **Qué reciben a cambio:** un reporte de su laboratorio (qué versión de Blender y qué ajustes convienen en sus equipos) y el tablero público.
+5. **Permiso por escrito**, aunque sea un correo, guardado junto a las mediciones de ese laboratorio.
+6. **Las granjas de render:** si usan Flamenco u otro gestor, la sonda sin ventana corre como un trabajo más.
 
-## 6. Arquitectura
+Antes de T3 se prepara una hoja de una página con estos puntos, para llevar a cada plática.
 
-### 6.1 Flujo de datos y zonas
+### 5.6 Metas de cobertura
+
+| Sin acuerdos con la universidad (solo T0 a T2) | Con acuerdos (T3) |
+|---|---|
+| Tus PCs (al menos un N2), 2 o 3 GPU de Colab (N3 y N4), 3 tamaños de máquina en Azure y Actions como control; 3 versiones de Blender en tu N2 | 30 equipos distintos medidos, al menos 5 por nivel de N1 a N4 |
+
+### 5.7 Datos sintéticos: nunca se mezclan
+
+Datos generados por una IA a partir de instrucciones (prompts), escenas inventadas o resultados simulados **no son telemetría**. Pueden servir para probar el código del pipeline, pero:
+
+- Llevan `"sintetico": true` (la sonda ya escribe `false` en cada medición real).
+- Viven en una carpeta aparte y nunca entran a plata ni a oro.
+- Nunca aparecen en el tablero ni en un reporte como si fueran mediciones.
+
+## 6. Licencias: cómo usar lo de otros sin que nos demanden
+
+La pregunta de fondo es: "¿y si lo integramos al kernel y resulta que es parte de otro kernel?". En software libre eso es normal y legal, **siempre que la licencia sea compatible y se dé crédito**. Así se construyó Linux. El riesgo no es usar código libre: es mezclar licencias incompatibles o usar algo que no era libre.
+
+### 6.1 Ideas frente a código
+
+- **Las ideas y técnicas no tienen derechos de autor.** Implementar con tu propio código una técnica descrita en un artículo o en una charla de la GDC es legal, aunque la haya inventado Rockstar.
+- **El código y los textos sí.** Copiar código, o el texto de una documentación, requiere que su licencia lo permita.
+- **Las patentes son la excepción:** protegen técnicas concretas. Antes de convertir una técnica en add-on, se revisa si tiene patente vigente (sección 4.4).
+- **Las marcas:** no se usan nombres como Maya, 3ds Max o RAGE para nombrar herramientas propias. Sí se pueden mencionar para explicar equivalencias ("si vienes de Maya, aquí se hace así").
+
+### 6.2 Qué licencias se pueden combinar con el kernel
+
+El add-on y el Corazón son GPL-3.0-or-later porque usan la API de Blender (Blender es GPL-2.0-or-later). Propuesta para G7B: AGPL-3.0.
+
+| Licencia de lo que quieres usar | ¿Se puede meter en el kernel (GPL-3.0)? | Ejemplos |
+|---|---|---|
+| MIT, BSD, Zlib | Sí, conservando su aviso | Godot (MIT) |
+| Apache-2.0 | Sí, con GPL-3.0 (no con GPL-2.0 sola) | OpenUSD, O3DE |
+| LGPL, GPL-2.0-or-later, GPL-3.0, AGPL-3.0 | Sí | Blender, FreeCAD (LGPL), Krita (GPL) |
+| CC BY-SA 4.0 (documentación, ejemplos de código del manual) | Sí, en un solo sentido: Creative Commons la declaró compatible con GPL-3.0 | Manual de Blender |
+| CC0, dominio público | Sí | Poly Haven |
+| GPL-2.0 sola ("only") | **No** se mezcla con GPL-3.0 | Revisar caso por caso |
+| No comercial (CC BY-NC), "solo investigación" | **No** | ShapeNet, parte de Objaverse |
+| "Código disponible" con licencia de uso (EULA), BSL, SSPL | **No** | Código de Unreal |
+| Sin licencia | **No**: sin licencia, todos los derechos están reservados | Repos sin archivo de licencia |
+
+Los ejemplos de esta tabla se confirman en el catálogo antes de usar cada pieza.
+
+### 6.3 Cómo se lleva el control
+
+1. **Cada dato de G7B lleva su licencia** (regla 4 de calidad). Si un fragmento de código llega a un add-on, su licencia viaja con él.
+2. **Cada archivo de código lleva su licencia y su autor** en un encabezado estándar (SPDX). La herramienta `reuse` de la FSFE revisa en CI que no falte ninguno.
+3. **Las dependencias se revisan en CI** con un comprobador de licencias: si entra una incompatible, la revisión falla.
+4. **Un archivo `TERCEROS.md`** lista todo lo que viene de otros proyectos: qué es, de dónde, versión y licencia.
+5. **Ante la duda, no entra.** Y si el proyecto llega a tener dinero o socios, se consulta a un abogado de propiedad intelectual. Este plan no es asesoría legal.
+
+## 7. Arquitectura
+
+### 7.1 Flujo de datos y zonas
 
 Se usa la convención de zonas por calidad: bronce (crudo), plata (validado) y oro (curado, listo para usarse). Siempre **ELT**: primero se guarda el crudo y después se transforma, para poder reprocesar sin volver a extraer.
 
@@ -183,7 +253,7 @@ Se usa la convención de zonas por calidad: bronce (crudo), plata (validado) y o
                                          ▲ secretos: Doppler · vigilancia: Sentry
 ```
 
-### 6.2 Un servicio por capa
+### 7.2 Un servicio por capa
 
 | Capa | Servicio | Por qué | Cuánto dura |
 |---|---|---|---|
@@ -191,6 +261,7 @@ Se usa la convención de zonas por calidad: bronce (crudo), plata (validado) y o
 | Descargas y reloj | GitHub Actions (GitHub Pro) | Tareas programadas sin máquinas encendidas | Mientras seas estudiante |
 | Lago (bronce y plata) | Azure Blob Storage | Barato; el crédito de $100 dura casi solo para esto | Crédito de estudiante |
 | Procesamiento pesado | Camber | 40 h de CPU y 5 h de GPU **cada mes**; servidor MCP para Claude Code | Mientras estudies |
+| GPU de gama alta | Google Colab (unos 200 créditos) | La sonda con Cycles en GPU (N3 y N4) y lotes de vectores. Una corrida de la sonda tarda minutos | Se gastan por hora de GPU: se usan en corridas planeadas, no en sesiones abiertas |
 | Procesamiento ligero | Tu Ryzen y GitHub Actions | Gratis | — |
 | Conocimiento (oro) | MongoDB Atlas M0 (ya activo) con búsqueda por vectores | Ya está; 512 MB alcanzan para la documentación de Blender con vectores | Gratis; los $50 se guardan hasta llegar a unos 400 MB |
 | Analítica (warehouse oro) | Parquet en Azure Blob + DuckDB | Un warehouse de pago es innecesario a esta escala | Gratis |
@@ -206,7 +277,7 @@ Se usa la convención de zonas por calidad: bronce (crudo), plata (validado) y o
 - La regla de red `0.0.0.0/0` se mantiene porque Zyte, Actions y Heroku cambian de IP; los permisos mínimos limitan el daño posible.
 - La API que recibe mediciones y telemetría pide clave por instalación y tiene límite de envíos, para que nadie la llene de datos falsos.
 
-### 6.3 Contratos de datos
+### 7.3 Contratos de datos
 
 Mismo estilo que `amatista.practice/2` y `amatista.corazon/1`: JSON versionado, validado con un esquema.
 
@@ -220,7 +291,7 @@ Mismo estilo que `amatista.practice/2` y `amatista.corazon/1`: JSON versionado, 
 | `g7b.equivalencia/1` | Una tarea de Maya o 3ds Max | tarea, disciplina, estado (sección 4.4), cómo se hace en libre, uso relativo |
 | `g7b.perfil/1` | Ajustes recomendados por nivel de equipo | nivel, versión de Blender, ajustes, cuadros por segundo esperados, evidencia |
 
-### 6.4 Warehouse: modelo en estrella
+### 7.4 Warehouse: modelo en estrella
 
 | Tabla de hechos | Una fila es | Dimensiones |
 |---|---|---|
@@ -230,7 +301,7 @@ Mismo estilo que `amatista.practice/2` y `amatista.corazon/1`: JSON versionado, 
 
 Todo en Parquet y consultado con DuckDB, desde tu PC, desde Deepnote o desde Camber, sin servidor de base de datos.
 
-## 7. Cómo vas a ver los datos
+## 8. Cómo vas a ver los datos
 
 | Qué | Herramienta | Para quién |
 |---|---|---|
@@ -247,7 +318,7 @@ Páginas del tablero:
 5. **Técnicas:** el catálogo de fichas con su costo en hardware.
 6. **Salud de los datos:** fuentes activas, última corrida, muestra humana y registros rechazados con su motivo.
 
-## 8. Del dato al kernel: cómo se usa lo que juntamos
+## 9. Del dato al kernel: cómo se usa lo que juntamos
 
 Los datos no se convierten solos en software. Cada tipo de dato tiene un camino concreto hacia el Corazón y hacia Blender Amatista:
 
@@ -267,21 +338,21 @@ Los datos no se convierten solos en software. Cada tipo de dato tiene un camino 
 - **Lo que se agrega** se hace con lo que Blender ya ofrece: la API de Python, recursos de Geometry Nodes, mapas de teclas, preferencias y la plataforma de extensiones. Antes de escribir un add-on se busca uno libre que ya lo haga, y se integra respetando su licencia.
 - **Otros programas** entran como adaptadores del Corazón con su propio sistema de extensión: Godot (plugins), FreeCAD y Krita (Python). Uno a la vez, y solo cuando el anterior pase su prueba de conformidad.
 
-## 9. Fases y calendario
+## 10. Fases y calendario
 
 Cada fase tiene criterio de salida (cuándo está lista) y criterio de abandono (cuándo se cambia de rumbo).
 
 | Fase | Cuándo | Qué se hace | Lista cuando | Se replantea si |
 |---|---|---|---|---|
-| **F0 Base** | Fin de semana 1 | Limpiar el repo; contratos; Doppler; Azure con el contenedor `lago`; arañas del manual y de la API `bpy` de Blender 4.x LTS; copia de Zyte al lago; Blender Open Data en DuckDB; primera página del tablero | Hay un análisis real de Open Data publicado y el manual completo en bronce sin duplicados | — |
-| **F1 Sonda** | Semanas 1 y 2 | `g7b-sonda` v0 (sin ventana y con ventana); medir tus PCs, ejecutores de Actions y 2 o 3 tamaños de máquina en Azure | 5 equipos medidos de al menos 3 niveles, y resultados repetibles: misma máquina, diferencia menor al 10 % | Las mediciones no se repiten: se arregla la sonda antes de seguir |
+| **F0 Base** | Fin de semana 1 | Limpiar el repo; contratos; Doppler; Azure con el contenedor `lago`; arañas del manual y de la API `bpy` de la LTS vigente de Blender (5.2); copia de Zyte al lago; Blender Open Data en DuckDB; primera página del tablero | Hay un análisis real de Open Data publicado y el manual completo en bronce sin duplicados | — |
+| **F1 Sonda** | Semanas 1 y 2 | `g7b-sonda` v0 ya hecha (probada sin ventana en Linux). Probarla con ventana y con GPU en tu PC; medir tus PCs en 3 versiones de Blender (T1); Colab con GPU, Actions y 2 o 3 tamaños de máquina en Azure (T2) | Al menos 5 equipos o máquinas de 3 niveles, y resultados repetibles: misma máquina, diferencia menor al 10 % | Las mediciones no se repiten: se arregla la sonda antes de seguir |
 | **F2 Conocimiento** | Semanas 3 y 4 | Fragmentos y vectores en Camber; índice de búsqueda por vectores en Mongo; servidor MCP; prueba de 20 preguntas técnicas con y sin G7B | Con G7B mejoran las respuestas y citan la fuente en al menos 15 de 20 | Si no mejora, se dejan de extraer documentos y se revisa la fragmentación |
-| **F3 Telemetría y catálogos** | Semanas 5 a 8 | Aviso de privacidad; botón "Medir mi equipo" y telemetría con consentimiento en el add-on (repo `amatista`); conseguir equipos; catálogo de equivalencias v0 (unas 100 tareas); 50 fichas de técnica | 20 equipos medidos; catálogo con estado y uso; primer porcentaje de cobertura | Menos de 10 equipos a la semana 8: se cambia la forma de conseguirlos (laboratorios) |
-| **F4 Al kernel** | Semanas 9 a 12 | `g7b.perfil/1` v1 y su uso en el Corazón; API y MCP en Heroku; tablero completo; reporte trimestral | 30 equipos, 5 por nivel; el add-on aplica un perfil medido y mejora la fluidez en N1 o N2 | Si los perfiles no mejoran nada medible, se revisa la sonda y los niveles |
+| **F3 Catálogos y pláticas** | Semanas 5 a 8 | Catálogo de equivalencias v0 (unas 100 tareas); 50 fichas de técnica; hoja de una página para profesores y laboratorios (5.5) y las primeras pláticas | Catálogo con estado y uso; primer porcentaje de cobertura; al menos un laboratorio con permiso para T3 | Ningún laboratorio acepta: se sigue con T0 a T2 y se buscan otros lugares (otras escuelas, centros comunitarios) |
+| **F4 Al kernel** | Semanas 9 a 12 | `g7b.perfil/1` v1 y su uso en el Corazón; API y MCP en Heroku; tablero completo; mediciones en la universidad si hay permiso (T3); reporte trimestral | El add-on aplica un perfil medido y mejora la fluidez en N2 (y en N1 si ya hay equipos); metas de la sección 5.6 | Si los perfiles no mejoran nada medible, se revisa la sonda y los niveles |
 
 Lo que queda corriendo después de F0 no son máquinas encendidas, sino **trabajos programados**: revisión semanal de fuentes, descarga de Open Data, el reporte de calidad y los monitores.
 
-## 10. Riesgos
+## 11. Riesgos
 
 | Riesgo | Respuesta |
 |---|---|
@@ -290,19 +361,27 @@ Lo que queda corriendo después de F0 no son máquinas encendidas, sino **trabaj
 | Privacidad | Consentimiento, identificador anónimo, publicación agregada y aviso de privacidad antes de activar |
 | Datos falsos en mediciones o telemetría | Clave por instalación, límite de envíos y detección de valores imposibles |
 | Las arañas se rompen en silencio | Monitores de Sentry, reporte semanal y muestra humana |
-| Créditos que vencen sin usarse, o que se gastan sin control | Activar cada crédito solo cuando una fase lo necesita (sección 6.2) |
+| Créditos que vencen sin usarse, o que se gastan sin control | Activar cada crédito solo cuando una fase lo necesita (sección 7.2) |
 | Un solo desarrollador con muchos frentes | Una fase a la vez; máximo 3 tareas en progreso; G7B no detiene la prueba de Amatista con personas reales |
 | Faltan computadoras viejas (N1) | Buscarlas a propósito: laboratorios, escuelas, donaciones. Sin datos de N1, no se afirman conclusiones sobre N1 |
 
-## 11. Decisiones pendientes
+## 12. Decisiones pendientes
 
 1. **Licencias:** propuesta de código de G7B en AGPL-3.0 (cubre el uso como servicio en red), datos agregados publicados en CC BY 4.0 y registro de la marca. Por confirmar.
-2. **Versiones de Blender de referencia:** propuesta: 4.2 LTS y 3.6 LTS, más 2.93 para N1.
+2. **Versiones de Blender de referencia:** propuesta: 5.2 LTS (la vigente), 4.5 LTS y 3.6 LTS, más 2.93 para N1.
 3. **Dominio de G7B:** un `.dev` o `.software` de Name.com.
-4. **Aviso de privacidad** para la sonda y la telemetría, antes de F3.
+4. **Aviso de privacidad** para la sonda en laboratorios (T3) y para la telemetría de uso (T4).
 5. **Dónde corre el modelo de lenguaje**, si algún día se necesita uno propio. No hace falta hasta después de F2: el servidor MCP le sirve a la IA que ya usas.
 
-## 12. Reglas de trabajo
+## 13. Ideas para después (no entran a las fases)
+
+**Un motor de IA que sepa de modelado,** conectado a Blender u otro programa, que arme prácticas y escenas. Es viable más adelante, pero no así:
+
+- **No se entrena un modelo propio** con 200 créditos de Colab ni con 5 horas de GPU al mes. Entrenar un modelo de lenguaje cuesta miles de horas de GPU. Lo realista es usar un modelo existente que llama a la API de Blender por herramientas (MCP), alimentado por el conocimiento de G7B.
+- **Lo que produzca no es telemetría:** son datos sintéticos (sección 5.7). Sirven para generar borradores de prácticas que una persona revisa, no para medir.
+- **Entra solo si F2 sale bien:** si el MCP de G7B no mejora las respuestas, un motor de IA encima tampoco lo hará.
+
+## 14. Reglas de trabajo
 
 1. Sin pregunta en la sección 3, no se extrae.
 2. Ningún servicio ni crédito nuevo sin una fase que lo necesite.
