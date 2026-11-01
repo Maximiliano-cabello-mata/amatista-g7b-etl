@@ -27,6 +27,11 @@ if [ -z "${CUENTA:-}" ]; then
 fi
 echo "== Cuenta de almacenamiento: $CUENTA (grupo $GRUPO, región $UBICACION)"
 
+echo "== Servicio de almacenamiento registrado en la suscripción (las nuevas no lo traen)"
+if [ "$(az provider show -n Microsoft.Storage --query registrationState -o tsv 2>/dev/null)" != "Registered" ]; then
+  az provider register --namespace Microsoft.Storage --wait -o none
+fi
+
 echo "== Grupo de recursos"
 az group create -n "$GRUPO" -l "$UBICACION" --tags proyecto=g7b -o none
 
