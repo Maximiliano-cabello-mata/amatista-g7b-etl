@@ -19,6 +19,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import scrapy
+from scrapy.exceptions import CloseSpider
 
 
 class PaginasSpider(scrapy.Spider):
@@ -40,7 +41,9 @@ class PaginasSpider(scrapy.Spider):
 
     def parse(self, response):
         tipo = response.headers.get("Content-Type", b"").decode("latin-1")
-        if "html" not in tipo or self.paginas >= self.max_paginas:
+        if self.paginas >= self.max_paginas:
+            raise CloseSpider("max_paginas")  # cierra y descarta la cola
+        if "html" not in tipo:
             return
         self.paginas += 1
         base = {

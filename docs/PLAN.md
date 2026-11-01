@@ -2,6 +2,30 @@
 
 Fecha: 2026-11-01. Documento rector de este repositorio. Si otro documento contradice este, manda este. Reemplaza las fases A, B y C de [ARQUITECTURA_CLOUD.md](../ARQUITECTURA_CLOUD.md), que se conserva como historia del primer despliegue.
 
+## 0. Rumbo actualizado (2026-11-01, tarde)
+
+Después de la primera corrida real, el proyecto cambió de prioridad. **Esta sección manda sobre el orden de las fases** de la sección 10; el resto del plan sigue vigente.
+
+1. **Telemetría antes que texto.** Lo valioso son mediciones numéricas, no texto. La ingesta de texto (manual, foros, arXiv) queda como está, con poca frecuencia y sin fuentes nuevas: sirve para el servidor MCP.
+2. **El warehouse con cubo es la columna vertebral:** captura → lago (bronce) → plata (Parquet) → cubo en DuckDB (oro: hechos `hechos_medicion` y `hechos_render`; dimensiones dispositivo, versión, escena, perfil, tiempo y origen) → interfaz (Atlas, Excel, Deepnote, tablero) y `perfiles.json`. Primer insumo: **Blender Open Data**, que falta su enlace de descarga.
+3. **Geoda, el kernel:** catálogo de operaciones 3D con controladores libres (OpenSubdiv, meshoptimizer, Manifold, xatlas, Cycles, Open Image Denoise...), **sonda de operaciones** con curvas de costo, **modelo de costos** aprendido y **planificador** (si cabe, con qué calidad y dónde). Definiciones en [FICHAS_TECNICAS.md](FICHAS_TECNICAS.md).
+4. **Calidad, no solo velocidad:** cada perfil se elige maximizando la calidad visual (SSIM y LPIPS contra un render de referencia), con la condición de que la vista 3D sea fluida.
+5. **La IA dentro del sistema:**
+   - modelo de costos local;
+   - LPIPS para la calidad visual;
+   - detector de anomalías en las mediciones;
+   - modelo de lenguaje local (Ollama) para normalizar nombres de equipos y preguntarle al cubo en español.
+6. **Ingesta "masiva" con lo gratuito:** matriz de GitHub Actions (cuatro arquitecturas), Colab, Azure con VS Dev Essentials, BrowserStack (celulares reales) y, con acuerdos, laboratorios. Detalle en [OFERTAS_Y_GITHUB.md](OFERTAS_Y_GITHUB.md).
+7. **Unión con Amatista:** proyectos separados que se alimentan por contratos; lo personal, solo en Amatista. Ver [VISION.md](VISION.md).
+8. **La estadía es la primera prueba de todo:** [propuesta](estadia/2026-11-01_propuesta_estadia.md).
+
+**Orden inmediato:**
+1. El cubo, con Blender Open Data y la sonda.
+2. La sonda de operaciones en la matriz de Actions.
+3. `perfiles.json` v0.
+4. La detección del nivel en el add-on de Amatista.
+5. La estadía.
+
 ## 1. Qué es G7B, en una frase
 
 > **G7B es la base de conocimiento y de mediciones de un 3D libre:** reúne lo que se sabe (documentación, técnicas publicadas de la industria y equivalencias entre programas) y lo que se mide (rendimiento en computadoras reales, desde las más viejas hasta las más potentes), con fuente, versión y licencia, para que el Corazón Amatista y una IA puedan usarlo.
