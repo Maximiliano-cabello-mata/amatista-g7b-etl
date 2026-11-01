@@ -21,6 +21,9 @@ concurrency:
 
 jobs:
   copiar:
+    # Las corridas programadas solo arrancan con la variable G7B_INGESTA_ACTIVA = true;
+    # las manuales (Run workflow) siempre.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.G7B_INGESTA_ACTIVA == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:

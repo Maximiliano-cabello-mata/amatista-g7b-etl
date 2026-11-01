@@ -21,6 +21,9 @@ concurrency:
 
 jobs:
   procesar:
+    # Las corridas programadas solo arrancan con la variable G7B_INGESTA_ACTIVA = true;
+    # las manuales (Run workflow) siempre.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.G7B_INGESTA_ACTIVA == 'true' }}
     runs-on: ubuntu-latest
     env:
       MONGO_URI: ${{ secrets.MONGO_URI }}

@@ -168,3 +168,5 @@ Con la PR fusionada y los secretos del paso 5:
 4. **Opcional:** el secreto `STACKEXCHANGE_KEY`, que se pide gratis en stackapps.com, sube la cuota de la API de Stack Exchange.
 
 Cómo funciona todo esto: [docs/INGESTA.md](../../docs/INGESTA.md).
+
+**El interruptor:** las tareas programadas (Vigilar fuentes, Zyte al lago y Procesar bronce) **no corren solas** hasta que crees la variable `G7B_INGESTA_ACTIVA` con el valor `true` (Settings › Secrets and variables › Actions › Variables). Las corridas manuales siempre funcionan. Para pausar todo, cambia el valor a `false`.
