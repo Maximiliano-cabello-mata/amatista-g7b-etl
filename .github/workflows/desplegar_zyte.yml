@@ -1,7 +1,7 @@
 name: Desplegar a Zyte
 
 # Con cada push a main que toque las arañas: pruebas, revisión de que no haya artefactos de build
-# en el repo y despliegue a Zyte Scrapy Cloud (proyecto y stack de scrapinghub.yml).
+# en el repo y despliegue a Zyte Scrapy Cloud (proyecto de scrapinghub.yml, stack por omisión).
 on:
   push:
     branches: [main]

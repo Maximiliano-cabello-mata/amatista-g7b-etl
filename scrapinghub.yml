@@ -1,6 +1,6 @@
 projects:
   default: 883618
-stacks:
-  default: scrapy:2.11
+# Sin "stacks": se usa el stack por omisión de Zyte (hoy Scrapy 2.18 con Python 3.14, el que ya
+# corre los trabajos). Las arañas funcionan con Scrapy 2.11 o más nuevo.
 requirements:
   file: requirements.txt
