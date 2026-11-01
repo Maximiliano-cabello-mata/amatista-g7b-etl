@@ -96,7 +96,7 @@ Estos son los secretos que usan las tareas programadas:
 | `ZYTE_API_KEY` | La llave de tu cuenta de Zyte | Panel de Zyte › tu cuenta › API key |
 | `MONGO_URI` | La cadena del usuario de MongoDB que **solo escribe** en `conocimiento_3d` | MongoDB Atlas › Database Access (crear el usuario) › Connect |
 
-1. **GitHub** (lo que usan las tareas programadas): en el repo, **Settings** › **Secrets and variables** › **Actions** › **New repository secret**. Crea los dos secretos. En la pestaña **Variables**, crea `ZYTE_PROJECT_ID` con el valor `883618`.
+1. **GitHub** (lo que usan las tareas): los secretos viven en el environment **`amatista`** (Settings › **Environments** › `amatista` › Environment secrets), y las tareas que los necesitan lo declaran con `environment: amatista`. También sirven como **Repository secrets** (Settings › Secrets and variables › Actions). `ZYTE_PROJECT_ID` (`883618`) puede ir en cualquiera de los dos.
 2. **Doppler** (la copia central de todas las llaves, plan 7.2): crea el proyecto `g7b` y guarda ahí los mismos dos valores, más `MONGO_URI`. Más adelante, la integración de Doppler con GitHub puede sincronizarlos sola.
 
 ## Paso 6. Probar que Zyte llega al lago
@@ -169,4 +169,4 @@ Con la PR fusionada y los secretos del paso 5:
 
 Cómo funciona todo esto: [docs/INGESTA.md](../../docs/INGESTA.md).
 
-**El interruptor:** las tareas programadas (Vigilar fuentes, Zyte al lago y Procesar bronce) **no corren solas** hasta que crees la variable `G7B_INGESTA_ACTIVA` con el valor `true` (Settings › Secrets and variables › Actions › Variables). Las corridas manuales siempre funcionan. Para pausar todo, cambia el valor a `false`.
+**El interruptor:** las tareas programadas (Vigilar fuentes, Zyte al lago y Procesar bronce) **no corren solas** hasta que crees la variable `G7B_INGESTA_ACTIVA` con el valor `true` como **variable del repositorio** (Settings › Secrets and variables › Actions › Variables › Repository variables). No sirve dentro del environment `amatista`: GitHub decide si la tarea arranca antes de entrar al environment, y ahí todavía no la ve. Las corridas manuales siempre funcionan. Para pausar todo, cambia el valor a `false`.

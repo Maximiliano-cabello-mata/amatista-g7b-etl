@@ -22,6 +22,8 @@ concurrency:
 
 jobs:
   desplegar:
+    # Los secretos (AZURE_LAGO_URL, ZYTE_API_KEY, MONGO_URI) viven en el environment "amatista".
+    environment: amatista
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
