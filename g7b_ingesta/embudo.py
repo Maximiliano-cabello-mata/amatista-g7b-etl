@@ -24,6 +24,7 @@ UMBRALES = {
     "palabras_min_metadatos": 15,     # un resumen de arXiv es corto
     "proporcion_alfabetica_min": 0.6,
     "linea_repetida_max": 0.3,
+    # Páginas índice: más del 60 % de las líneas son elementos de lista de menos de 60 caracteres.
     "relevancia_min": 2.0,
     "valor_min": 2.0,
     "valor_revision": 1.0,
@@ -148,6 +149,10 @@ def evaluar(doc, fuente, taxonomia, indice, umbrales=UMBRALES):
         repetidas = len(lineas) - len(set(lineas))
         if repetidas / len(lineas) > u["linea_repetida_max"]:
             return Resultado(RECHAZADO, "calidad", ["demasiadas líneas repetidas (menús o plantillas)"])
+    if len(lineas) >= 5:
+        listas = [l for l in lineas if l.startswith(("- ", "* ", "• "))]
+        if len(listas) / len(lineas) > 0.6 and sum(len(l) for l in listas) / len(listas) < 60:
+            return Resultado(RECHAZADO, "calidad", ["página índice: casi todo son listas de enlaces cortos"])
     lengua = tx.idioma(completo)
     if lengua not in ("es", "en"):
         return Resultado(RECHAZADO, "calidad", [f"idioma no soportado: {lengua}"])

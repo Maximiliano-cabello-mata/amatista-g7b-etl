@@ -73,6 +73,9 @@ fuentes:
       tipo: pagina
       url: "https://docs.blender.org/manual/en/latest/"
     extractor: zyte
+    umbrales:                  # documentación oficial y versionada: vale por ser la fuente primaria (P6),
+      valor_min: 0             # aunque no traiga medidas ni hardware (primer simulacro real: 5 de 20 rechazadas así)
+      valor_revision: 0
     zyte:
       arana: blender_docs      # araña estructurada: secciones completas, propiedades y código, varias versiones
       argumentos:

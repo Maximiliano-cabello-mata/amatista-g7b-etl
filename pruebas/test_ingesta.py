@@ -227,3 +227,28 @@ def test_arana_paginas_cierra_al_llegar_al_tope():
     assert list(arana.parse(r))
     with pytest.raises(CloseSpider):
         list(arana.parse(r))
+
+
+def test_rechaza_pagina_indice():
+    indice = "Shader Nodes\n" + "\n".join(f"- Nodo de entrada {i}" for i in range(12)) + "\nVer también."
+    r = evaluar(doc(indice + " " + TEXTO_VALIOSO[:0], titulo="Shader Nodes"), FUENTE_FORO, TAXONOMIA, Indice())
+    assert (r.estado, r.etapa) == (RECHAZADO, "calidad") and "índice" in r.motivos[0]
+
+
+def test_pregunta_de_foro_sin_how_to_es_relevante():
+    pregunta = ("How can I prevent some ugly tile effect when applying a material image? When I apply the image "
+                "texture to the material of my mesh, the UV map shows visible seams on every face of the object. "
+                "I tried scaling the texture coordinates but the tile effect is still there in the render.")
+    r = evaluar(doc(pregunta, titulo="Ugly tile effect with image texture"), FUENTE_FORO, TAXONOMIA, Indice())
+    assert "P6" in r.preguntas, r.puntajes
+
+
+def test_documentacion_vale_sin_medidas():
+    manual = {**FUENTE_FORO, "umbrales": {"valor_min": 0, "valor_revision": 0}, "dominios": ["docs.blender.org"]}
+    texto = ("The Keymap editor lets you change the shortcuts of every operator. Each keymap item links a key "
+             "and its modifiers to an operator, and you can add, remove or export keymaps. How do you change a "
+             "shortcut? Find the operator in the list, click on the key field and press the new combination. "
+             "The Industry Compatible keymap is meant for users coming from other 3D applications.")
+    r = evaluar(doc(texto, url="https://docs.blender.org/manual/en/5.2/interface/keymap/index.html",
+                    titulo="Keymap"), manual, TAXONOMIA, Indice())
+    assert r.estado == ACEPTADO, (r.etapa, r.motivos, r.puntajes)
