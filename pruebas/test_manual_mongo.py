@@ -101,3 +101,13 @@ def test_diagnostico_mongo():
     base["foros_crudos"].insert_many([{"a": 1}, {"a": 2}])
     d = diagnostico(cliente, base)
     assert d["mongo"] == "conectado" and d["colecciones"] == {"foros_crudos": 2}
+
+
+def test_manual_cierra_al_llegar_al_tope():
+    import pytest
+    from scrapy.exceptions import CloseSpider
+
+    arana = BlenderDocsSpider(max_paginas="1")
+    assert correr(arana, respuesta())[0]["titulo"] == "Simplify"  # la primera sí se procesa
+    with pytest.raises(CloseSpider):
+        correr(arana, respuesta(url=URL.replace("simplify", "otra")))

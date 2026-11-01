@@ -18,6 +18,7 @@ from datetime import datetime, timezone
 from urllib.parse import urlparse
 
 import scrapy
+from scrapy.exceptions import CloseSpider
 
 _ESPACIOS = re.compile(r"\s+")
 _BPY = re.compile(r"\bbpy\.[A-Za-z_][A-Za-z0-9_.]*")
@@ -73,7 +74,9 @@ class ManualSphinxSpider(scrapy.Spider):
         if "html" not in response.headers.get("Content-Type", b"").decode("latin-1"):
             return
         if self.paginas >= self.max_paginas:
-            return
+            # Cerrar el trabajo y descartar la cola: sin esto, al llegar al tope seguía descargando
+            # lo encolado (una prueba con max_paginas=20 bajó 370 páginas).
+            raise CloseSpider("max_paginas")
         self.paginas += 1
         documento = self.extraer(response, version, seccion)
         if documento:

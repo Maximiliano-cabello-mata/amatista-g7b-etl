@@ -212,3 +212,18 @@ def test_arana_paginas_sigue_prefijo_y_respeta_modo():
     item2 = next(iter(solo.parse(respuesta)))
     assert "html" not in item2 and item2["descripcion"] == "desc"
     assert PaginasSpider.guardar_en_mongo is False
+
+
+def test_arana_paginas_cierra_al_llegar_al_tope():
+    from scrapy.exceptions import CloseSpider
+    from scrapy.http import HtmlResponse, Request
+
+    from motor_extraccion.spiders.paginas import PaginasSpider
+
+    url = "https://docs.blender.org/manual/en/latest/index.html"
+    r = HtmlResponse(url=url, body=b"<html><title>x</title></html>", headers={"Content-Type": "text/html"},
+                     request=Request(url))
+    arana = PaginasSpider(urls=json.dumps([url]), max_paginas="1")
+    assert list(arana.parse(r))
+    with pytest.raises(CloseSpider):
+        list(arana.parse(r))
