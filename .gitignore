@@ -1,7 +1,32 @@
+# Entornos y configuración local
 .env
+.venv/
 venv/
+ENV/
+
+# Empaquetado de Python y Zyte (shub)
+build/
+dist/
+*.egg-info/
+.eggs/
+.scrapy/
+
+# Caché de Python y pruebas
 __pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# Salidas locales (resultados de la sonda y de "scrapy crawl -o" en la raíz)
+resultados/
+/*.json
+/*.jl
+/*.csv
 *.log
-*.csv
-*.json
+
+# Sistema e IDE
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/

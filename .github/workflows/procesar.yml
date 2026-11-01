@@ -1,0 +1,58 @@
+name: Procesar bronce
+
+# Cada noche, después de "Zyte al lago": pasa lo nuevo de bronce por el embudo, lo deja en plata
+# y publica lo aceptado en MongoDB (si existe el secreto MONGO_URI).
+on:
+  schedule:
+    - cron: "47 10 * * *"  # 10:47 UTC = 04:47 en la Ciudad de México
+  workflow_dispatch:
+    inputs:
+      simulacro:
+        description: "Evaluar sin escribir"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ingesta
+  cancel-in-progress: false
+
+jobs:
+  procesar:
+    # Las corridas programadas solo arrancan con la variable G7B_INGESTA_ACTIVA = true;
+    # las manuales (Run workflow) siempre.
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.G7B_INGESTA_ACTIVA == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lago.txt
+      - name: Procesar
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          SIMULACRO: ${{ inputs.simulacro }}
+        run: |
+          if [ "$SIMULACRO" = "true" ]; then
+            python -m g7b_ingesta.procesar --simulacro
+          else
+            python -m g7b_ingesta.procesar
+          fi
+      - name: Publicar lo aceptado en MongoDB (oro)
+        if: ${{ env.MONGO_URI != '' }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          SIMULACRO: ${{ inputs.simulacro }}
+        run: |
+          if [ "$SIMULACRO" = "true" ]; then
+            python -m g7b_ingesta.publicar --simulacro
+          else
+            python -m g7b_ingesta.publicar
+          fi

@@ -1,0 +1,46 @@
+name: Desplegar a Zyte
+
+# Con cada push a main que toque las arañas: pruebas, revisión de que no haya artefactos de build
+# en el repo y despliegue a Zyte Scrapy Cloud (proyecto de scrapinghub.yml, stack por omisión).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "motor_extraccion/**"
+      - "requirements.txt"
+      - "scrapinghub.yml"
+      - "setup.py"
+      - "scrapy.cfg"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: desplegar-zyte
+  cancel-in-progress: false
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Sin artefactos de build en el repo
+        run: |
+          if git ls-files | grep -E '^(build/|dist/)|\.egg-info/|^motor_extraccion/settin$'; then
+            echo "Hay artefactos de build en el repo: bórralos con git rm antes de desplegar."
+            exit 1
+          fi
+      - run: pip install -r requirements-dev.txt shub
+      - name: Pruebas de las arañas
+        run: python -m pytest pruebas -q -k "arana or manual or mongo"
+      - name: Las arañas cargan
+        run: scrapy list
+      - name: Desplegar
+        env:
+          SHUB_APIKEY: ${{ secrets.ZYTE_API_KEY }}
+        run: shub deploy

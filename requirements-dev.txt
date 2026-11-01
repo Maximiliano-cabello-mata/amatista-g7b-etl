@@ -1,0 +1,4 @@
+-r requirements-lago.txt
+pytest>=8
+scrapy>=2.11,<3
+mongomock>=4.1,<5

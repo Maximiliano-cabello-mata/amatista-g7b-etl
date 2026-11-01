@@ -1,0 +1,110 @@
+# Palabras clave por pregunta del plan (docs/PLAN.md, sección 3), en español e inglés.
+# Se comparan sin acentos y en minúsculas, por raíz (prefijo). Una entrada [clave, peso] pesa más.
+# El embudo suma los pesos de cada pregunta; la relevancia de un documento es la de su mejor pregunta.
+version: 1
+preguntas:
+  P1:
+    nombre: Ajustes que permiten trabajar con fluidez según el equipo
+    claves:
+      - [rendimiento, 2]
+      - [performance, 2]
+      - [fps, 2]
+      - [viewport, 1.5]
+      - [lento, 1.5]
+      - [slow, 1.5]
+      - [lag, 1.5]
+      - [optimiz, 2]
+      - [simplify, 2]
+      - [vram, 2]
+      - [memoria, 1]
+      - [memory, 1]
+      - [integrad, 1.5]
+      - [integrated, 1.5]
+      - [render time, 2]
+      - [tiempo de render, 2]
+      - [samples, 1]
+      - [muestras, 1]
+      - [denois, 1]
+      - [subdivision, 1]
+      - [low end, 2]
+      - [old computer, 2]
+      - [computadora vieja, 2]
+  P2:
+    nombre: Qué versión de Blender conviene en cada equipo
+    claves:
+      - [opengl, 2]
+      - [vulkan, 1.5]
+      - [requisitos, 2]
+      - [requirements, 2]
+      - [compatib, 1.5]
+      - [driver, 1.5]
+      - [controlador, 1.5]
+      - [lts, 1.5]
+      - [legacy, 1]
+      - [unsupported, 1.5]
+      - [no compatible, 1.5]
+  P3:
+    nombre: Qué tan común es cada nivel de equipo
+    claves:
+      - [hardware survey, 3]
+      - [encuesta, 1.5]
+      - [market share, 2]
+      - [benchmark, 2]
+  P4:
+    nombre: Equivalencias de Maya y 3ds Max con herramientas libres
+    claves:
+      - [maya, 2]
+      - [3ds max, 2]
+      - [3dsmax, 2]
+      - [equivalent, 2]
+      - [equivalente, 2]
+      - [coming from, 1.5]
+      - [vengo de, 1.5]
+      - [industry compatible, 3]
+      - [keymap, 1.5]
+      - [migrat, 1.5]
+      - [workflow, 1]
+      - [flujo de trabajo, 1]
+  P5:
+    nombre: Técnicas publicadas por la industria aplicables con herramientas libres
+    claves:
+      - [real-time rendering, 2]
+      - [tiempo real, 1.5]
+      - [level of detail, 2]
+      - [lod, 1.5]
+      - [culling, 1.5]
+      - [global illumination, 2]
+      - [iluminacion global, 2]
+      - [shading, 1]
+      - [physically based, 2]
+      - [pbr, 1.5]
+      - [baking, 1.5]
+      - [horne, 1]
+      - [normal map, 1.5]
+      - [retopolog, 1.5]
+      - [rigging, 1]
+      - [skinning, 1.5]
+      - [mesh simplification, 2]
+      - [texture compression, 2]
+      - [denoising, 1.5]
+      - [path tracing, 1.5]
+      - [rasteriz, 1.5]
+      - [geometry processing, 2]
+  P6:
+    nombre: Cómo se hace algo en una versión concreta de un programa libre
+    claves:
+      - [how to, 1]
+      - [como hago, 1]
+      - [como se, 1]
+      - [bpy, 2]
+      - [operator, 1]
+      - [operador, 1]
+      - [modifier, 1]
+      - [modificador, 1]
+      - [geometry nodes, 2]
+      - [nodos de geometria, 2]
+      - [shader nodes, 1.5]
+      - [python api, 2]
+      - [add-on, 1]
+      - [addon, 1]
+      - [script, 1]

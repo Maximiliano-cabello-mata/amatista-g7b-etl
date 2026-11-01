@@ -1,0 +1,181 @@
+# Catálogo de fuentes de G7B. Una fuente solo se vigila si:
+#   activa: true  Y  licencia_verificada: true
+# (regla 4 del plan: sin licencia confirmada, no entra).
+#
+# modo:
+#   texto_completo   se guarda el texto (licencias abiertas: CC BY, CC BY-SA, CC0, GPL...)
+#   solo_metadatos   título, enlace, fecha, autores y un resumen corto (derechos reservados)
+#   agregados        solo cifras agregadas, nunca el contenido (p. ej. encuestas)
+#
+# sensor.tipo:
+#   atom | rss        un feed: avisa de entradas nuevas
+#   pagina            pide la página con ETag / Last-Modified y compara su huella
+#   sitemap           lee el sitemap y avisa de URLs nuevas o con lastmod más reciente
+#   stackexchange     API de Stack Exchange: preguntas nuevas desde la última vez
+#
+# extractor:
+#   directo           el sensor ya trae el contenido (feed o API): va directo a bronce
+#   zyte              lanza una araña en Zyte: "paginas" (genérica, con las URLs detectadas) o la que
+#                     diga zyte.arana (p. ej. blender_docs), con zyte.argumentos
+#   descarga          descarga el archivo (PDF) a bronce
+#
+# preguntas: las del plan (docs/PLAN.md, sección 3) que esta fuente ayuda a responder.
+version: 1
+fuentes:
+
+  - id: arxiv-cs-gr
+    nombre: arXiv, gráficos por computadora (cs.GR)
+    tipo: publicaciones
+    programa: general
+    licencia: CC0-1.0          # metadatos y resúmenes de arXiv; el PDF de cada artículo tiene su propia licencia
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P5]
+    sensor:
+      tipo: atom
+      url: "https://export.arxiv.org/api/query?search_query=cat:cs.GR&sortBy=submittedDate&sortOrder=descending&max_results=100"
+    extractor: directo
+    umbrales:                  # en un resumen académico el valor es la técnica, no medidas ni versiones
+      valor_min: 0
+      valor_revision: 0
+    frecuencia_horas: 24
+    dominios: [export.arxiv.org, arxiv.org]
+    activa: true
+
+  - id: blender-stackexchange
+    nombre: Blender Stack Exchange
+    tipo: foro
+    programa: blender
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P1, P2, P4, P6]
+    sensor:
+      tipo: stackexchange
+      sitio: blender
+      puntaje_minimo: 3        # filtro en la fuente: solo preguntas con votos
+    extractor: directo
+    frecuencia_horas: 24
+    dominios: [api.stackexchange.com, blender.stackexchange.com]
+    activa: true
+
+  - id: blender-manual
+    nombre: Manual de Blender (LTS vigente)
+    tipo: documentacion
+    programa: blender
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P1, P2, P6]
+    sensor:
+      tipo: pagina
+      url: "https://docs.blender.org/manual/en/latest/"
+    extractor: zyte
+    zyte:
+      arana: blender_docs      # araña estructurada: secciones completas, propiedades y código, varias versiones
+      argumentos:
+        max_paginas: 3000
+    frecuencia_horas: 168
+    dominios: [docs.blender.org]
+    activa: true
+
+  - id: blender-notas-version
+    nombre: Notas de versión de Blender
+    tipo: documentacion
+    programa: blender
+    licencia: por_confirmar
+    licencia_verificada: false
+    modo: texto_completo
+    preguntas: [P1, P2]
+    sensor:
+      tipo: pagina
+      url: "https://developer.blender.org/docs/release_notes/"
+    extractor: zyte
+    zyte: {seguir: true, prefijo: "https://developer.blender.org/docs/release_notes/", max_paginas: 500}
+    frecuencia_horas: 168
+    dominios: [developer.blender.org]
+    activa: false
+
+  - id: blender-api-python
+    nombre: Referencia de la API de Python de Blender
+    tipo: documentacion
+    programa: blender
+    licencia: por_confirmar
+    licencia_verificada: false
+    modo: texto_completo
+    preguntas: [P6]
+    sensor:
+      tipo: pagina
+      url: "https://docs.blender.org/api/current/"
+    extractor: zyte
+    zyte: {seguir: true, prefijo: "https://docs.blender.org/api/current/", max_paginas: 5000}
+    frecuencia_horas: 168
+    dominios: [docs.blender.org]
+    activa: false
+
+  - id: godot-docs
+    nombre: Documentación de Godot (estable)
+    tipo: documentacion
+    programa: godot
+    licencia: CC-BY-3.0
+    licencia_verificada: false
+    modo: texto_completo
+    preguntas: [P6]
+    sensor:
+      tipo: pagina
+      url: "https://docs.godotengine.org/en/stable/"
+    extractor: zyte
+    zyte: {seguir: true, prefijo: "https://docs.godotengine.org/en/stable/", max_paginas: 3000}
+    frecuencia_horas: 168
+    dominios: [docs.godotengine.org]
+    activa: false
+
+  - id: siggraph-advances
+    nombre: SIGGRAPH, curso "Advances in Real-Time Rendering"
+    tipo: publicaciones
+    programa: general
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P5]
+    sensor:
+      tipo: pagina
+      url: "https://advances.realtimerendering.com/"
+    extractor: zyte
+    zyte: {seguir: false}
+    frecuencia_horas: 720
+    dominios: [advances.realtimerendering.com]
+    activa: false              # activar en F3 (catálogo de técnicas)
+
+  - id: blender-open-data
+    nombre: Blender Open Data (benchmark)
+    tipo: mediciones
+    programa: blender
+    licencia: por_confirmar    # datos abiertos; confirmar la licencia exacta en F0
+    licencia_verificada: false
+    modo: agregados
+    preguntas: [P1, P3]
+    sensor:
+      tipo: pagina
+      url: "https://opendata.blender.org/"
+    extractor: descarga
+    frecuencia_horas: 168
+    dominios: [opendata.blender.org]
+    activa: false
+
+  - id: steam-encuesta-hardware
+    nombre: Encuesta de hardware de Steam
+    tipo: mediciones
+    programa: general
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P3]
+    sensor:
+      tipo: pagina
+      url: "https://store.steampowered.com/hwsurvey"
+    extractor: zyte
+    zyte: {seguir: false}
+    frecuencia_horas: 720
+    dominios: [store.steampowered.com]
+    activa: false              # revisar sus condiciones antes de activarla

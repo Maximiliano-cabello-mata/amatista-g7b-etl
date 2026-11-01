@@ -1,0 +1,30 @@
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-dev.txt
+      - name: Azurite (Azure Storage de prueba)
+        run: |
+          docker run -d -p 10000:10000 mcr.microsoft.com/azure-storage/azurite \
+            azurite-blob --blobHost 0.0.0.0 --skipApiVersionCheck
+          for i in $(seq 1 30); do (echo > /dev/tcp/127.0.0.1/10000) 2>/dev/null && break; sleep 1; done
+      - name: Pruebas
+        env:
+          AZURE_PRUEBAS_CONEXION: UseDevelopmentStorage=true
+        run: python -m pytest pruebas -q
+      - name: Revisar el script de Azure
+        run: bash -n infra/azure/crear_lago.sh
