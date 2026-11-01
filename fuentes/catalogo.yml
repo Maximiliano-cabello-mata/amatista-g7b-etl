@@ -33,13 +33,15 @@ fuentes:
     preguntas: [P5]
     sensor:
       tipo: atom
-      url: "https://export.arxiv.org/api/query?search_query=cat:cs.GR&sortBy=submittedDate&sortOrder=descending&max_results=100"
+      # Feed oficial de artículos nuevos de cs.GR. La API de export.arxiv.org no permite robots en su
+      # robots.txt (la primera corrida dio 999), así que se usa el feed, que es para esto.
+      url: "https://rss.arxiv.org/atom/cs.GR"
     extractor: directo
     umbrales:                  # en un resumen académico el valor es la técnica, no medidas ni versiones
       valor_min: 0
       valor_revision: 0
     frecuencia_horas: 24
-    dominios: [export.arxiv.org, arxiv.org]
+    dominios: [rss.arxiv.org, arxiv.org]
     activa: true
 
   - id: blender-stackexchange

@@ -21,6 +21,8 @@ concurrency:
 
 jobs:
   copiar:
+    # Los secretos (AZURE_LAGO_URL, ZYTE_API_KEY, MONGO_URI) viven en el environment "amatista1".
+    environment: amatista1
     # Las corridas programadas solo arrancan con la variable G7B_INGESTA_ACTIVA = true;
     # las manuales (Run workflow) siempre.
     if: ${{ github.event_name == 'workflow_dispatch' || vars.G7B_INGESTA_ACTIVA == 'true' }}
