@@ -3,8 +3,13 @@ import urllib.robotparser
 from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
-AGENTE = "G7B-bot/0.1 (+https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl)"
+AGENTE = "G7B-bot/0.1 (Geodar Radar; +https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl)"
 _ROBOTS = {}
+
+# APIs públicas y documentadas: se rigen por sus propias condiciones (límites, llave, identificación),
+# no por el robots.txt del sitio, que es para rastreadores de páginas. Solo se agregan aquí APIs cuyo
+# uso automatizado está documentado por su dueño.
+APIS_OFICIALES = {"api.github.com", "api.stackexchange.com", "api.polyhaven.com"}
 
 
 @dataclass
@@ -21,6 +26,8 @@ class Respuesta:
 def permitido(url, obtener_robots=None):
     """Respeta robots.txt; si no se puede leer, se permite (como hacen los buscadores)."""
     partes = urlparse(url)
+    if partes.hostname in APIS_OFICIALES:
+        return True
     base = f"{partes.scheme}://{partes.netloc}"
     if base not in _ROBOTS:
         lector = urllib.robotparser.RobotFileParser()

@@ -30,5 +30,6 @@ Lo siguiente es la fase F0 del plan.
 - [¿Ya existe esto?](docs/investigacion/2026-11-01_novedad_kernel_3d.md): investigación del estado del arte: qué existe, en qué se diferencia, por qué falta lo que falta y si la necesidad es actual, futura o no prevista.
 - [Ofertas y GitHub](docs/OFERTAS_Y_GITHUB.md): qué oferta del Developer Pack y qué función de GitHub cumple cada papel, y cuándo activarla.
 - [Propuesta de estadía](docs/estadia/2026-11-01_propuesta_estadia.md): la versión integrada Amatista + G7B como trabajo final.
+- **[Geodar Radar](docs/GEODAR_RADAR.md): la herramienta de captura.** Sensores en foros, documentación, catálogos de texturas y modelos, herramientas libres y telemetría pública; documentos y catálogos a MongoDB, telemetría y señales a Azure. `python -m geodar --help` · [mapa de sensores](docs/GEODAR_RADAR_MAPA.md).
 - **[Plan maestro](docs/PLAN_MAESTRO.md): el camino a seguir.** Cada oferta, cómo se reclama y se conecta, Azure paso a paso, el panel en Atlas Charts y la conexión Amatista ↔ G7B ↔ Geoda. Manda sobre los demás planes.
 - [Revisión del 2026-11-02 y plan de ofertas](docs/reportes/2026-11-02_revision_y_ofertas.md): qué entró en las PR #4 a #9, qué está alineado con el plan y qué hace cada oferta del Developer Pack por el fin final.

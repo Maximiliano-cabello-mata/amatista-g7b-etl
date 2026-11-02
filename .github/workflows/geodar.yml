@@ -1,0 +1,87 @@
+name: Geodar Radar (probar y revisar)
+
+# Solo a mano. Sirve para decidir antes de activar una fuente y para revisar el radar sin entrar a Azure:
+#   probar  revisa fuentes EN VIVO sin escribir nada en el lago ni en MongoDB (no usa secretos)
+#   mapa    dónde están los sensores, con su última revisión y errores (lee el lago)
+#   salud   qué sensores fallan o se atrasaron (lee el lago)
+# El resultado queda en el resumen de la corrida (pestaña Summary).
+on:
+  workflow_dispatch:
+    inputs:
+      orden:
+        description: "Qué hacer"
+        type: choice
+        options: [probar, mapa, salud]
+        default: probar
+      fuente:
+        description: "probar: id de una fuente (vacío = todas, incluidas las inactivas)"
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  probar:
+    if: ${{ inputs.orden == 'probar' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lago.txt
+      - name: Probar sensores en vivo
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          FUENTE: ${{ inputs.fuente }}
+        run: |
+          if [ -n "$FUENTE" ]; then sel=(--fuente "$FUENTE"); else sel=(--todas); fi
+          set +e
+          python -m geodar probar "${sel[@]}" | tee probar.txt
+          codigo=${PIPESTATUS[0]}
+          {
+            echo "## Geodar Radar: prueba en vivo"
+            echo
+            echo '```'
+            tail -n 1 probar.txt
+            echo '```'
+            echo
+            echo "| Fuente | Estado | Resultado |"
+            echo "|---|---|---|"
+            grep '^{' probar.txt | python -c "
+          import json, sys
+          for l in sys.stdin:
+              r = json.loads(l)
+              res = ('✅ ' + r['nota']) if r['ok'] else ('❌ ' + r['error'])
+              print(f\"| {r['fuente']} | {r['estado']} | {res} |\")"
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit $codigo
+
+  revisar:
+    if: ${{ inputs.orden != 'probar' }}
+    environment: amatista1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-lago.txt
+      - name: Mapa con estado
+        if: ${{ inputs.orden == 'mapa' }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+        run: python -m geodar mapa --estado --markdown "$GITHUB_STEP_SUMMARY"
+      - name: Salud
+        if: ${{ inputs.orden == 'salud' }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+        run: |
+          set +e
+          python -m geodar salud | tee salud.txt
+          codigo=${PIPESTATUS[0]}
+          { echo "## Geodar Radar: salud"; echo; echo '```'; cat salud.txt; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+          exit $codigo

@@ -79,7 +79,10 @@ def test_cadena_completa(lago):
     from g7b_ingesta.procesar import CONTEOS, procesar
     from g7b_ingesta.vigilar import ESTADO, vigilar
 
-    catalogo, zyte = cat.cargar(), ZyteFalso()
+    # Las fuentes de esta prueba (Geodar agregó más; tienen sus pruebas en test_geodar.py).
+    originales = {"arxiv-cs-gr", "blender-stackexchange", "blender-manual"}
+    catalogo = {"fuentes": [f for f in cat.cargar()["fuentes"] if f["id"] in originales]}
+    zyte = ZyteFalso()
     bitacora = vigilar(catalogo, lago, obtener=obtener_falso, zyte=zyte, proyecto_id="883618",
                        ahora=AHORA, salida=lambda *_: None)
     por_fuente = {b["fuente"]: b for b in bitacora}

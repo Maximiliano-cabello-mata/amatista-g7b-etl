@@ -1,5 +1,8 @@
 # Ingesta: sensores, disparadores y el embudo de calidad
 
+
+> **2026-11-02:** la ingesta ahora se maneja con [Geodar Radar](GEODAR_RADAR.md) (`python -m geodar`), que agrega foros, catálogos, telemetría web y el enrutamiento por destino. Lo de este documento sigue vigente para el embudo de documentos.
+
 Cómo llega un dato de internet al warehouse, y por qué casi nada llega. Aplica las reglas de calidad del [plan](PLAN.md#2-qué-es-un-dato-de-calidad-aquí).
 
 ```text

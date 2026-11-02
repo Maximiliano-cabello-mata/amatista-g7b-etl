@@ -1,7 +1,10 @@
 name: Procesar bronce
 
-# Cada noche, después de "Zyte al lago": pasa lo nuevo de bronce por el embudo, lo deja en plata
-# y publica lo aceptado en MongoDB (si existe el secreto MONGO_URI).
+# Cada noche, después de "Zyte al lago", Geodar Radar enruta lo nuevo de bronce según su destino:
+#   documentos  → embudo → plata → MongoDB conocimiento_3d.documentos
+#   catalogo    → MongoDB g7b_catalogo (texturas, HDRI, modelos, herramientas, extensiones)
+#   senales     → oro/senales/semanal.json en Azure (+ g7b_panel.senales para Atlas Charts)
+#   telemetria  → se queda en bronce para el cubo del warehouse
 on:
   schedule:
     - cron: "47 10 * * *"  # 10:47 UTC = 04:47 en la Ciudad de México
@@ -42,9 +45,9 @@ jobs:
           SIMULACRO: ${{ inputs.simulacro }}
         run: |
           if [ "$SIMULACRO" = "true" ]; then
-            python -m g7b_ingesta.procesar --simulacro
+            python -m geodar procesar --simulacro
           else
-            python -m g7b_ingesta.procesar
+            python -m geodar procesar
           fi
       - name: Publicar lo aceptado en MongoDB (oro)
         if: ${{ env.MONGO_URI != '' }}
@@ -54,7 +57,28 @@ jobs:
           SIMULACRO: ${{ inputs.simulacro }}
         run: |
           if [ "$SIMULACRO" = "true" ]; then
-            python -m g7b_ingesta.publicar --simulacro
+            python -m geodar publicar --simulacro
           else
-            python -m g7b_ingesta.publicar
+            python -m geodar publicar
+          fi
+      - name: Catálogos a MongoDB (texturas, modelos, herramientas)
+        if: ${{ env.MONGO_URI != '' }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          SIMULACRO: ${{ inputs.simulacro }}
+        run: |
+          if [ "$SIMULACRO" = "true" ]; then
+            python -m geodar catalogar --simulacro
+          else
+            python -m geodar catalogar
+          fi
+      - name: Señales de los foros (resumen semanal)
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          SIMULACRO: ${{ inputs.simulacro }}
+        run: |
+          if [ "$SIMULACRO" = "true" ]; then
+            python -m geodar senales --simulacro
+          else
+            python -m geodar senales
           fi

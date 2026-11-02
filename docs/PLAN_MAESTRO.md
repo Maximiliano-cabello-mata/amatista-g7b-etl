@@ -90,6 +90,8 @@ Fecha: 2026-11-02. Un solo camino, de principio a fin, para que G7B quede **func
 | F6 | **Aprendizaje** | Eventos de las prácticas de Amatista, **agregados** (≥5 equipos) y con consentimiento | Amatista los expone; Actions los trae | Prácticas que se adaptan; los datos de la estadía |
 | F7 | **Modelos 3D** (para la tienda, después) | Poly Haven (modelos CC0): polígonos y costo de carga | Actions + sonda | Modelos por nivel de equipo |
 
+**La herramienta que captura todo esto es [Geodar Radar](GEODAR_RADAR.md)** (`python -m geodar`); su [mapa de sensores](GEODAR_RADAR_MAPA.md) dice dónde vigila cada fuente.
+
 **Lo que nunca entra:** datos personales; código o herramientas filtradas o propietarias; sitios que lo prohíben en su `robots.txt`; datos sintéticos mezclados con los reales.
 
 ---

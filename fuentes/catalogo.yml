@@ -1,45 +1,60 @@
-# Catálogo de fuentes de G7B. Una fuente solo se vigila si:
-#   activa: true  Y  licencia_verificada: true
+# Catálogo de fuentes de G7B: el mapa de Geodar Radar (python -m geodar mapa).
+#
+# Una fuente solo se vigila si:  activa: true  Y  licencia_verificada: true  Y  su extractor no es externo
 # (regla 4 del plan: sin licencia confirmada, no entra).
+#
+# familia (plan maestro, sección 2):
+#   F1 telemetría de equipos · F2 formas optimizadas · F3 texturas · F4 herramientas
+#   F5 técnicas y conocimiento · F6 aprendizaje · F7 modelos 3D
+#
+# destino (todo entra primero crudo a Azure, en bronce; después):
+#   documentos   → embudo de calidad → MongoDB conocimiento_3d.documentos
+#   catalogo     → MongoDB g7b_catalogo.<coleccion>
+#   telemetria   → Azure: cubo DuckDB del warehouse
+#   senales      → Azure: oro/senales/ (resumen semanal de lo que pregunta la comunidad)
 #
 # modo:
 #   texto_completo   se guarda el texto (licencias abiertas: CC BY, CC BY-SA, CC0, GPL...)
-#   solo_metadatos   título, enlace, fecha, autores y un resumen corto (derechos reservados)
-#   agregados        solo cifras agregadas, nunca el contenido (p. ej. encuestas)
+#   solo_metadatos   título, enlace, fecha, etiquetas y cifras (derechos reservados)
+#   agregados        solo cifras agregadas, nunca el contenido
 #
 # sensor.tipo:
-#   atom | rss        un feed: avisa de entradas nuevas
-#   pagina            pide la página con ETag / Last-Modified y compara su huella
-#   sitemap           lee el sitemap y avisa de URLs nuevas o con lastmod más reciente
-#   stackexchange     API de Stack Exchange: preguntas nuevas desde la última vez
+#   atom | rss        un feed: entradas nuevas
+#   pagina            la página con ETag / Last-Modified y huella del contenido
+#   sitemap           URLs nuevas o con lastmod más reciente
+#   stackexchange     API de Stack Exchange: preguntas con votos y su mejor respuesta
+#   discourse         foro Discourse: temas nuevos con vistas, «me gusta» y respuestas (solo metadatos)
+#   github_releases   versiones nuevas de repos de GitHub, con licencia y estrellas
+#   json_api          API JSON con una lista de elementos: nuevos o cambiados
+#   externo           otra tarea la trae (ver gestor); Geodar solo la muestra en el mapa
 #
 # extractor:
-#   directo           el sensor ya trae el contenido (feed o API): va directo a bronce
-#   zyte              lanza una araña en Zyte: "paginas" (genérica, con las URLs detectadas) o la que
-#                     diga zyte.arana (p. ej. blender_docs), con zyte.argumentos
-#   descarga          descarga el archivo (PDF) a bronce
-#
-# preguntas: las del plan (docs/PLAN.md, sección 3) que esta fuente ayuda a responder.
-version: 1
+#   directo   el sensor ya trae el contenido: va directo a bronce
+#   zyte      lanza una araña en Zyte ("paginas" o la de zyte.arana)
+#   descarga  descarga el archivo (PDF) a bronce
+#   externo   la trae otra tarea (gestor)
+version: 2
 fuentes:
+
+  # ================================================================ F5 · técnicas y conocimiento
 
   - id: arxiv-cs-gr
     nombre: arXiv, gráficos por computadora (cs.GR)
     tipo: publicaciones
     programa: general
+    familia: F5
+    destino: documentos
     licencia: CC0-1.0          # metadatos y resúmenes de arXiv; el PDF de cada artículo tiene su propia licencia
     licencia_verificada: true
     modo: solo_metadatos
     preguntas: [P5]
     sensor:
       tipo: atom
-      # Feed oficial de artículos nuevos de cs.GR. La API de export.arxiv.org no permite robots en su
-      # robots.txt (la primera corrida dio 999), así que se usa el feed, que es para esto.
+      # La API de export.arxiv.org no permite robots en su robots.txt (la primera corrida dio 999):
+      # se usa el feed oficial, que es para esto.
       url: "https://rss.arxiv.org/atom/cs.GR"
     extractor: directo
-    umbrales:                  # en un resumen académico el valor es la técnica, no medidas ni versiones
-      valor_min: 0
-      valor_revision: 0
+    umbrales: {valor_min: 0, valor_revision: 0}   # en un resumen académico el valor es la técnica
     frecuencia_horas: 24
     dominios: [rss.arxiv.org, arxiv.org]
     activa: true
@@ -48,53 +63,134 @@ fuentes:
     nombre: Blender Stack Exchange
     tipo: foro
     programa: blender
+    familia: F5
+    destino: documentos
     licencia: CC-BY-SA-4.0
     licencia_verificada: true
     modo: texto_completo
     preguntas: [P1, P2, P4, P6]
-    sensor:
-      tipo: stackexchange
-      sitio: blender
-      puntaje_minimo: 3        # filtro en la fuente: solo preguntas con votos
+    sensor: {tipo: stackexchange, sitio: blender, puntaje_minimo: 3}
     extractor: directo
     frecuencia_horas: 24
     dominios: [api.stackexchange.com, blender.stackexchange.com]
+    activa: true
+
+  - id: computergraphics-stackexchange
+    nombre: Computer Graphics Stack Exchange
+    tipo: foro
+    programa: general
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P5, P6]
+    sensor: {tipo: stackexchange, sitio: computergraphics, puntaje_minimo: 2}
+    extractor: directo
+    frecuencia_horas: 72
+    dominios: [api.stackexchange.com, computergraphics.stackexchange.com]
     activa: true
 
   - id: blender-manual
     nombre: Manual de Blender (LTS vigente)
     tipo: documentacion
     programa: blender
+    familia: F5
+    destino: documentos
     licencia: CC-BY-SA-4.0
     licencia_verificada: true
     modo: texto_completo
     preguntas: [P1, P2, P6]
-    sensor:
-      tipo: pagina
-      url: "https://docs.blender.org/manual/en/latest/"
+    sensor: {tipo: pagina, url: "https://docs.blender.org/manual/en/latest/"}
     extractor: zyte
-    umbrales:                  # documentación oficial y versionada: vale por ser la fuente primaria (P6),
-      valor_min: 0             # aunque no traiga medidas ni hardware (primer simulacro real: 5 de 20 rechazadas así)
-      valor_revision: 0
+    umbrales: {valor_min: 0, valor_revision: 0}   # documentación oficial: vale por ser la fuente primaria
     zyte:
-      arana: blender_docs      # araña estructurada: secciones completas, propiedades y código, varias versiones
-      argumentos:
-        max_paginas: 3000
+      arana: blender_docs      # secciones completas, propiedades y código, en varias versiones
+      argumentos: {max_paginas: 3000}
     frecuencia_horas: 168
     dominios: [docs.blender.org]
+    activa: true
+
+  - id: blender-noticias
+    nombre: Noticias de blender.org
+    tipo: noticias
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P1, P2]
+    sensor: {tipo: rss, url: "https://www.blender.org/feed/"}
+    extractor: directo
+    umbrales: {valor_min: 0, valor_revision: 0}
+    frecuencia_horas: 24
+    dominios: [www.blender.org]
+    activa: true
+
+  - id: blender-code-blog
+    nombre: Blog de desarrollo de Blender (code.blender.org)
+    tipo: noticias
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P1, P5]
+    sensor: {tipo: rss, url: "https://code.blender.org/feed/"}
+    extractor: directo
+    umbrales: {valor_min: 0, valor_revision: 0}
+    frecuencia_horas: 72
+    dominios: [code.blender.org]
+    activa: true
+
+  - id: godot-blog
+    nombre: Blog de Godot
+    tipo: noticias
+    programa: godot
+    familia: F5
+    destino: documentos
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P5]
+    sensor: {tipo: rss, url: "https://godotengine.org/rss.xml"}
+    extractor: directo
+    umbrales: {valor_min: 0, valor_revision: 0}
+    frecuencia_horas: 72
+    dominios: [godotengine.org]
+    activa: true
+
+  - id: blendernation
+    nombre: BlenderNation (noticias y tutoriales de la comunidad)
+    tipo: noticias
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P2, P5]
+    sensor: {tipo: rss, url: "https://www.blendernation.com/feed/"}
+    extractor: directo
+    umbrales: {valor_min: 0, valor_revision: 0}
+    frecuencia_horas: 24
+    dominios: [www.blendernation.com]
     activa: true
 
   - id: blender-notas-version
     nombre: Notas de versión de Blender
     tipo: documentacion
     programa: blender
+    familia: F5
+    destino: documentos
     licencia: por_confirmar
     licencia_verificada: false
+    revisar: "Licencia del contenido de developer.blender.org/docs"
     modo: texto_completo
     preguntas: [P1, P2]
-    sensor:
-      tipo: pagina
-      url: "https://developer.blender.org/docs/release_notes/"
+    sensor: {tipo: pagina, url: "https://developer.blender.org/docs/release_notes/"}
     extractor: zyte
     zyte: {seguir: true, prefijo: "https://developer.blender.org/docs/release_notes/", max_paginas: 500}
     frecuencia_horas: 168
@@ -105,13 +201,14 @@ fuentes:
     nombre: Referencia de la API de Python de Blender
     tipo: documentacion
     programa: blender
+    familia: F5
+    destino: documentos
     licencia: por_confirmar
     licencia_verificada: false
+    revisar: "Licencia de docs.blender.org/api (se genera del código GPL; confirmar la del texto)"
     modo: texto_completo
     preguntas: [P6]
-    sensor:
-      tipo: pagina
-      url: "https://docs.blender.org/api/current/"
+    sensor: {tipo: pagina, url: "https://docs.blender.org/api/current/"}
     extractor: zyte
     zyte: {seguir: true, prefijo: "https://docs.blender.org/api/current/", max_paginas: 5000}
     frecuencia_horas: 168
@@ -122,13 +219,14 @@ fuentes:
     nombre: Documentación de Godot (estable)
     tipo: documentacion
     programa: godot
+    familia: F5
+    destino: documentos
     licencia: CC-BY-3.0
     licencia_verificada: false
+    revisar: "Confirmar CC BY 3.0 en el pie de docs.godotengine.org; entra con Godot como segundo programa"
     modo: texto_completo
     preguntas: [P6]
-    sensor:
-      tipo: pagina
-      url: "https://docs.godotengine.org/en/stable/"
+    sensor: {tipo: pagina, url: "https://docs.godotengine.org/en/stable/"}
     extractor: zyte
     zyte: {seguir: true, prefijo: "https://docs.godotengine.org/en/stable/", max_paginas: 3000}
     frecuencia_horas: 168
@@ -139,48 +237,420 @@ fuentes:
     nombre: SIGGRAPH, curso "Advances in Real-Time Rendering"
     tipo: publicaciones
     programa: general
+    familia: F5
+    destino: documentos
     licencia: derechos_reservados
     licencia_verificada: true
     modo: solo_metadatos
     preguntas: [P5]
-    sensor:
-      tipo: pagina
-      url: "https://advances.realtimerendering.com/"
+    sensor: {tipo: pagina, url: "https://advances.realtimerendering.com/"}
     extractor: zyte
     zyte: {seguir: false}
     frecuencia_horas: 720
     dominios: [advances.realtimerendering.com]
-    activa: false              # activar en F3 (catálogo de técnicas)
+    activa: false              # activar con el catálogo de técnicas
+
+  # ================================================================ Señales: lo que pregunta la comunidad
+
+  - id: blender-artists
+    nombre: Foro Blender Artists
+    tipo: foro
+    programa: blender
+    familia: F5
+    destino: senales
+    licencia: derechos_reservados   # los mensajes son de sus autores: solo título, etiquetas y cifras
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P1, P2, P4]
+    sensor:
+      tipo: discourse
+      base: "https://blenderartists.org"
+      rutas: ["/latest.json", "/top.json?period=weekly"]
+    extractor: directo
+    frecuencia_horas: 12
+    dominios: [blenderartists.org]
+    activa: true
+
+  - id: blender-devtalk
+    nombre: Foro de desarrollo de Blender (devtalk)
+    tipo: foro
+    programa: blender
+    familia: F5
+    destino: senales
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P1, P2]
+    sensor: {tipo: discourse, base: "https://devtalk.blender.org", rutas: ["/latest.json"]}
+    extractor: directo
+    frecuencia_horas: 24
+    dominios: [devtalk.blender.org]
+    activa: true
+
+  - id: godot-foro
+    nombre: Foro de Godot
+    tipo: foro
+    programa: godot
+    familia: F5
+    destino: senales
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P2, P5]
+    sensor: {tipo: discourse, base: "https://forum.godotengine.org", rutas: ["/latest.json"]}
+    extractor: directo
+    frecuencia_horas: 24
+    dominios: [forum.godotengine.org]
+    activa: true
+
+  - id: threejs-foro
+    nombre: Foro de three.js (3D en la web)
+    tipo: foro
+    programa: web
+    familia: F5
+    destino: senales
+    licencia: derechos_reservados
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P3, P5]
+    sensor: {tipo: discourse, base: "https://discourse.threejs.org", rutas: ["/latest.json"]}
+    extractor: directo
+    frecuencia_horas: 24
+    dominios: [discourse.threejs.org]
+    activa: true
+
+  # ================================================================ F4 · herramientas
+
+  - id: blender-extensiones
+    nombre: Plataforma de extensiones de Blender
+    tipo: catalogo
+    programa: blender
+    familia: F4
+    destino: catalogo
+    coleccion: extensiones_blender
+    licencia: varias            # cada extensión declara la suya (campo license); se guardan solo metadatos
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P2, P6]
+    sensor:
+      tipo: json_api
+      url: "https://extensions.blender.org/api/v1/extensions/"
+      items: data
+      id: id
+      titulo: name
+      campo_url: website
+      campos: [id, name, tagline, version, type, blender_version_min, blender_version_max, license, tags,
+               website, maintainer, archive_size, platforms]
+    extractor: directo
+    frecuencia_horas: 168
+    dominios: [extensions.blender.org]
+    activa: true
+
+  - id: herramientas-libres
+    nombre: Versiones de herramientas 3D libres (GitHub)
+    tipo: catalogo
+    programa: general
+    familia: F4
+    destino: catalogo
+    coleccion: herramientas
+    licencia: varias            # la del repo (se guarda su identificador SPDX); notas recortadas
+    licencia_verificada: true
+    modo: solo_metadatos
+    preguntas: [P2, P5, P6]
+    sensor:
+      tipo: github_releases
+      repos:
+        - godotengine/godot
+        - KhronosGroup/glTF-Blender-IO
+        - mrdoob/three.js
+        - aframevr/aframe
+        - zeux/meshoptimizer
+        - elalish/manifold
+        - jpcy/xatlas
+        - PixarAnimationStudios/OpenSubdiv
+        - RenderKit/oidn
+        - AcademySoftwareFoundation/openvdb
+        - AcademySoftwareFoundation/MaterialX
+        - google/draco
+        - KhronosGroup/KTX-Software
+        - BinomialLLC/basis_universal
+        - bulletphysics/bullet3
+        - isl-org/Open3D
+        - FreeCAD/FreeCAD
+        - armory3d/armory
+    extractor: directo
+    frecuencia_horas: 24
+    dominios: [api.github.com, github.com]
+    activa: true
+
+  # ================================================================ F3 · texturas y materiales · F7 · modelos
+
+  - id: polyhaven-texturas
+    nombre: Poly Haven, texturas
+    tipo: catalogo
+    programa: general
+    familia: F3
+    destino: catalogo
+    coleccion: texturas
+    licencia: CC0-1.0
+    licencia_verificada: true
+    condiciones: "API gratis para proyectos no comerciales e investigación (polyhaven.com/our-api). Si Amatista
+      llega a cobrar, pedir licencia a Poly Haven antes de usar la API ahí. Pide un User-Agent propio (lo tiene)."
+    modo: solo_metadatos
+    preguntas: [P2, P3]
+    sensor:
+      tipo: json_api
+      url: "https://api.polyhaven.com/assets?type=textures"
+      titulo: name
+      id: "@clave"
+      url_item: "https://polyhaven.com/a/{id}"
+      campos: [name, categories, tags, max_resolution, date_published, download_count, authors]
+      huella_sin: [download_count]
+    extractor: directo
+    frecuencia_horas: 168
+    dominios: [api.polyhaven.com, polyhaven.com]
+    activa: true
+
+  - id: polyhaven-hdri
+    nombre: Poly Haven, HDRI (iluminación)
+    tipo: catalogo
+    programa: general
+    familia: F3
+    destino: catalogo
+    coleccion: hdri
+    licencia: CC0-1.0
+    licencia_verificada: true
+    condiciones: "Las mismas que polyhaven-texturas."
+    modo: solo_metadatos
+    preguntas: [P2, P3]
+    sensor:
+      tipo: json_api
+      url: "https://api.polyhaven.com/assets?type=hdris"
+      titulo: name
+      id: "@clave"
+      url_item: "https://polyhaven.com/a/{id}"
+      campos: [name, categories, tags, max_resolution, date_published, download_count, authors]
+      huella_sin: [download_count]
+    extractor: directo
+    frecuencia_horas: 168
+    dominios: [api.polyhaven.com, polyhaven.com]
+    activa: true
+
+  - id: polyhaven-modelos
+    nombre: Poly Haven, modelos 3D
+    tipo: catalogo
+    programa: general
+    familia: F7
+    destino: catalogo
+    coleccion: modelos
+    licencia: CC0-1.0
+    licencia_verificada: true
+    condiciones: "Las mismas que polyhaven-texturas."
+    modo: solo_metadatos
+    preguntas: [P2, P3]
+    sensor:
+      tipo: json_api
+      url: "https://api.polyhaven.com/assets?type=models"
+      titulo: name
+      id: "@clave"
+      url_item: "https://polyhaven.com/a/{id}"
+      campos: [name, categories, tags, max_resolution, date_published, download_count, authors, polycount]
+      huella_sin: [download_count]
+    extractor: directo
+    frecuencia_horas: 168
+    dominios: [api.polyhaven.com, polyhaven.com]
+    activa: true
+
+  - id: ambientcg-materiales
+    nombre: ambientCG, materiales
+    tipo: catalogo
+    programa: general
+    familia: F3
+    destino: catalogo
+    coleccion: texturas
+    licencia: CC0-1.0
+    licencia_verificada: true
+    condiciones: "API v2 sin actualizaciones (docs.ambientcg.com); migrar a v3 si deja de responder."
+    modo: solo_metadatos
+    preguntas: [P2, P3]
+    sensor:
+      tipo: json_api
+      url: "https://ambientcg.com/api/v2/full_json?type=Material&sort=Latest&limit=100"
+      items: foundAssets
+      id: assetId
+      titulo: displayName
+      url_item: "https://ambientcg.com/view?id={id}"
+      campos: [assetId, displayName, displayCategory, tags, dataType, releaseDate, downloadCount]
+      huella_sin: [downloadCount]
+    extractor: directo
+    frecuencia_horas: 168
+    dominios: [ambientcg.com]
+    activa: true
+
+  # ================================================================ F1 · telemetría
 
   - id: blender-open-data
-    nombre: Blender Open Data (benchmark)
+    nombre: Blender Open Data (benchmark de render)
     tipo: mediciones
     programa: blender
-    licencia: por_confirmar    # datos abiertos; confirmar la licencia exacta en F0
-    licencia_verificada: false
+    familia: F1
+    destino: telemetria
+    licencia: CC0-1.0
+    licencia_verificada: true
     modo: agregados
     preguntas: [P1, P3]
-    sensor:
-      tipo: pagina
-      url: "https://opendata.blender.org/"
-    extractor: descarga
+    sensor: {tipo: externo}
+    extractor: externo
+    gestor: "g7b_almacen opendata (tarea Warehouse, cada lunes)"
     frecuencia_horas: 168
     dominios: [opendata.blender.org]
-    activa: false
+    activa: true
+
+  - id: sonda-g7b
+    nombre: Sonda de G7B (Blender medido en Actions, Azure, Colab, Camber, Codespaces, PCs y laboratorios)
+    tipo: mediciones
+    programa: blender
+    familia: F1
+    destino: telemetria
+    licencia: propia
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P1, P3, P4]
+    sensor: {tipo: externo}
+    extractor: externo
+    gestor: "sonda (sonda_matriz y Jobs de Azure; lo externo llega por el contenedor entrada)"
+    frecuencia_horas: 168
+    dominios: []
+    activa: true
+
+  - id: caniuse-web3d
+    nombre: Soporte de 3D en navegadores (caniuse)
+    tipo: mediciones
+    programa: web
+    familia: F1
+    destino: telemetria
+    licencia: CC-BY-4.0
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P3]
+    sensor:
+      tipo: json_api
+      url: "https://raw.githubusercontent.com/Fyrd/caniuse/HEAD/fulldata-json/data-2.0.json"
+      items: data
+      id: "@clave"
+      titulo: title
+      url_item: "https://caniuse.com/{id}"
+      solo_ids: [webgl, webgl2, webgpu, webxr, wasm, offscreencanvas]
+      campos: [title, usage_perc_y, usage_perc_a, stats]
+    extractor: directo
+    frecuencia_horas: 168
+    dominios: [raw.githubusercontent.com]
+    activa: true
 
   - id: steam-encuesta-hardware
     nombre: Encuesta de hardware de Steam
     tipo: mediciones
     programa: general
+    familia: F1
+    destino: telemetria
     licencia: derechos_reservados
     licencia_verificada: true
+    revisar: "Condiciones de uso de store.steampowered.com antes de activarla"
     modo: agregados
     preguntas: [P3]
-    sensor:
-      tipo: pagina
-      url: "https://store.steampowered.com/hwsurvey"
+    sensor: {tipo: pagina, url: "https://store.steampowered.com/hwsurvey"}
     extractor: zyte
     zyte: {seguir: false}
     frecuencia_horas: 720
     dominios: [store.steampowered.com]
-    activa: false              # revisar sus condiciones antes de activarla
+    activa: false
+
+  - id: openbenchmarking-blender
+    nombre: OpenBenchmarking.org, prueba pts/blender
+    tipo: mediciones
+    programa: blender
+    familia: F1
+    destino: telemetria
+    licencia: por_confirmar
+    licencia_verificada: false
+    revisar: "Condiciones de uso de los resultados públicos de OpenBenchmarking.org"
+    modo: agregados
+    preguntas: [P1, P3]
+    sensor: {tipo: pagina, url: "https://openbenchmarking.org/test/pts/blender"}
+    extractor: zyte
+    zyte: {seguir: false}
+    frecuencia_horas: 720
+    dominios: [openbenchmarking.org]
+    activa: false
+
+  - id: web3dsurvey
+    nombre: Web3D Survey (soporte de WebGL y WebGPU por dispositivo)
+    tipo: mediciones
+    programa: web
+    familia: F1
+    destino: telemetria
+    licencia: por_confirmar
+    licencia_verificada: false
+    revisar: "Licencia de los datos de web3dsurvey.com"
+    modo: agregados
+    preguntas: [P3]
+    sensor: {tipo: pagina, url: "https://web3dsurvey.com/"}
+    extractor: zyte
+    zyte: {seguir: false}
+    frecuencia_horas: 720
+    dominios: [web3dsurvey.com]
+    activa: false
+
+  - id: gpuinfo-opengl
+    nombre: GPUinfo, capacidades OpenGL por tarjeta
+    tipo: mediciones
+    programa: general
+    familia: F1
+    destino: telemetria
+    licencia: por_confirmar
+    licencia_verificada: false
+    revisar: "Condiciones de uso de opengl.gpuinfo.org (base de datos comunitaria)"
+    modo: agregados
+    preguntas: [P3]
+    sensor: {tipo: pagina, url: "https://opengl.gpuinfo.org/"}
+    extractor: zyte
+    zyte: {seguir: false}
+    frecuencia_horas: 720
+    dominios: [opengl.gpuinfo.org]
+    activa: false
+
+  # ================================================================ F2 · formas optimizadas · F6 · aprendizaje
+
+  - id: sonda-operaciones
+    nombre: Sonda de operaciones (subdividir, simplificar, booleanas, UV, horneado...)
+    tipo: mediciones
+    programa: blender
+    familia: F2
+    destino: telemetria
+    licencia: propia
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P1, P4]
+    sensor: {tipo: externo}
+    extractor: externo
+    gestor: "sonda de operaciones (plan maestro B13; Colab, Camber y Azure → contenedor entrada)"
+    frecuencia_horas: 720
+    dominios: []
+    activa: false              # se enciende cuando exista la sonda de operaciones
+
+  - id: amatista-agregados
+    nombre: Amatista, eventos de práctica agregados (≥5 equipos, con consentimiento)
+    tipo: mediciones
+    programa: blender
+    familia: F6
+    destino: telemetria
+    licencia: propia
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P4]
+    sensor: {tipo: externo}
+    extractor: externo
+    gestor: "traer_amatista.yml (plan maestro B8) desde /api/g7b/v1/agregados"
+    frecuencia_horas: 24
+    dominios: [api.amatista-3d.tech]
+    activa: false              # se enciende cuando Amatista exponga la ruta
