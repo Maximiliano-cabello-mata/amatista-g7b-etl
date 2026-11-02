@@ -9,6 +9,16 @@ GRUPO="${G7B_GRUPO:-g7b}"
 FASE="${G7B_FASE:-laboratorio}"
 ARCHIVO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/g7b-control-privado.bicep"
 
+# La plantilla inicial no representa ACR, logs ni el worker ya configurados.
+# Listar primero: un fallo de permisos debe detenerse, nunca interpretarse como ausencia.
+EXISTENTES=$(az resource list --resource-group "$GRUPO" --resource-type Microsoft.App/managedEnvironments \
+  --query "[?name=='g7b-env-${FASE}-jobs-v3'].name" --output tsv)
+if [[ -n "$EXISTENTES" ]]; then
+  echo 'BLOQUEADO: el entorno v3 ya existe. Esta plantilla inicial no es una actualizacion segura.' >&2
+  echo 'Usar bash infra/azure/revisar_operacion.sh y seguir docs/CIERRE_AZURE.md.' >&2
+  exit 2
+fi
+
 if [[ "${G7B_ROTACION_CONFIRMADA:-no}" != "si" ]]; then
   echo "BLOQUEADO: primero revoca la SAS expuesta y registra la nueva credencial fuera del repositorio." >&2
   exit 2

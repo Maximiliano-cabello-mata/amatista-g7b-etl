@@ -12,7 +12,8 @@ param storageAccountName string
 param stage string = 'laboratorio'
 
 param containerName string = 'lago'
-param location string = resourceGroup().location
+@description('Region explicita del computo; no heredar la region del grupo de recursos.')
+param location string = 'westus2'
 
 @description('Desactivado hasta rotar las credenciales y revisar la facturación.')
 param provisionCompute bool = false

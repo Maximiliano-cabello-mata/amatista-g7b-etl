@@ -1,6 +1,6 @@
 # Centro de Operaciones G7B — Azure y ofertas estudiantiles (arquitectura de ejecución)
 
-**Fecha:** 2026-11-02. **Estado:** laboratorio v3 desplegado; despliegue, RBAC y smoke manual `Succeeded` según logs reportados por el usuario. ETL y acceso efectivo al lago no verificados. [Bitácora y límites de evidencia](bitacoras/2026-11-02.md).
+**Fecha:** 2026-11-02. **Estado:** laboratorio v3 y auditor privado ejecutados con exito segun logs del usuario. Evidencia indirecta de enumeracion de metadatos; falta recuperar salida persistida. ETL no acreditado. Prioridad y procedimiento vigente: [cierre operativo](CIERRE_AZURE.md). [Bitacora](bitacoras/2026-11-02.md).
 **Regla:** las ofertas son capacidades de la fábrica de datos, no nuevas bases de datos arbitrarias.
 
 ## 1. Resultado que debe producir el sistema
@@ -99,11 +99,11 @@ Revisar qué créditos requieren activación manual y si son acumulables.
 - `herramientas/validar_catalogo.py` + `pruebas/test_operacion_azure.py`
   — reglas que impiden asumir conexiones o eludir los límites.
 
-**Importante:** el job de Bicep arranca con una imagen pública de prueba (smoke).
-No ejecutar el worker real hasta crear una imagen PRIVADA en Azure Container
-Registry (ACR) y conceder explícitamente `AcrPull` a su identidad.
-El manifest deja cambiar `workerImage` después; esta fase aún no configura
-ACR ni Log Analytics y, por tanto, no es un Centro de Operaciones completo.
+**Importante:** la plantilla inicial conserva el smoke publico, pero Azure ya
+ejecuta el auditor privado mediante ACR. La plantilla aun no representa ACR,
+registro del Job ni Log Analytics: no usarla para actualizar el entorno actual.
+El script de aprovisionamiento bloquea entornos v3 existentes hasta reconciliar
+estas diferencias. No es aun un Centro de Operaciones completo.
 ACR, Log Analytics y redes privadas pueden generar cargos incluso sin trabajos.
 
 ## 5. Seguimiento del incidente histórico SAS
@@ -128,7 +128,9 @@ export G7B_ROTACION_CONFIRMADA=si
 bash infra/azure/validar_y_aprovisionar.sh
 ```
 
-Esto ejecuta validación sintáctica y `what-if`, **no despliega**. El comando
+Si ya existe el entorno v3, se detiene para evitar regresiones: usar el
+[diagnostico operativo](CIERRE_AZURE.md). Para un entorno nuevo ejecuta
+validación sintáctica y `what-if`, **no despliega**. El comando
 de aprovisionamiento existe detrás de dos confirmaciones de entorno:
 `G7B_APROVISIONAR=si` y `G7B_PRESUPUESTO_REVISADO=si`, además de la
 rotación confirmada. Antes de usarlo revisa los cargos y las cuotas de tu
@@ -158,6 +160,6 @@ No marcar `listo` hasta disponer de evidencia de:
 válida. Se deben medir muestras reales variadas, con licencias, orígenes y
 calidad estadística documentados antes de automatizar recomendaciones.
 
-## Siguiente paso: worker de diagnostico
+## Siguiente paso: cerrar logs y operacion
 
-El procedimiento para publicar la imagen privada, configurar el Job existente y comprobar lectura mediante identidad administrada esta en [WORKER_AZURE.md](WORKER_AZURE.md). Su preparacion y pruebas simuladas no acreditan una ejecucion real en Azure.
+El worker ya se ejecuto segun la evidencia del usuario. Seguir [CIERRE_AZURE.md](CIERRE_AZURE.md) para resolver logs sin lanzar trabajos repetidos. Las pruebas simuladas no acreditan entrega de logs, alertas ni recuperacion en Azure.

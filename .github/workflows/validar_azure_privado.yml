@@ -13,6 +13,9 @@ on:
       - infra/azure/worker/**
       - g7b_ops/**
       - pruebas/test_activar_diagnostico.sh
+      - infra/azure/revisar_operacion.*
+      - pruebas/test_revision_operacion.py
+      - pruebas/test_guardia_aprovisionamiento.sh
   workflow_dispatch:
 
 permissions:
@@ -48,6 +51,9 @@ jobs:
           bash -n infra/azure/diagnosticar_cloud_shell.sh
           bash -n infra/azure/activar_diagnostico.sh
           bash pruebas/test_activar_diagnostico.sh
+          bash -n infra/azure/revisar_operacion.sh
+          python -m unittest discover -s pruebas -p test_revision_operacion.py -v
+          bash pruebas/test_guardia_aprovisionamiento.sh
           python -m compileall -q g7b_ops
           python herramientas/validar_catalogo.py
       - name: Preparar instrucciones
