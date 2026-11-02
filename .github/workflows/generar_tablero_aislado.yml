@@ -3,11 +3,12 @@ name: Generar tablero HTML G7B desde DuckDB verificado
 # Ejecución única en la rama de experimento. La salida es un HTML descargable,
 # no publica datos en GitHub Pages ni modifica Azure.
 on:
+  workflow_dispatch:
   push:
     branches:
       - chatgpt/tablero-g7b-html-20261101
     paths:
-      - .github/workflows/generar_tablero_aislado.yml
+      - docs/ACTIVAR_TABLERO_G7B.txt
 
 permissions:
   contents: read
@@ -18,7 +19,7 @@ jobs:
     environment: amatista1
     timeout-minutes: 10
     env:
-      AZURE_LAGO_URL: \${{ secrets.AZURE_LAGO_URL }}
+      AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
