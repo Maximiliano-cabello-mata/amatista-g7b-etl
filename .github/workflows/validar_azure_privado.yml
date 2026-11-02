@@ -41,6 +41,7 @@ jobs:
         shell: bash
         run: |
           bash -n infra/azure/validar_y_aprovisionar.sh
+          bash -n infra/azure/diagnosticar_cloud_shell.sh
           python herramientas/validar_catalogo.py
       - name: Preparar instrucciones
         run: |
