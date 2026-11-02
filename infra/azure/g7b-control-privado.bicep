@@ -17,6 +17,9 @@ param location string = resourceGroup().location
 @description('Desactivado hasta rotar las credenciales y revisar la facturación.')
 param provisionCompute bool = false
 
+@description('Imagen OCI: por defecto smoke oficial. Para diagnóstico real, usar imagen G7B construida en ACR.')
+param workerImage string = 'mcr.microsoft.com/k8se/quickstart-jobs:latest'
+
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
 }
@@ -70,7 +73,17 @@ resource job 'Microsoft.App/jobs@2024-03-01' = if (provisionCompute) {
       containers: [
         {
           name: 'smoke'
-          image: 'mcr.microsoft.com/k8se/quickstart-jobs:latest'
+          image: workerImage
+          env: [
+            {
+              name: 'AZURE_STORAGE_ACCOUNT_URL'
+              value: 'https://${storageAccountName}.blob.core.windows.net'
+            }
+            {
+              name: 'AZURE_CONTAINER_NAME'
+              value: containerName
+            }
+          ]
           resources: {
             cpu: 0.25
             memory: '0.5Gi'
