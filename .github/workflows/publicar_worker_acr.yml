@@ -44,12 +44,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          SERVIDOR=$(az acr show -n "$ACR" --query loginServer -o tsv)
-          az acr login -n "$ACR" --output none
+          SERVIDOR=g7bacr09b52a0e.azurecr.io
+          az acr login -n "$ACR" -g g7b --output none
           IMAGEN="$SERVIDOR/g7b/auditoria:$GITHUB_SHA"
           docker tag "g7b-worker:$GITHUB_SHA" "$IMAGEN"
           docker push "$IMAGEN"
-          DIGEST=$(az acr repository show -n "$ACR" --image "g7b/auditoria:$GITHUB_SHA" --query digest -o tsv)
+          docker pull "$IMAGEN"
+          REFERENCIA=$(docker image inspect "$IMAGEN" --format '{{index .RepoDigests 0}}')
+          DIGEST="${REFERENCIA##*@}"
           [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
           printf 'Imagen publicada: %s@%s\n\nEtiqueta para Cloud Shell: g7b/auditoria:%s\n' "$SERVIDOR/g7b/auditoria" "$DIGEST" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
       - name: Cerrar sesion
