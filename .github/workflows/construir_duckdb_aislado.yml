@@ -1,0 +1,56 @@
+name: Construir DuckDB aislado desde Blender en Azure
+
+# Una única ejecución al crear el workflow en esta rama experimental.
+# Nunca escribe en bronce/, plata/, oro/ ni publicado/ de producción.
+on:
+  push:
+    branches:
+      - chatgpt/duckdb-azure-aislado-20261101
+    paths:
+      - .github/workflows/construir_duckdb_aislado.yml
+
+permissions:
+  contents: read
+
+jobs:
+  warehouse_aislado:
+    name: Blender Azure -> Parquet + DuckDB aislados
+    runs-on: ubuntu-latest
+    environment: amatista1
+    timeout-minutes: 12
+    env:
+      AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias de G7B
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Comprobar la construcción con pruebas aisladas
+        run: python -m pytest -q pruebas/test_duckdb_azure_aislado.py
+
+      - name: Verificar acceso autorizado al lago de Azure
+        shell: bash
+        run: |
+          if [ -z "$AZURE_LAGO_URL" ]; then
+            echo "::error::Falta AZURE_LAGO_URL en environment amatista1"
+            exit 1
+          fi
+          echo "Credencial de Azure disponible (valor oculto)."
+
+      - name: Construir y comprobar DuckDB con la medición verdadera
+        shell: bash
+        run: |
+          python -m g7b_lago.prueba_duckdb_aislada
+          {
+            echo "## DuckDB G7B: prueba aislada"
+            echo "Origen: \`lago/tmp/pruebas-blender/41379915232-intento1/medicion.json\`"
+            echo "Destino: \`lago/tmp/pruebas-duckdb/${GITHUB_RUN_ID}-intento${GITHUB_RUN_ATTEMPT}/\`"
+            echo "Archivo: \`oro/cubo.duckdb\`"
+            echo "Parquet: \`plata/sonda/medicion.parquet\`"
+            echo "Manifiesto: \`verificacion_duckdb.json\`"
+            echo "Solo se publica si se verifica la calidad y la integridad de los blobs."
+          } >> "$GITHUB_STEP_SUMMARY"
