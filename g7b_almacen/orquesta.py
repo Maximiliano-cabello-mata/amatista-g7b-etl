@@ -18,7 +18,7 @@ fase anterior, con su propio interruptor; aquí se orquesta la columna medición
 import json
 from datetime import datetime, timezone
 
-from . import calidad, cubo, opendata
+from . import calidad, cubo, opendata, publicacion
 
 CONTROL = "control/orquesta.json"
 INGESTA_DIAS = 7       # Open Data se revisa como mucho una vez por semana (publican a diario, no cambia tanto)
@@ -118,6 +118,9 @@ def paso(almacen, sesion=None, ahora=None, salida=print):
     # Fase 3: compuerta de calidad. Decide si el oro es confiable.
     if hay_bronce and (sucio["oro"] or not almacen.existe("oro/calidad.json")):
         reporte = calidad.evaluar(almacen, ahora=ahora)
+        if reporte["aprobado"]:
+            # Solo un snapshot validado puede ser consumido por Amatista.
+            publicacion.publicar(almacen, reporte)
         sucio["oro"] = False
         estado["oro_confiable"] = reporte["aprobado"]
         salida(f"calidad: {'APROBADA' if reporte['aprobado'] else 'NO aprobada'} "
