@@ -1,8 +1,8 @@
 # G7B — Azure 24/7 con crédito estudiantil (Cloud Shell)
 
-**Estado:** runbook de instalación, NO ejecutado en una suscripción real por ChatGPT.
-**Fecha:** 2026-11-01. Revisión necesaria antes de realizar cualquier modificación
-con costos o efectos sobre los conectores existentes.
+**Estado (2026-11-02):** laboratorio v3 y smoke manual completados según logs reportados por el usuario; no ejecutados ni consultados directamente en Azure durante esta revisión. [Bitácora](bitacoras/2026-11-02.md). Este runbook sirve para inspección y cambios posteriores; no requiere repetir el despliegue exitoso.
+
+Entorno vigente: `g7b-env-laboratorio-jobs-v3`, API del entorno `2026-07-01`, `environmentMode: WorkloadProfiles`, perfil `Consumption`. Los intentos v1/v2 fallaron con `ExpressEnvironmentResourceNotSupported` y sus dos entornos Express fueron eliminados, según el usuario. No recrearlos.
 
 ## Qué significa 24/7
 
@@ -53,7 +53,9 @@ correcta usando `az account list -o table` y
 
 ## Paso 2 — Incidente de SAS y continuidad de servicio
 
-La cuenta de almacenamiento de G7B empleó la clave primaria para firmar una
+Estado de la revisión: el run `41381723814` devuelve 404; esto no prueba revocación SAS ni su eliminación. La remediación no está verificada aquí. Revisar evidencia existente antes de repetir acciones de rotación.
+
+Según el reporte histórico, la cuenta de almacenamiento de G7B empleó la clave primaria para firmar una
 SAS que fue visible en un registro público de GitHub Actions. Eliminar el log
 sin revocar la SAS NO es suficiente.
 
@@ -71,8 +73,7 @@ az storage account keys renew \
 ```
 
 **Efecto:** otras SAS y clientes firmados con esa clave dejarán de funcionar.
-Actualizar dependencias y verificar primero operaciones básicas; borrar logs
-del run público `41381723814` y revisar otros registros.
+Si la remediación sigue pendiente, actualizar dependencias y verificar operaciones básicas; revisar otros registros expuestos. El run `41381723814` ya no es accesible en la consulta realizada.
 Nunca ejecutar `az storage account keys list` sin filtrar la salida:
 imprime valores secretos. Preferir identidades administradas y OIDC.
 
@@ -108,8 +109,8 @@ roles, costos y el plan de regiones. La plantilla actual solo crea un
 
 ## Qué sigue
 
-1. Aplicar presupuesto, cuotas y monitoreo.
-2. Remediar la SAS comprometida y pasar servicios a identidad administrada.
+1. Verificar evidencia de presupuesto, cuotas y monitoreo; no confirmados en esta revisión.
+2. Verificar evidencia de revocación SAS y acceso efectivo al lago mediante identidad administrada; no inferirlos del 404 o del smoke.
 3. Crear registro de contenedores privado, publicar worker real de G7B, y
    configurar permisos de lectura y escritura por separado.
 4. Programar extracción y transformación con retención y calidad.
@@ -119,3 +120,19 @@ roles, costos y el plan de regiones. La plantilla actual solo crea un
 
 La iniciativa puede dar cobertura continua de datos sin dejar el procesador
 ocupado de manera continua. Todo lo demás requiere evidencia operativa real.
+
+## Inspección del laboratorio existente (solo lectura)
+
+Estos comandos son de consulta; no se ejecutaron durante la actualización documental:
+
+```bash
+az resource list -g g7b --query "[].{nombre:name,tipo:type}" -o table
+az containerapp env show -g g7b -n g7b-env-laboratorio-jobs-v3 \
+  --query "{estado:properties.provisioningState,modo:properties.environmentMode,perfiles:properties.workloadProfiles}" -o json
+az containerapp job show -g g7b -n g7b-smoke-laboratorio \
+  --query "{estado:properties.provisioningState,entorno:properties.environmentId,trigger:properties.configuration.triggerType}" -o json
+az containerapp job execution list -g g7b -n g7b-smoke-laboratorio \
+  --query "[].{nombre:name,estado:properties.status,inicio:properties.startTime,fin:properties.endTime}" -o table
+```
+
+Referencia histórica: `g7b-smoke-laboratorio-ex51o9l`, `Succeeded`, 2026-11-02 06:09:43–06:10:40 UTC (57 s). Inventario reportado: storage `g7blago09b52a0e`, entorno v3 y Job. Si la ejecución ya no aparece, conservar la distinción entre historial reportado y estado consultado. No deducir acceso al lago, ETL real, presupuesto ni revocación SAS de estas consultas.
