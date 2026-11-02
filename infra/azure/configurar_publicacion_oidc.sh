@@ -4,6 +4,8 @@ set -euo pipefail
 [[ "${1:-}" == --aplicar ]] || { echo 'Uso: bash infra/azure/configurar_publicacion_oidc.sh --aplicar'; exit 2; }
 REPO=Maximiliano-cabello-mata/amatista-g7b-etl
 RAMA=chatgpt/g7b-arquitectura-privada-ofertas-20261101
+# Subject exacto observado en el run 41407548404; GitHub incluye IDs inmutables.
+SUJETO="repo:Maximiliano-cabello-mata@335839614/amatista-g7b-etl@1441384047:ref:refs/heads/$RAMA"
 IDENTIDAD=g7b-github-acr
 ACR=g7bacr09b52a0e
 command -v gh >/dev/null
@@ -22,7 +24,7 @@ az identity create -g g7b -n "$IDENTIDAD" -l westus2 --output none
 CLIENTE=$(az identity show -g g7b -n "$IDENTIDAD" --query clientId -o tsv)
 PRINCIPAL=$(az identity show -g g7b -n "$IDENTIDAD" --query principalId -o tsv)
 TENANT=$(az identity show -g g7b -n "$IDENTIDAD" --query tenantId -o tsv)
-az identity federated-credential create -g g7b --identity-name "$IDENTIDAD" --name github-pr9 --issuer https://token.actions.githubusercontent.com --subject "repo:$REPO:ref:refs/heads/$RAMA" --audiences api://AzureADTokenExchange --output none
+az identity federated-credential create -g g7b --identity-name "$IDENTIDAD" --name github-pr9 --issuer https://token.actions.githubusercontent.com --subject "$SUJETO" --audiences api://AzureADTokenExchange --output none
 az role assignment create --assignee-object-id "$PRINCIPAL" --assignee-principal-type ServicePrincipal --role AcrPush --scope "$ACR_ID" --output none
 gh variable set G7B_AZURE_CLIENT_ID --repo "$REPO" --body "$CLIENTE"
 gh variable set G7B_AZURE_TENANT_ID --repo "$REPO" --body "$TENANT"
