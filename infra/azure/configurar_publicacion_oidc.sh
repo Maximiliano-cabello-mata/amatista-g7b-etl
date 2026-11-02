@@ -26,9 +26,11 @@ PRINCIPAL=$(az identity show -g g7b -n "$IDENTIDAD" --query principalId -o tsv)
 TENANT=$(az identity show -g g7b -n "$IDENTIDAD" --query tenantId -o tsv)
 az identity federated-credential create -g g7b --identity-name "$IDENTIDAD" --name github-pr9 --issuer https://token.actions.githubusercontent.com --subject "$SUJETO" --audiences api://AzureADTokenExchange --output none
 az role assignment create --assignee-object-id "$PRINCIPAL" --assignee-principal-type ServicePrincipal --role AcrPush --scope "$ACR_ID" --output none
+# Azure CLI necesita leer la configuracion ARM del registro para az acr login.
+az role assignment create --assignee-object-id "$PRINCIPAL" --assignee-principal-type ServicePrincipal --role Reader --scope "$ACR_ID" --output none
 gh variable set G7B_AZURE_CLIENT_ID --repo "$REPO" --body "$CLIENTE"
 gh variable set G7B_AZURE_TENANT_ID --repo "$REPO" --body "$TENANT"
 gh variable set G7B_AZURE_SUBSCRIPTION_ID --repo "$REPO" --body "$ACTUAL"
 gh variable set G7B_ACR_OIDC_LISTO --repo "$REPO" --body si
-echo 'OIDC_CONFIGURADO: identidad con AcrPush solo sobre el ACR; no se inicio el Job.'
+echo 'OIDC_CONFIGURADO: identidad con AcrPush y Reader solo sobre el ACR; no se inicio el Job.'
 echo 'Tras propagacion de permisos, publicar con un commit que contenga [publicar-worker].'
