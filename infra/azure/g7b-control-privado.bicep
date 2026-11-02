@@ -85,7 +85,7 @@ resource job 'Microsoft.App/jobs@2024-03-01' = if (provisionCompute) {
             }
           ]
           resources: {
-            cpu: 0.25
+            cpu: json('0.25')
             memory: '0.5Gi'
           }
         }
@@ -101,7 +101,7 @@ resource jobReadAccess 'Microsoft.Authorization/roleAssignments@2022-04-01' = if
   name: guid(blobContainer.id, job.id, blobDataReader)
   scope: blobContainer
   properties: {
-    principalId: job.identity.principalId
+    principalId: job!.identity.principalId
     principalType: 'ServicePrincipal'
     roleDefinitionId: blobDataReader
   }
