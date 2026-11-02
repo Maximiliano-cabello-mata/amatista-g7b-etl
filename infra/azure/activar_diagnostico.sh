@@ -57,7 +57,11 @@ if [[ "$MODO" == --aplicar ]]; then
   mkdir -p "$CONTEXTO/g7b_ops"
   cp "$RAIZ"/g7b_ops/*.py "$CONTEXTO/g7b_ops/"
   cp "$RAIZ/infra/azure/worker/Dockerfile" "$CONTEXTO/Dockerfile"
-  az acr build -r "$G7B_ACR" --image "$TAG" --file Dockerfile "$CONTEXTO" --no-logs -o none
+  # Resolver Dockerfile y contexto desde el mismo directorio, independiente del cwd del usuario.
+  (
+    cd "$CONTEXTO"
+    az acr build -r "$G7B_ACR" --image "$TAG" --file Dockerfile . --no-logs -o none
+  )
   DIGEST=$(az acr repository show -n "$G7B_ACR" --image "$TAG" --query digest -o tsv)
   [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fallar 'No se pudo resolver el digest de la imagen.'
   IMAGEN="$SERVIDOR/g7b/auditoria@$DIGEST"

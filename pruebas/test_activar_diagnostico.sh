@@ -24,7 +24,12 @@ az() {
     'acr show '*'--query roleAssignmentMode'*) echo LegacyRegistryPermissions;;
     'acr config authentication-as-arm show '*) echo enabled;;
     'acr repository show '*) printf 'sha256:%064d\n' 0;;
-    'acr build '*|'role assignment create '*|'containerapp job registry set '*|'containerapp job update '*) :;;
+    'acr build '*)
+      [[ -f Dockerfile && -f g7b_ops/auditoria.py && ! -e .git && ! -e .env ]] || { echo 'Contexto o Dockerfile incorrecto' >&2; return 98; }
+      [[ "$*" == *'--file Dockerfile . --no-logs -o none'* ]] || return 98
+      [[ "${BUILD_FALLA:-no}" != si ]] || { echo 'Build simulado fallido' >&2; return 97; }
+      ;;
+    'role assignment create '*|'containerapp job registry set '*|'containerapp job update '*) :;;
     'containerapp job start '*) echo ejecucion-prueba;;
     'containerapp job execution show '*) echo "${ESTADO_SIMULADO:-Succeeded}";;
     'account show '*|'storage account show '*|'acr list '*) :;;
@@ -66,6 +71,14 @@ git() {
 export -f git
 export G7B_ACR=prueba G7B_SUSCRIPCION=suscripcion-prueba G7B_PRESUPUESTO_REVISADO=si G7B_ROTACION_CONFIRMADA=si
 : > "$REGISTRO"
+if BUILD_FALLA=si bash "$SCRIPT" --aplicar > "$TEMP_PRUEBA/salida" 2>&1; then
+  echo 'Ignoro fallo de build'; exit 1
+fi
+grep -q 'Build simulado fallido' "$TEMP_PRUEBA/salida"
+if grep -Eq 'role assignment create|containerapp job (registry set|update|start)' "$REGISTRO"; then
+  echo 'Modifico permisos o Job despues de fallo de build'; exit 1
+fi
+: > "$REGISTRO"
 bash "$SCRIPT" --aplicar > "$TEMP_PRUEBA/salida"
 grep -q 'CONFIGURADO: prueba.azurecr.io/g7b/auditoria@sha256:' "$TEMP_PRUEBA/salida"
 grep -q 'role assignment create .*--role AcrPull --scope /acr/prueba' "$REGISTRO"
@@ -77,4 +90,4 @@ bash "$SCRIPT" --ejecutar > "$TEMP_PRUEBA/salida"
 grep -q 'Succeeded: recuperar' "$TEMP_PRUEBA/salida"
 if ESTADO_SIMULADO=Failed bash "$SCRIPT" --ejecutar > "$TEMP_PRUEBA/salida" 2>&1; then echo 'Acepto ejecucion fallida'; exit 1; fi
 grep -q 'termino: Failed' "$TEMP_PRUEBA/salida"
-echo '10 pruebas correctas (incluyen API explicita y modo ausente/Express): revision, entorno, suscripcion, presupuesto, aplicar, imagen, exito y fallo.'
+echo '11 pruebas correctas (incluyen contexto Dockerfile, fallo de build y API explicita): revision, entorno, suscripcion, presupuesto, aplicar, imagen, exito y fallo.'
