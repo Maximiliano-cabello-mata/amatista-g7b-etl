@@ -32,8 +32,8 @@ resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/container
   name: containerName
 }
 
-resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = if (provisionCompute) {
-  name: 'g7b-env-${stage}'
+resource environment 'Microsoft.App/managedEnvironments@2026-07-01' = if (provisionCompute) {
+  name: 'g7b-env-${stage}-jobs-v3'
   location: location
   tags: {
     proyecto: 'g7b'
@@ -41,9 +41,13 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = if (provis
     datos: 'privados'
   }
   properties: {
-    appLogsConfiguration: {
-      destination: 'none'
-    }
+    environmentMode: 'WorkloadProfiles'
+    workloadProfiles: [
+      {
+        name: 'Consumption'
+        workloadProfileType: 'Consumption'
+      }
+    ]
   }
 }
 
@@ -77,7 +81,7 @@ resource job 'Microsoft.App/jobs@2024-03-01' = if (provisionCompute) {
           env: [
             {
               name: 'AZURE_STORAGE_ACCOUNT_URL'
-              value: 'https://${storageAccountName}.blob.core.windows.net'
+              value: 'https://${storageAccountName}.blob.${az.environment().suffixes.storage}'
             }
             {
               name: 'AZURE_CONTAINER_NAME'
