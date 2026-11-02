@@ -20,9 +20,13 @@ param provisionCompute bool = false
 resource storage 'Microsoft.Storage/storageAccounts@2023-05-01' existing = {
   name: storageAccountName
 }
-resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = {
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' existing = {
   parent: storage
-  name: 'default/${containerName}'
+  name: 'default'
+}
+resource blobContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' existing = {
+  parent: blobService
+  name: containerName
 }
 
 resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = if (provisionCompute) {
