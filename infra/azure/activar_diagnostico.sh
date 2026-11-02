@@ -12,9 +12,13 @@ fallar() { echo "$*" >&2; exit 2; }
 command -v az >/dev/null || fallar 'Ejecutar en Azure Cloud Shell (Bash), con sesion iniciada.'
 az account show --query '{suscripcion:name,estado:state}' -o table
 az storage account show -g "$GRUPO" -n "$STORAGE" --query '{nombre:name,region:primaryLocation}' -o table
-MODO_ENV=$(az containerapp env show -g "$GRUPO" -n "$ENTORNO" --query properties.environmentMode -o tsv)
-[[ "$MODO_ENV" == WorkloadProfiles ]] || fallar 'El entorno existente no es WorkloadProfiles.'
 ENV_ID=$(az containerapp env show -g "$GRUPO" -n "$ENTORNO" --query id -o tsv)
+[[ -n "$ENV_ID" && "$ENV_ID" != None ]] || fallar 'No se pudo obtener el ID del entorno.'
+# La API usada internamente por az containerapp env show puede omitir environmentMode.
+# Consultar la misma version que la plantilla v3; un campo ausente no prueba modo Express.
+MODO_ENV=$(az rest --method get --url "https://management.azure.com${ENV_ID}?api-version=2026-07-01" --query properties.environmentMode -o tsv)
+[[ -n "$MODO_ENV" && "$MODO_ENV" != None && "$MODO_ENV" != null ]] || fallar 'La API 2026-07-01 no devolvio environmentMode; no se puede validar el modo.'
+[[ "$MODO_ENV" == WorkloadProfiles ]] || fallar "Modo del entorno no compatible: $MODO_ENV; se requiere WorkloadProfiles."
 JOB_ENV=$(az containerapp job show -g "$GRUPO" -n "$JOB" --query properties.environmentId -o tsv)
 [[ "${ENV_ID,,}" == "${JOB_ENV,,}" ]] || fallar 'El Job no apunta al entorno v3 esperado.'
 TRIGGER=$(az containerapp job show -g "$GRUPO" -n "$JOB" --query properties.configuration.triggerType -o tsv)

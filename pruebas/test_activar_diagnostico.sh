@@ -10,7 +10,8 @@ az() {
   printf '%s\n' "$*" >> "$REGISTRO"
   case "$*" in
     'account show --query id -o tsv') echo suscripcion-prueba;;
-    *'--query properties.environmentMode'*) echo WorkloadProfiles;;
+    'containerapp env show '*'--query properties.environmentMode'*) :;; # Reproduce CLI que omite el campo.
+    'rest --method get --url https://management.azure.com/entorno/v3?api-version=2026-07-01 --query properties.environmentMode -o tsv') printf '%s\n' "${MODO_ENV_SIMULADO-WorkloadProfiles}";;
     *'--query properties.environmentId'*) echo "${ENTORNO_SIMULADO:-/entorno/v3}";;
     'containerapp env show '*'--query id'*) echo /entorno/v3;;
     *'--query properties.configuration.triggerType'*) echo Manual;;
@@ -36,6 +37,16 @@ grep -q 'REVISION COMPLETA' "$TEMP_PRUEBA/salida"
 if grep -Eq ' build | update | start | create | set ' "$REGISTRO"; then
   echo 'La revision intento modificar Azure'; exit 1
 fi
+for modo_invalido in '' Express; do
+  if MODO_ENV_SIMULADO="$modo_invalido" bash "$SCRIPT" --revisar > "$TEMP_PRUEBA/salida" 2>&1; then
+    echo 'Acepto modo ausente o Express'; exit 1
+  fi
+  if [[ -z "$modo_invalido" ]]; then
+    grep -q 'no devolvio environmentMode' "$TEMP_PRUEBA/salida"
+  else
+    grep -q 'Modo del entorno no compatible: Express' "$TEMP_PRUEBA/salida"
+  fi
+done
 if ENTORNO_SIMULADO=/otro bash "$SCRIPT" --revisar > "$TEMP_PRUEBA/salida" 2>&1; then
   echo 'No rechazo entorno incorrecto'; exit 1
 fi
@@ -66,4 +77,4 @@ bash "$SCRIPT" --ejecutar > "$TEMP_PRUEBA/salida"
 grep -q 'Succeeded: recuperar' "$TEMP_PRUEBA/salida"
 if ESTADO_SIMULADO=Failed bash "$SCRIPT" --ejecutar > "$TEMP_PRUEBA/salida" 2>&1; then echo 'Acepto ejecucion fallida'; exit 1; fi
 grep -q 'termino: Failed' "$TEMP_PRUEBA/salida"
-echo '8 pruebas correctas: revision, entorno, suscripcion, presupuesto, aplicar, imagen, exito y fallo.'
+echo '10 pruebas correctas (incluyen API explicita y modo ausente/Express): revision, entorno, suscripcion, presupuesto, aplicar, imagen, exito y fallo.'
