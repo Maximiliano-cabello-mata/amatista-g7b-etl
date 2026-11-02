@@ -1,0 +1,4 @@
+# Lo que necesita el warehouse (g7b_almacen): cubo en DuckDB, lectura de Parquet y descargas.
+-r requirements-lago.txt
+duckdb>=1.1,<2
+pyarrow>=16,<21

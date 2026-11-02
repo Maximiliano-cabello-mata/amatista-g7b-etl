@@ -1,0 +1,70 @@
+name: Sonda en matriz (nube)
+
+# Corre la Amatista Sonda en varias arquitecturas de los ejecutores de GitHub (sin GPU), descarga
+# Blender oficial y sube cada medición al lago (bronce/sonda/). Es telemetría de MÁQUINAS, no de
+# personas: hardware y tiempos, nada personal (PLAN 5.2, etapa T2). Gratis en repo público.
+on:
+  schedule:
+    - cron: "11 7 * * 2"   # martes 07:11 UTC
+  workflow_dispatch:
+    inputs:
+      blender:
+        description: "Versión de Blender (serie LTS)"
+        type: choice
+        options: ["5.2", "4.5", "3.6"]
+        default: "5.2"
+      escena:
+        description: "Tamaño de la escena"
+        type: choice
+        options: [ligera, media, pesada]
+        default: media
+
+permissions:
+  contents: read
+
+concurrency:
+  group: sonda-matriz
+  cancel-in-progress: false
+
+env:
+  BLENDER_SERIE: ${{ inputs.blender || '5.2' }}
+  ESCENA: ${{ inputs.escena || 'media' }}
+
+jobs:
+  medir:
+    environment: amatista1
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.G7B_INGESTA_ACTIVA == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { so: ubuntu-latest,  etiqueta: linux-x64 }
+          - { so: ubuntu-24.04-arm, etiqueta: linux-arm64 }
+          - { so: windows-latest, etiqueta: windows-x64 }
+          - { so: macos-latest,   etiqueta: macos-arm64 }
+    runs-on: ${{ matrix.so }}
+    timeout-minutes: 30
+    env:
+      G7B_ORIGEN: actions
+    steps:
+      - uses: actions/checkout@v4
+      - name: Instalar Blender
+        uses: bradyajohnston/setup-blender@v3
+        with:
+          version: ${{ env.BLENDER_SERIE }}
+      - name: Medir (sin ventana; sin GPU en los ejecutores)
+        run: blender -b --factory-startup --python sonda/g7b_sonda.py -- --salida resultados --escena ${{ env.ESCENA }} --sin-render --origen actions
+      - name: Subir al lago
+        if: ${{ env.AZURE_LAGO_URL != '' }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+        shell: bash
+        run: |
+          python -m pip install -r requirements-almacen.txt
+          python -m g7b_almacen sonda resultados
+      - name: Guardar como artefacto (siempre, para revisarlo a mano)
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonda-${{ matrix.etiqueta }}-blender${{ env.BLENDER_SERIE }}
+          path: resultados/*.json
+          if-no-files-found: warn

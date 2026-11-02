@@ -1,0 +1,49 @@
+name: Warehouse (Open Data y cubo)
+
+# Cada semana (y a mano): baja la copia nueva de Blender Open Data a bronce y reconstruye el cubo
+# (plata en Parquet y oro: cubo DuckDB, CSV, resumen y perfiles.json). No enciende máquinas: es una
+# tarea programada. Necesita AZURE_LAGO_URL; sin ella, no corre.
+on:
+  schedule:
+    - cron: "23 8 * * 1"   # Open Data, lunes 08:23 UTC
+    - cron: "53 8 * * 1"   # cubo, 30 min después, para que use la copia recién bajada
+  workflow_dispatch:
+    inputs:
+      orden:
+        description: "Qué correr"
+        type: choice
+        options: [todo, opendata, construir]
+        default: todo
+
+permissions:
+  contents: read
+
+concurrency:
+  group: almacen
+  cancel-in-progress: false
+
+jobs:
+  warehouse:
+    environment: amatista1
+    if: ${{ github.event_name == 'workflow_dispatch' || vars.G7B_INGESTA_ACTIVA == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-almacen.txt
+      - name: Elegir la orden
+        id: que
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            [ "${{ github.event.schedule }}" = "23 8 * * 1" ] && echo "orden=opendata" >> "$GITHUB_OUTPUT" || echo "orden=construir" >> "$GITHUB_OUTPUT"
+          else
+            echo "orden=${{ inputs.orden }}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Correr
+        run: python -m g7b_almacen ${{ steps.que.outputs.orden }}

@@ -69,3 +69,36 @@ Fecha: 2026-11-01. Qué servicio cumple cada papel, cuándo activarlo y qué no 
 | **Campus Experts** | Respaldo para las pláticas en la universidad (etapa T3) | **Postularse pronto** |
 
 Las máquinas con GPU de GitHub no vienen en el plan Pro: para GPU se usan Colab y Camber. Los límites exactos (horas de Codespaces, tamaño de los archivos de Releases) se confirman al configurar cada cosa.
+
+## 4. ¿Cuánto dura el «24/7»? (añadido 2026-11-02)
+
+«Operar 24/7» no significa máquinas encendidas todo el tiempo. El warehouse y la ingesta son **tareas programadas** más **almacenamiento gratuito**: eso corre de forma continua, por años, a costo casi cero. Lo único que gasta crédito mientras está encendido es una API siempre disponible o una GPU. Separado así:
+
+### Lo que es 24/7 gratis y no vence (la base del warehouse)
+
+| Pieza | Servicio | Límite real | Dura |
+|---|---|---|---|
+| Reloj y tareas (Open Data, cubo, sonda, ingesta) | GitHub Actions | Minutos **ilimitados** en repo público | Mientras el repo sea público |
+| Conocimiento (oro) | MongoDB Atlas M0 | 512 MB, gratis para siempre | Indefinido (los $50 se guardan) |
+| Lago (bronce y plata) | Azure Blob | Unos centavos al mes con los $100 | Años: el crédito apenas se toca sin cómputo |
+| Cubo y Parquet | DuckDB + Blob | Gratis (sin servidor de base de datos) | Indefinido |
+| Secretos, vigilancia | Doppler, Sentry | Gratis / 1 año renovable | — |
+| Tablero | GitHub Pages | Gratis | — |
+
+**Conclusión: el Data Warehouse y el ETLT pueden estar activos de forma continua, por años, a ~0 pesos**, porque no hay máquina encendida: hay tareas que corren y se apagan.
+
+### Lo que sí consume crédito encendido (solo cuando toca)
+
+| Pieza | Oferta | Cuánto da | Cómo estirarlo |
+|---|---|---|---|
+| API de G7B y servidor MCP (siempre disponible) | Heroku ($13/mes × 24 meses del pack) | **24 meses** de una API pequeña encendida | Encenderla en F2/F4, no antes; mientras, el cubo vive en archivos |
+| Procesamiento pesado / vectores (GPU) | Camber | 40 h CPU + 5 h GPU **cada mes** | Por ráfagas; no conectado 24/7 |
+| GPU de gama alta para la sonda | Google Colab (~200 créditos) | Minutos por corrida | Corridas planeadas (simulaciones), no sesiones abiertas |
+| Semana de benchmarks en varias máquinas | VS Dev Essentials ($200 Azure, **solo 1 mes**) | ~1 semana intensa | Planear la semana antes de activarlo |
+| Más Azure | Azure for Students ($100) | Lago por años, o cómputo por ráfagas | No dejar máquinas encendidas |
+
+Las simulaciones de Blender en Colab (distintos entornos, para asemejar equipos) van por aquí: **no conectadas al warehouse en vivo**, sino subiendo su JSON al lago cuando terminan, igual que la sonda en la matriz de Actions.
+
+### Regla para que nada venza sin usarse
+
+Encender cada oferta **solo cuando una fase la necesita**: hoy, nada de Heroku ni Camber. El 24/7 real de arrancar ya —tareas programadas y almacenamiento— no gasta ninguno de los créditos que vencen.

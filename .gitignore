@@ -32,3 +32,6 @@ Thumbs.db
 .vscode/
 research_notes/
 reports/
+
+# Warehouse local (python -m g7b_almacen --carpeta datos)
+datos/

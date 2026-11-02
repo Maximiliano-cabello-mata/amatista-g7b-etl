@@ -22,6 +22,7 @@ Opciones después de ``--``:
     --sin-render       omite las pruebas de render
     --rapida           escena ligera, perfil ligero y una repetición
     --salir            cierra Blender al terminar (modo con ventana)
+    --origen ORIGEN    pc | actions | colab | azure | laboratorio (por omisión: G7B_ORIGEN o pc)
 
 Privacidad: no guarda nombre de usuario, nombre del equipo, rutas ni
 contenido personal. La huella del equipo es un resumen (hash) del modelo de
@@ -44,7 +45,7 @@ import bpy  # antes que bmesh: con Blender como módulo, bmesh existe solo despu
 import bmesh
 
 CONTRATO = "g7b.medicion/1"
-VERSION_SONDA = "0.1.0"
+VERSION_SONDA = "0.2.0"
 
 # Tamaño de la escena: es la carga de trabajo, igual en todas las computadoras.
 ESCENAS = {
@@ -59,6 +60,9 @@ PERFILES = {
     "ligero": {"subsurf": 1, "simplify": False, "muestras": 16, "res_pct": 75},
     "completo": {"subsurf": 2, "simplify": False, "muestras": 64, "res_pct": 100},
 }
+
+# Dónde corrió la sonda: el cubo separa tus PCs de la nube (dim_origen).
+ORIGENES = ("pc", "actions", "colab", "azure", "laboratorio")
 
 TIPOS_GPU_CYCLES = ("OPTIX", "CUDA", "HIP", "METAL", "ONEAPI")
 
@@ -433,6 +437,7 @@ def correr(opciones, ruta=None):
         "fecha": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "sintetico": False,
         "completa": False,
+        "origen": opciones.origen,
         "blender": {"version": bpy.app.version_string, "hash": bpy.app.build_hash.decode(errors="replace"),
                     "sin_ventana": bool(bpy.app.background)},
         "equipo": huella_equipo(opciones.nivel),
@@ -494,6 +499,7 @@ def leer_opciones(argv):
     p.add_argument("--sin-render", action="store_true")
     p.add_argument("--rapida", action="store_true")
     p.add_argument("--salir", action="store_true")
+    p.add_argument("--origen", choices=ORIGENES, default=os.environ.get("G7B_ORIGEN", "pc"))
     opciones = p.parse_args(argv)
     desconocidos = set(opciones.perfiles) - set(PERFILES)
     if desconocidos:
