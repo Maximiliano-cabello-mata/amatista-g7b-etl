@@ -2,6 +2,9 @@
 
 Fecha: 2026-11-01. Documento rector de este repositorio. Si otro documento contradice este, manda este. Reemplaza las fases A, B y C de [ARQUITECTURA_CLOUD.md](../ARQUITECTURA_CLOUD.md), que se conserva como historia del primer despliegue.
 
+
+> **2026-11-02:** el orden de trabajo y la configuración de cada servicio están ahora en el [plan maestro](PLAN_MAESTRO.md), que manda sobre este documento donde difieran.
+
 ## 0. Rumbo actualizado (2026-11-01, tarde)
 
 Después de la primera corrida real, el proyecto cambió de prioridad. **Esta sección manda sobre el orden de las fases** de la sección 10; el resto del plan sigue vigente.
