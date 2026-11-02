@@ -12,6 +12,7 @@ HORARIOS = {
     "g7b-opendata": "23 8 * * 1",
     "g7b-cubo": "53 8 * * 1",
     "g7b-sonda-matriz": "11 7 * * 2",
+    "g7b-latido": "0 * * * *",
 }
 
 

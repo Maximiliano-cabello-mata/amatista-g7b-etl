@@ -73,3 +73,41 @@ El warehouse no necesita una máquina encendida. Son tareas que corren solas y s
 | vigilar · zyte_a_lago · procesar | Ya existían | Ingesta de texto, apagada por el interruptor `G7B_INGESTA_ACTIVA` |
 
 Con Sentry (`SENTRY_DSN`), cada tarea avisa si deja de correr. El detalle de cuánto tiempo aguanta cada oferta está en [OFERTAS_Y_GITHUB.md](OFERTAS_Y_GITHUB.md), sección «¿Cuánto dura el 24/7?».
+
+## 8. Calidad por compuertas y el latido 24/7
+
+Añadido 2026-11-02. Cómo aseguran las empresas grandes que los datos lleguen limpios, y cómo lo hacemos nosotros con el mismo principio pero gratis.
+
+### Cómo lo hace la industria (y dónde está en G7B)
+
+| Práctica de la industria | Qué es | Dónde vive en G7B |
+|---|---|---|
+| **Contratos de datos** | Cada dato cumple un esquema con versión; lo que no cumple, se rechaza | Contratos `g7b.*/1`; se validan al leer |
+| **Arquitectura medallón** (bronce/plata/oro) | Guardar el crudo y refinar por capas, sin perder el origen | `bronce/` → `plata/` → `oro/` en el lago |
+| **Expectativas de calidad** (Great Expectations, tests de dbt) | Reglas que los datos deben cumplir, medidas en cada corrida | `g7b_almacen/calidad.py` |
+| **Compuerta de calidad** (quality gate) | No se promueve a «bueno» lo que no pasa las reglas | La fase `calidad` del orquestador; si algo falla, el oro no se marca confiable |
+| **Orquestación por fases** (Airflow, Dagster) | Un paso corre, termina, y dispara el siguiente | `g7b_almacen/orquesta.py` + el latido |
+| **ELT idempotente** | Reprocesar sin volver a extraer; correr dos veces da lo mismo | El cubo se reconstruye entero desde bronce |
+| **Observabilidad** | Avisar cuando una tarea deja de correr o la calidad baja | Sentry (monitores) + `oro/calidad.json` |
+| **Sin datos personales** | Minimizar y separar lo identificable | Nada personal entra a G7B; solo agregados con consentimiento |
+
+### Las compuertas (`calidad.py`)
+
+Antes de dar el oro por bueno, se corren expectativas sobre el cubo: contrato de los perfiles, volumen, frescura de Open Data, sin duplicados, sin nulos en las claves, fps dentro de rango, que no haya datos sintéticos, un perfil por nivel, y cuánta medición quedó inestable. Cada una pasa (`ok`), avisa (`aviso`) o falla (`falla`); la compuerta se **aprueba** solo si ninguna falla, y todo queda en `oro/calidad.json` para el tablero de salud.
+
+### El latido (`orquesta.py`)
+
+Trabaja 24/7 pero **por pasos**, no todo de un golpe. Cada hora, el latido avanza una sola fase:
+
+```text
+ingesta ──► cubo ──► calidad (compuerta) ──► oro confiable
+```
+
+Cada fase se enciende solo cuando tiene trabajo y se apaga pasando el turno. El estado vive en `control/orquesta.json`, así el proceso se para y sigue sin perder el hilo y nunca rehace lo que ya está al día. Si la ingesta falla (sin red), se hace a un lado un rato para no frenar el cubo ni la compuerta con los datos que ya hay.
+
+```bash
+python -m g7b_almacen calidad   # corre solo la compuerta
+python -m g7b_almacen latido    # avanza un paso del pipeline
+```
+
+El análisis del resultado (ciencia de datos) entra por [analisis/](../analisis/README.md): el cubo se abre en Deepnote, Excel o Camber, todos leyendo el mismo `oro/cubo.duckdb`.

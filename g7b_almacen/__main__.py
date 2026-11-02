@@ -4,6 +4,8 @@
     python -m g7b_almacen construir           plata y oro (cubo, CSV, resumen, perfiles.json)
     python -m g7b_almacen todo                las dos cosas, en ese orden
     python -m g7b_almacen sonda RESULTADOS    agrega mediciones de la sonda a bronce/sonda/
+    python -m g7b_almacen calidad             corre la compuerta de calidad sobre el cubo
+    python -m g7b_almacen latido              avanza el orquestador un paso (ingesta/cubo/calidad)
 
 Sin ``--carpeta`` trabaja contra el lago de Azure (AZURE_LAGO_URL). Con ``--carpeta datos`` trabaja
 en una carpeta local con la misma estructura: sirve en tu PC y en Deepnote, sin nube.
@@ -15,7 +17,7 @@ import os
 import sys
 
 from . import almacen as alm
-from . import cubo, opendata, plata, vigia
+from . import calidad, cubo, opendata, orquesta, plata, vigia
 
 
 def agregar_sonda(almacen, carpeta, salida=print):
@@ -44,7 +46,7 @@ def agregar_sonda(almacen, carpeta, salida=print):
 def main(argv=None):
     p = argparse.ArgumentParser(prog="g7b_almacen", description=__doc__,
                                 formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("orden", choices=["opendata", "construir", "todo", "sonda"])
+    p.add_argument("orden", choices=["opendata", "construir", "todo", "sonda", "calidad", "latido"])
     p.add_argument("resultados", nargs="?", default="resultados", help="carpeta con JSON de la sonda (orden sonda)")
     p.add_argument("--carpeta", help="almacén local en lugar del lago de Azure")
     p.add_argument("--url", help="enlace directo a la copia de Open Data (si la página cambia)")
@@ -54,7 +56,17 @@ def main(argv=None):
     if opciones.orden == "sonda":
         if not os.path.isdir(opciones.resultados):
             sys.exit(f"No existe la carpeta {opciones.resultados}")
-        print(json.dumps(agregar_sonda(almacen, opciones.resultados), ensure_ascii=False))
+        resumen = agregar_sonda(almacen, opciones.resultados)
+        if resumen["agregadas"]:
+            orquesta.marcar_bronce(almacen)  # hay crudo nuevo: el próximo latido reconstruye el cubo
+        print(json.dumps(resumen, ensure_ascii=False))
+        return
+    if opciones.orden == "calidad":
+        print(json.dumps(calidad.evaluar(almacen), ensure_ascii=False))
+        return
+    if opciones.orden == "latido":
+        with vigia.monitor("g7b-latido"):
+            print(json.dumps(orquesta.paso(almacen), ensure_ascii=False, default=str))
         return
     if opciones.orden in ("opendata", "todo"):
         with vigia.monitor("g7b-opendata"):
