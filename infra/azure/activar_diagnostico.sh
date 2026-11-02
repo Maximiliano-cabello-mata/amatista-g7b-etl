@@ -51,6 +51,10 @@ if [[ "$MODO" == --aplicar ]]; then
   [[ -z "$(git -C "$RAIZ" status --porcelain --untracked-files=normal)" ]] || fallar 'Usa un checkout limpio; conserva copias .bak fuera del repositorio.'
   REV=$(git -C "$RAIZ" rev-parse HEAD)
   TAG="g7b/auditoria:$REV"
+  if [[ -n "${G7B_IMAGEN_EXISTENTE:-}" ]]; then
+    [[ "$G7B_IMAGEN_EXISTENTE" =~ ^g7b/auditoria:[a-f0-9]{40}$ ]] || fallar 'Usa la etiqueta g7b/auditoria:COMMIT de la publicacion aprobada.'
+    TAG="$G7B_IMAGEN_EXISTENTE"
+  else
   # Contexto minimo: nunca enviar .git, .env, backups ni archivos del lago a ACR.
   CONTEXTO=$(mktemp -d)
   trap 'rm -rf -- "$CONTEXTO"' EXIT
@@ -62,6 +66,7 @@ if [[ "$MODO" == --aplicar ]]; then
     cd "$CONTEXTO"
     az acr build -r "$G7B_ACR" --image "$TAG" --file Dockerfile . --no-logs -o none
   )
+  fi
   DIGEST=$(az acr repository show -n "$G7B_ACR" --image "$TAG" --query digest -o tsv)
   [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]] || fallar 'No se pudo resolver el digest de la imagen.'
   IMAGEN="$SERVIDOR/g7b/auditoria@$DIGEST"

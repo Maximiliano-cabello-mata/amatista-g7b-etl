@@ -90,4 +90,12 @@ bash "$SCRIPT" --ejecutar > "$TEMP_PRUEBA/salida"
 grep -q 'Succeeded: recuperar' "$TEMP_PRUEBA/salida"
 if ESTADO_SIMULADO=Failed bash "$SCRIPT" --ejecutar > "$TEMP_PRUEBA/salida" 2>&1; then echo 'Acepto ejecucion fallida'; exit 1; fi
 grep -q 'termino: Failed' "$TEMP_PRUEBA/salida"
-echo '11 pruebas correctas (incluyen contexto Dockerfile, fallo de build y API explicita): revision, entorno, suscripcion, presupuesto, aplicar, imagen, exito y fallo.'
+unset IMAGEN_SIMULADA
+: > "$REGISTRO"
+G7B_IMAGEN_EXISTENTE="g7b/auditoria:$(printf '%040d' 2)" bash "$SCRIPT" --aplicar > "$TEMP_PRUEBA/salida"
+grep -q CONFIGURADO "$TEMP_PRUEBA/salida"
+if grep -q 'acr build' "$REGISTRO"; then echo 'Reconstruyo una imagen existente'; exit 1; fi
+if G7B_IMAGEN_EXISTENTE='otro:latest' bash "$SCRIPT" --aplicar > "$TEMP_PRUEBA/salida" 2>&1; then
+  echo 'Acepto etiqueta no aprobada'; exit 1
+fi
+echo '13 pruebas correctas (incluyen contexto Dockerfile, fallo de build y API explicita): revision, entorno, suscripcion, presupuesto, aplicar, imagen, exito y fallo.'

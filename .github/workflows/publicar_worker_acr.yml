@@ -1,0 +1,59 @@
+name: Publicar worker G7B en ACR
+on:
+  push:
+    branches: [chatgpt/g7b-arquitectura-privada-ofertas-20261101]
+permissions:
+  contents: read
+concurrency:
+  group: publicar-worker-g7b
+  cancel-in-progress: false
+jobs:
+  publicar:
+    if: vars.G7B_ACR_OIDC_LISTO == 'si' && contains(github.event.head_commit.message, '[publicar-worker]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ACR: g7bacr09b52a0e
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Comprobar worker y procedimiento
+        run: |
+          python -m compileall -q g7b_ops
+          bash pruebas/test_activar_diagnostico.sh
+      - name: Construir localmente en el runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONTEXTO=$(mktemp -d)
+          mkdir -p "$CONTEXTO/g7b_ops"
+          cp g7b_ops/*.py "$CONTEXTO/g7b_ops/"
+          cp infra/azure/worker/Dockerfile "$CONTEXTO/Dockerfile"
+          docker build --platform linux/amd64 -t "g7b-worker:$GITHUB_SHA" "$CONTEXTO"
+          docker run --rm --entrypoint python "g7b-worker:$GITHUB_SHA" -c "from azure.identity import ManagedIdentityCredential; from g7b_ops.auditoria import validar_configuracion; validar_configuracion({'AZURE_STORAGE_ACCOUNT_URL':'https://g7blago09b52a0e.blob.core.windows.net','AZURE_CONTAINER_NAME':'lago'})"
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.G7B_AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.G7B_AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.G7B_AZURE_SUBSCRIPTION_ID }}
+      - name: Publicar imagen privada y registrar digest
+        shell: bash
+        run: |
+          set -euo pipefail
+          SERVIDOR=$(az acr show -n "$ACR" --query loginServer -o tsv)
+          az acr login -n "$ACR" --output none
+          IMAGEN="$SERVIDOR/g7b/auditoria:$GITHUB_SHA"
+          docker tag "g7b-worker:$GITHUB_SHA" "$IMAGEN"
+          docker push "$IMAGEN"
+          DIGEST=$(az acr repository show -n "$ACR" --image "g7b/auditoria:$GITHUB_SHA" --query digest -o tsv)
+          [[ "$DIGEST" =~ ^sha256:[a-f0-9]{64}$ ]]
+          printf 'Imagen publicada: %s@%s\n\nEtiqueta para Cloud Shell: g7b/auditoria:%s\n' "$SERVIDOR/g7b/auditoria" "$DIGEST" "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+      - name: Cerrar sesion
+        if: always()
+        run: |
+          docker logout g7bacr09b52a0e.azurecr.io || true
+          az logout || true

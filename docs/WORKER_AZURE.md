@@ -121,3 +121,7 @@ Referencias oficiales consultadas para los comandos:
 - [Registro del Job e identidad](https://learn.microsoft.com/en-us/cli/azure/containerapp/job/registry?view=azure-cli-latest)
 - [Actualizar e iniciar Jobs](https://learn.microsoft.com/en-us/cli/azure/containerapp/job?view=azure-cli-latest)
 - [Imagen privada con identidad administrada](https://learn.microsoft.com/en-us/azure/container-apps/managed-identity-image-pull)
+
+## Si ACR Tasks no esta permitido
+
+Ante `TasksOperationsNotAllowed`, usar [publicacion desde GitHub con OIDC](PUBLICAR_WORKER_OIDC.md). Esta alternativa conserva el ACR y permite configurar el Job con `G7B_IMAGEN_EXISTENTE`, sin volver a invocar ACR Tasks.
