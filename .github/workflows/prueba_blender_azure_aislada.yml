@@ -1,0 +1,80 @@
+name: Prueba aislada Blender hacia Azure
+
+# Experimento explícito: una ejecución automática cuando se crea este workflow
+# en la rama de prueba, y ningún cron. Blender corre en GitHub Actions; Azure solo almacena.
+on:
+  push:
+    branches:
+      - chatgpt/prueba-blender-azure-aislada-20261101
+    paths:
+      - .github/workflows/prueba_blender_azure_aislada.yml
+
+permissions:
+  contents: read
+
+jobs:
+  blender_a_azure:
+    name: Blender CPU -> tmp/pruebas-blender (Azure)
+    runs-on: ubuntu-latest
+    environment: amatista1
+    timeout-minutes: 12
+    env:
+      AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Revisar disponibilidad de acceso al lago
+        shell: bash
+        run: |
+          if [ -z "$AZURE_LAGO_URL" ]; then
+            echo "::error::Falta AZURE_LAGO_URL en el environment amatista1."
+            exit 1
+          fi
+          echo "Se encontró la configuración del lago (valor oculto)."
+
+      - name: Instalar Blender 4.5.15 oficial
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libgl1 libx11-6 libxi6 libxrender1 libxxf86vm1 libxfixes3 libsm6 libxkbcommon0 libegl1 libopengl0 libxrandr2 libxcursor1 libxinerama1
+          curl -fL --retry 3 --connect-timeout 30 --max-time 180 \
+            -o blender.tar.xz \
+            https://download.blender.org/release/Blender4.5/blender-4.5.15-linux-x64.tar.xz
+          tar -xJf blender.tar.xz
+          ./blender-4.5.15-linux-x64/blender -b --factory-startup \
+            --python-expr "import bpy; print('G7B_BLENDER_OK', bpy.app.version_string)"
+
+      - name: Ejecutar sonda real sin render (límite cinco minutos)
+        shell: bash
+        run: |
+          mkdir -p resultados
+          timeout -s TERM -k 10s 300s \
+            ./blender-4.5.15-linux-x64/blender -b --factory-startup \
+            --python sonda/g7b_sonda.py -- \
+            --salida resultados \
+            --escena ligera --perfiles minimo,ligero \
+            --repeticiones 3 --sin-render --origen actions
+          ls -lh resultados/medicion_*.json
+
+      - name: Instalar cliente de Azure Blob
+        run: python -m pip install "azure-storage-blob>=12.20,<13"
+
+      - name: Subir y verificar solamente en tmp/pruebas-blender/
+        shell: bash
+        run: |
+          python -m g7b_lago.prueba_blender_aislada
+          echo "## Resultado de la prueba G7B" >> "$GITHUB_STEP_SUMMARY"
+          echo "Ruta de Azure: \`lago/tmp/pruebas-blender/${GITHUB_RUN_ID}-intento${GITHUB_RUN_ATTEMPT}/\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Archivos: \`medicion.json\` y \`verificacion.json\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "Integridad: comprobada descargando los blobs tras subirlos." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Conservar la medición como respaldo del experimento
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g7b-blender-aislado-${{ github.run_id }}
+          path: resultados/medicion_*.json
+          if-no-files-found: warn
