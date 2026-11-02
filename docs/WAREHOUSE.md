@@ -40,6 +40,8 @@ Dos tablas de hechos y seis dimensiones, en DuckDB (PLAN 7.4):
 
 Dimensiones: `dim_dispositivo` (clase: cpu, gpu_integrada, gpu_dedicada; y nivel N0–N4 para la sonda), `dim_version` (con marca LTS), `dim_escena`, `dim_perfil`, `dim_origen` (tus PCs, Actions, Colab, Azure, laboratorio) y `dim_tiempo`.
 
+El `resumen.json` para el tablero junta las **dos mitades** del proyecto: las mediciones (sonda y Open Data) y el **conocimiento** (documentos del embudo de texto, que ya funcionaba): lee `control/embudo.json` y `control/procesados.json` tal como los dejó `g7b_ingesta/procesar.py`, sin re-procesar ni tocar MongoDB. Si la ingesta de texto está apagada, ese bloque va en ceros.
+
 Vistas listas para leer: `v_render_por_clase`, `v_medicion_por_nivel`, `v_salud` (cuántas filas por calidad) y `v_equipos_sonda`. Se exportan a CSV para abrirlas en Excel con tablas dinámicas, y el cubo entero (`oro/cubo.duckdb`) se abre en Deepnote con una línea de SQL.
 
 ## 4. Calidad: qué dato cuenta

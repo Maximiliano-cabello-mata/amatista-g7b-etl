@@ -147,6 +147,29 @@ def test_construir_cubo_y_perfiles(almacen):
     resumen = json.loads(almacen.leer("oro/resumen.json"))
     assert resumen["perfiles"] == 2 and resumen["render_por_clase"] == []  # menos de 20 renders por celda
     assert any(e["nivel"] == "N2" for e in resumen["equipos_sonda"])
+    # Sin ingesta de texto corrida, el bloque de conocimiento existe y está en ceros (no falla).
+    assert resumen["conocimiento"]["ingesta_activa"] is False
+    assert resumen["conocimiento"]["documentos_aceptados"] == 0
+
+
+def test_resumen_une_conocimiento_ya_existente(almacen):
+    """El warehouse integra lo que el embudo (ya funcionando) dejó en control/, sin re-procesar."""
+    from g7b_almacen import conocimiento
+
+    almacen.escribir("control/embudo.json", json.dumps({
+        "blender_manual": {"aceptado:valor": 40, "rechazado:calidad": 5, "revision:valor": 2},
+        "arxiv": {"aceptado:valor": 8, "rechazado:relevancia": 10},
+    }).encode())
+    almacen.escribir("control/procesados.json", json.dumps({"bronce/zyte/a/x.jsonl.gz": {}}).encode())
+    datos = conocimiento.resumen(almacen)
+    assert datos["ingesta_activa"] is True and datos["documentos_aceptados"] == 48
+    assert datos["estados"] == {"aceptado": 48, "revision": 2, "rechazado": 15}
+    assert datos["archivos_bronce_procesados"] == 1
+    manual = next(f for f in datos["por_fuente"] if f["fuente"] == "blender_manual")
+    assert manual == {"fuente": "blender_manual", "aceptado": 40, "revision": 2, "rechazado": 5}
+
+    cubo.construir(almacen, salida=lambda *_: None, ahora=AHORA)
+    assert json.loads(almacen.leer("oro/resumen.json"))["conocimiento"]["documentos_aceptados"] == 48
 
 
 def test_construir_sin_datos(tmp_path):

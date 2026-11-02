@@ -22,7 +22,7 @@ from datetime import datetime, timezone
 
 import duckdb
 
-from . import opendata, perfiles, plata
+from . import conocimiento, opendata, perfiles, plata
 
 LTS = {"2.83", "2.93", "3.3", "3.6", "4.2", "4.5", "5.2"}
 
@@ -183,7 +183,7 @@ def _filas(con, sql, limite=None):
             for fila in cursor.fetchall()]
 
 
-def resumen(con, ahora):
+def resumen(con, ahora, almacen=None):
     conteos = con.execute("""
         SELECT (SELECT count(*) FROM hechos_render), (SELECT count(*) FROM dim_dispositivo WHERE fuente='opendata'),
                (SELECT count(DISTINCT medicion_id) FROM hechos_medicion),
@@ -201,6 +201,7 @@ def resumen(con, ahora):
         "equipos_sonda": _filas(con, "SELECT nivel, nombre, so, arquitectura, corridas, origenes "
                                      "FROM v_equipos_sonda", 200),
         "salud": _filas(con, "SELECT * FROM v_salud"),
+        "conocimiento": conocimiento.resumen(almacen) if almacen is not None else {},
         "fuentes": [{"nombre": "Blender Open Data", "url": "https://opendata.blender.org/",
                      "licencia": opendata.LICENCIA},
                     {"nombre": "g7b-sonda", "url": "https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/"
@@ -230,7 +231,7 @@ def construir(almacen, salida=print, ahora=None):
             errores = perfiles.validar(documento)
             if errores:
                 raise ValueError(f"perfiles.json no cumple {perfiles.CONTRATO}: {errores}")
-            datos_resumen = resumen(con, ahora)
+            datos_resumen = resumen(con, ahora, almacen)
             datos_resumen["perfiles"] = len(documento["perfiles"])
 
             archivos = {}
