@@ -64,9 +64,10 @@ def main():
     except ValueError as exc:
         print(f"Configuración inválida: {exc}", file=sys.stderr)
         return 2
-    from azure.identity import DefaultAzureCredential
+    from azure.identity import ManagedIdentityCredential
     from azure.storage.blob import BlobServiceClient
-    identidad = DefaultAzureCredential(exclude_interactive_browser_credential=True)
+    # La prueba debe acreditar la identidad del Job, no otra credencial ambiental.
+    identidad = ManagedIdentityCredential()
     cliente = BlobServiceClient(account_url=url, credential=identidad)
     resultado = auditar(cliente, contenedor)
     print("G7B_AZURE_DIAGNOSTICO", json.dumps(resultado, ensure_ascii=False, sort_keys=True))

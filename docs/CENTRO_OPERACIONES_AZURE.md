@@ -91,7 +91,7 @@ Revisar qué créditos requieren activación manual y si son acumulables.
   confirma rotación de credenciales y presupuesto; ejecuta `az bicep build`
   y `az deployment group what-if` antes de ofrecer aprovisionamiento.
 - `g7b_ops/auditoria.py` — diagnóstico read-only basado en
-  `DefaultAzureCredential`, exclusivamente cuenta objetos/tamaños por zona;
+  `ManagedIdentityCredential`, exclusivamente cuenta objetos/tamaños por zona;
   rechaza credenciales SAS o cadenas de conexión y no recupera contenidos.
 - `infra/azure/worker/Dockerfile` — worker ejecutado sin usuario root y sin
   puerto HTTP; se construye localmente con `docker build -f ... .`.
@@ -157,3 +157,7 @@ No marcar `listo` hasta disponer de evidencia de:
 **Regla de producción:** una prueba verde no representa una decisión científica
 válida. Se deben medir muestras reales variadas, con licencias, orígenes y
 calidad estadística documentados antes de automatizar recomendaciones.
+
+## Siguiente paso: worker de diagnostico
+
+El procedimiento para publicar la imagen privada, configurar el Job existente y comprobar lectura mediante identidad administrada esta en [WORKER_AZURE.md](WORKER_AZURE.md). Su preparacion y pruebas simuladas no acreditan una ejecucion real en Azure.

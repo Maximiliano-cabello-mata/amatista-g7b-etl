@@ -9,6 +9,10 @@ on:
       - infra/azure/g7b-control-privado.bicep
       - infra/azure/validar_y_aprovisionar.sh
       - infra/ofertas/catalogo.json
+      - infra/azure/activar_diagnostico.sh
+      - infra/azure/worker/**
+      - g7b_ops/**
+      - pruebas/test_activar_diagnostico.sh
   workflow_dispatch:
 
 permissions:
@@ -42,6 +46,9 @@ jobs:
         run: |
           bash -n infra/azure/validar_y_aprovisionar.sh
           bash -n infra/azure/diagnosticar_cloud_shell.sh
+          bash -n infra/azure/activar_diagnostico.sh
+          bash pruebas/test_activar_diagnostico.sh
+          python -m compileall -q g7b_ops
           python herramientas/validar_catalogo.py
       - name: Preparar instrucciones
         run: |

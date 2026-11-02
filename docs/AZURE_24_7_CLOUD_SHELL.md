@@ -136,3 +136,7 @@ az containerapp job execution list -g g7b -n g7b-smoke-laboratorio \
 ```
 
 Referencia histórica: `g7b-smoke-laboratorio-ex51o9l`, `Succeeded`, 2026-11-02 06:09:43–06:10:40 UTC (57 s). Inventario reportado: storage `g7blago09b52a0e`, entorno v3 y Job. Si la ejecución ya no aparece, conservar la distinción entre historial reportado y estado consultado. No deducir acceso al lago, ETL real, presupuesto ni revocación SAS de estas consultas.
+
+## Siguiente paso: worker de diagnostico
+
+El procedimiento para publicar la imagen privada, configurar el Job existente y comprobar lectura mediante identidad administrada esta en [WORKER_AZURE.md](WORKER_AZURE.md). Su preparacion y pruebas simuladas no acreditan una ejecucion real en Azure.
