@@ -1,0 +1,77 @@
+name: Generar tablero HTML G7B desde DuckDB verificado
+
+# Ejecución única en la rama de experimento. La salida es un HTML descargable,
+# no publica datos en GitHub Pages ni modifica Azure.
+on:
+  push:
+    branches:
+      - chatgpt/tablero-g7b-html-20261101
+    paths:
+      - .github/workflows/generar_tablero_aislado.yml
+
+permissions:
+  contents: read
+
+jobs:
+  tablero:
+    runs-on: ubuntu-latest
+    environment: amatista1
+    timeout-minutes: 10
+    env:
+      AZURE_LAGO_URL: \${{ secrets.AZURE_LAGO_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Instalar DuckDB y Azure Blob
+        run: python -m pip install -r requirements-almacen.txt
+
+      - name: Leer archivos aprobados del experimento en Azure
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          from g7b_lago import Lago
+          if not os.environ.get("AZURE_LAGO_URL"):
+              raise SystemExit("No está configurado AZURE_LAGO_URL en amatista1")
+          lago = Lago.desde_entorno()
+          raiz = "tmp/pruebas-duckdb/41380886305-intento1"
+          manifiesto = json.loads(lago.contenedor.download_blob(
+              raiz + "/verificacion_duckdb.json").readall())
+          assert manifiesto["estado"] == "verificado"
+          assert manifiesto["calidad"]["aprobado"]
+          assert manifiesto["destino_azure"] == raiz
+          for ruta in ("oro/cubo.duckdb", "oro/resumen.json",
+                       "oro/perfiles.json", "oro/calidad.json"):
+              item = manifiesto["archivos"][ruta]
+              assert item["ruta"] == raiz + "/" + ruta
+              datos = lago.contenedor.download_blob(item["ruta"]).readall()
+              assert hashlib.sha256(datos).hexdigest() == item["sha256"]
+              assert len(datos) == item["bytes"]
+              destino = Path("datos_tablero") / ruta
+              destino.parent.mkdir(parents=True, exist_ok=True)
+              destino.write_bytes(datos)
+              print("Validado:", ruta, len(datos), "bytes")
+          PY
+
+      - name: Construir interfaz interactiva
+        run: |
+          python -m g7b_almacen.tablero \
+            --cubo datos_tablero/oro/cubo.duckdb \
+            --resumen datos_tablero/oro/resumen.json \
+            --perfiles datos_tablero/oro/perfiles.json \
+            --calidad datos_tablero/oro/calidad.json \
+            --salida salida/index.html
+          test -s salida/index.html
+
+      - name: Entregar tablero para abrir en el navegador
+        uses: actions/upload-artifact@v4
+        with:
+          name: G7B-Tablero-DuckDB-Real
+          path: salida/index.html
+          retention-days: 30
+          if-no-files-found: error
