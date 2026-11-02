@@ -2,8 +2,10 @@
 
 ## Estado y siguiente accion
 
-Azure ejecuta el auditor privado. Falta comprobar entrega de logs y completar
-reconciliacion de infraestructura, alertas y recuperacion. No esta cerrado.
+Azure ejecuta el auditor privado y ya se comprobo la entrega persistida de su
+marcador: una fila de la ejecucion a665997 a las 16:49:00.3267357 UTC, tabla
+ContainerAppConsoleLogs_CL. Ya no se investiga una averia de logs no demostrada.
+Falta completar reconciliacion, migracion planificada, alertas y recuperacion.
 La evidencia de Azure procede de las salidas del usuario del 2026-11-02;
 las comprobaciones de CI no acceden a la suscripcion.
 
@@ -13,7 +15,7 @@ Desde Cloud Shell Bash, una sola revision sin modificar Azure:
 cd "$HOME/g7b-cloud-shell" &&
 git switch chatgpt/g7b-arquitectura-privada-ofertas-20261101 &&
 git pull --ff-only &&
-bash infra/azure/revisar_operacion.sh --ejecucion g7b-smoke-laboratorio-a665997
+bash infra/azure/consolidar_azure.sh --plan
 ```
 
 Si la carpeta no existe en una sesion efimera, recuperar el checkout:
@@ -23,11 +25,21 @@ git clone --branch chatgpt/g7b-arquitectura-privada-ofertas-20261101 \
   https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl.git "$HOME/g7b-cloud-shell"
 ```
 
-El script usa Python 3 estandar y la sesion de Azure CLI. No instala extensiones,
-no inicia Jobs, no lee claves/SAS ni cuerpos de blobs. No imprime mensajes de logs
-completos: entrega conteos y configuracion seleccionada, sin variables del worker.
-Sin `--ejecucion`, selecciona la mas reciente desde Azure, no desde una variable
-de shell. Una ejecucion fuera del historial retenido se informa como ausente.
+El script comprueba region, perfil, imagen, comando, recursos, registro, identidad,
+federacion OIDC y roles requeridos en sus alcances exactos. Conserva las etiquetas
+del Job en el plan. Una diferencia detiene la preparacion: no la corrige a ciegas.
+No inicia Jobs ni cambia recursos. `--plan` usa what-if y requiere Bicep disponible
+en Azure CLI. No hay modo aplicar. El reporte de cambios muestra rutas de
+propiedades, no valores que pudieran contener secretos.
+
+La nueva plantilla `g7b-operacion.bicep` representa el Job con la imagen real.
+Entorno, lago, ACR, identidad de publicacion y workspace son dependencias existentes:
+no se crean ni se reconfiguran con esa plantilla. Sus roles se comprueban; no se
+duplican asignaciones con GUID nuevos. No es una plantilla de recuperacion total
+tras borrar toda la suscripcion. La plantilla inicial continua bloqueada para v3.
+
+La revision anterior `revisar_operacion.sh` sigue disponible para observar logs.
+No es necesario repetirla ahora: la evidencia ya esta en `infra/azure/base_operativa.json`.
 
 ## Interpretacion de la revision
 
@@ -50,11 +62,10 @@ necesario; no conceder Owner para resolver una consulta.
 
 ## Secuencia de cierre y criterios de aceptacion
 
-1. **Logs:** inspeccionar este informe; resolver destino, permisos o esquema
-   segun evidencia. Si se migra a Azure Monitor, reutilizar el workspace,
-   comprobar categorias admitidas y evitar entregas duplicadas. Ejecutar una
-   unica prueba nueva despues del cambio y recuperar su resultado persistido.
-   No es posible reconstruir logs que nunca se ingirieron.
+1. **Logs comprobados:** conservar el marcador encontrado como evidencia.
+   La ruta directa antigua funciona, pero la API subyacente termino soporte el
+   2026-09-14 segun Microsoft. Preparar [migracion controlada](MIGRACION_LOGS_AZURE.md)
+   al mismo workspace. No cambiar el destino ni iniciar pruebas en esta entrega.
 2. **Configuracion reproducible:** reconciliar plantilla con `westus2`, v3,
    Consumption, digest privado, comando Python, ACR, identidades, permisos y
    logs efectivos. Revisar what-if sin reemplazo del lago/entorno. El script
@@ -80,16 +91,17 @@ necesario; no conceder Owner para resolver una consulta.
 | Entorno v3 | WorkloadProfiles/Consumption, westus2, Succeeded | Configuracion completa en IaC |
 | ACR g7bacr09b52a0e | Basic, administrador deshabilitado | Representarlo y verificar deriva |
 | Publicacion | GitHub + OIDC; ACR Tasks rechazado | Mantener esta ruta; no repetir ACR Tasks |
-| Job | Manual, identidad system, imagen por digest | Validar logs, recuperacion y ausencia de solapamientos |
-| Workspace | g7b-logs-laboratorio; destino log-analytics | Entrega aun no acreditada |
+| Job | Manual, identidad system, imagen por digest y marcador persistido | What-if, recuperacion y ausencia de solapamientos |
+| Workspace | g7b-logs-laboratorio; entrega log-analytics acreditada | Preparar migracion y comprobar retencion/coste efectivos |
 | Lago | Metadatos enumerados por el auditor antes de terminar | Resultado agregado; contenido/escritura fuera de alcance |
 | Credenciales y presupuesto | Usuario indico revision previa | Conservar evidencia; no repetir rotacion a ciegas |
 
 La ejecucion `g7b-smoke-laboratorio-a665997` termino `Succeeded` de
 16:48:30 a 16:49:03 UTC del 2026-11-02. El worker configurado solo termina con
 exito despues de enumerar metadatos: evidencia indirecta de esa operacion,
-distinta del smoke publico inicial. Las consultas aportadas devolvieron `[]`;
-la causa sigue sin confirmar. No afirmar revocacion SAS por un run GitHub 404.
+distinta del smoke publico inicial. La revision posterior localizo un marcador
+de ESA ejecucion. Los vacios anteriores no demuestran una averia; no se conoce
+su causa. No afirmar revocacion SAS por un run GitHub 404.
 
 No migrar a otras nubes ni agregar monitoreo duplicado durante este cierre.
 ACR y almacenamiento de logs pueden costar aun sin ejecutar Jobs. Un presupuesto

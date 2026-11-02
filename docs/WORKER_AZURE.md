@@ -37,9 +37,11 @@ pendiente del cierre operativo.
 
 ## Evidencia y recuperacion
 
-La corrida `a665997` termino Succeeded; el marcador `G7B_AZURE_DIAGNOSTICO`
-aun no se recupero. El worker enumera objetos con ManagedIdentityCredential
-antes de terminar: evidencia indirecta de lectura de metadatos. Su limite es
+La corrida `a665997` termino Succeeded; se localizo un marcador
+`G7B_AZURE_DIAGNOSTICO` de esa ejecucion en Log Analytics a las 16:49:00.3267357 UTC.
+Se comprobo entrega persistida; los valores agregados del marcador aun no se
+recuperaron. El worker enumera objetos con ManagedIdentityCredential
+antes de emitirlo: evidencia de lectura de metadatos. Su limite es
 10000 objetos; cero objetos puede ser un resultado valido. No descarga cuerpos.
 
 La corrida fallida `z1vrdd8` mostraba command/args como `[""]`. Se corrigio a

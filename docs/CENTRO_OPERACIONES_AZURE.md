@@ -1,6 +1,6 @@
 # Centro de Operaciones G7B — Azure y ofertas estudiantiles (arquitectura de ejecución)
 
-**Fecha:** 2026-11-02. **Estado:** laboratorio v3 y auditor privado ejecutados con exito segun logs del usuario. Evidencia indirecta de enumeracion de metadatos; falta recuperar salida persistida. ETL no acreditado. Prioridad y procedimiento vigente: [cierre operativo](CIERRE_AZURE.md). [Bitacora](bitacoras/2026-11-02.md).
+**Fecha:** 2026-11-02. **Estado:** laboratorio v3 y auditor privado ejecutados con exito; marcador de la ejecucion a665997 localizado en Log Analytics segun salida del usuario. Entrega persistida comprobada; valores agregados y ETL no acreditados. Prioridad: consolidar la base y preparar migracion, no investigar una averia no demostrada. [Cierre operativo](CIERRE_AZURE.md). [Bitacora](bitacoras/2026-11-02.md).
 **Regla:** las ofertas son capacidades de la fábrica de datos, no nuevas bases de datos arbitrarias.
 
 ## 1. Resultado que debe producir el sistema
@@ -162,4 +162,8 @@ calidad estadística documentados antes de automatizar recomendaciones.
 
 ## Siguiente paso: cerrar logs y operacion
 
-El worker ya se ejecuto segun la evidencia del usuario. Seguir [CIERRE_AZURE.md](CIERRE_AZURE.md) para resolver logs sin lanzar trabajos repetidos. Las pruebas simuladas no acreditan entrega de logs, alertas ni recuperacion en Azure.
+El worker ya se ejecuto y su marcador persistido fue localizado por el usuario.
+Seguir [CIERRE_AZURE.md](CIERRE_AZURE.md) para comparar la base y preparar cambios
+sin lanzar trabajos. La plantilla nueva de mantenimiento usa dependencias
+existentes; no es reconstruccion total de la suscripcion. Las pruebas simuladas
+no acreditan despliegue, migracion de logs, alertas ni recuperacion en Azure.

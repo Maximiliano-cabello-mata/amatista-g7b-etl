@@ -19,10 +19,10 @@ class RevisionError(Exception):
     pass
 
 
-def az(*args):
+def az(*args, timeout_seconds=90):
     try:
         result = subprocess.run(["az", *args, "--output", "json", "--only-show-errors"],
-                                capture_output=True, text=True, timeout=90, check=False)
+                                capture_output=True, text=True, timeout=timeout_seconds, check=False)
     except (OSError, subprocess.TimeoutExpired) as exc:
         raise RevisionError("AZ_NO_DISPONIBLE_O_TIMEOUT: comprobar sesion Cloud Shell") from exc
     if result.returncode:
