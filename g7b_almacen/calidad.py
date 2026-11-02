@@ -73,10 +73,12 @@ def evaluar(almacen, ahora=None):
                 checks.append(_check("contrato_perfiles", OK if not errores else FALLA,
                                      "perfiles.json cumple el contrato" if not errores else f"{errores[:3]}",
                                      len(errores)))
+            else:
+                checks.append(_check("contrato_perfiles", FALLA, "falta oro/perfiles.json"))
             # Volumen: hay datos.
             render = _consulta(con, "SELECT count(*) FROM hechos_render")
             sonda = _consulta(con, "SELECT count(DISTINCT medicion_id) FROM hechos_medicion")
-            checks.append(_check("volumen", OK if render + sonda > 0 else AVISO,
+            checks.append(_check("volumen", OK if render + sonda > 0 else FALLA,
                                  f"{render} renders de Open Data y {sonda} corridas de sonda", render + sonda))
             # Frescura: Open Data no demasiado viejo.
             _frescura(almacen, con, checks)
