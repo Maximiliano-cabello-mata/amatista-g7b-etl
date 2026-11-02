@@ -59,7 +59,7 @@ bash infra/azure/activar_diagnostico.sh --aplicar
 El script envia a ACR solo Dockerfile y los modulos `g7b_ops/*.py`, etiqueta con
 el commit y fija la imagen por digest. Concede AcrPull a la identidad de sistema
 solo sobre ese registro. Sustituye las variables del contenedor por la URL sin SAS
-y el nombre `lago`; limpia command/args para usar el CMD de Docker. No inicia el
+y el nombre `lago`; establece `command=["python"]` y `args=["/opt/g7b/g7b_ops/auditoria.py"]`. No inicia el
 Job. Guardar el digest y la imagen anterior que imprime el script. Si hay error,
 los pasos anteriores pueden haberse aplicado: inspeccionar antes de repetir.
 
@@ -125,3 +125,7 @@ Referencias oficiales consultadas para los comandos:
 ## Si ACR Tasks no esta permitido
 
 Ante `TasksOperationsNotAllowed`, usar [publicacion desde GitHub con OIDC](PUBLICAR_WORKER_OIDC.md). Esta alternativa conserva el ACR y permite configurar el Job con `G7B_IMAGEN_EXISTENTE`, sin volver a invocar ACR Tasks.
+
+### Correccion del arranque
+
+La ejecucion `g7b-smoke-laboratorio-z1vrdd8` termino Failed segun la salida del usuario. La plantilla mostraba command y args como `[""]`: esta version de CLI conservo cadenas vacias en lugar de retirar el override. Se corrige con comando y ruta Python explicitos. Esta evidencia identifica un defecto de configuracion; no sustituye los logs de causa final ni acredita acceso al lago. La nueva ejecucion debe verificarse por separado.

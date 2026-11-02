@@ -73,7 +73,7 @@ if [[ "$MODO" == --aplicar ]]; then
   az role assignment create --assignee-object-id "$PRINCIPAL" --assignee-principal-type ServicePrincipal --role AcrPull --scope "$ACR_ID" -o none
   az containerapp job registry set -g "$GRUPO" -n "$JOB" --server "$SERVIDOR" --identity system -o none
   az containerapp job update -g "$GRUPO" -n "$JOB" --container-name smoke --image "$IMAGEN" \
-    --command '' --args '' \
+    --command python --args /opt/g7b/g7b_ops/auditoria.py \
     --replace-env-vars "AZURE_STORAGE_ACCOUNT_URL=https://$STORAGE.blob.core.windows.net" 'AZURE_CONTAINER_NAME=lago' -o none
   echo "CONFIGURADO: $IMAGEN"
   echo "Imagen anterior para restauracion: $IMAGEN_ANTERIOR"

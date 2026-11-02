@@ -29,7 +29,10 @@ az() {
       [[ "$*" == *'--file Dockerfile . --no-logs -o none'* ]] || return 98
       [[ "${BUILD_FALLA:-no}" != si ]] || { echo 'Build simulado fallido' >&2; return 97; }
       ;;
-    'role assignment create '*|'containerapp job registry set '*|'containerapp job update '*) :;;
+    'containerapp job update '*)
+      [[ "$*" == *'--command python --args /opt/g7b/g7b_ops/auditoria.py --replace-env-vars '* ]] || { echo 'Arranque del worker incorrecto' >&2; return 96; }
+      ;;
+    'role assignment create '*|'containerapp job registry set '*) :;;
     'containerapp job start '*) echo ejecucion-prueba;;
     'containerapp job execution show '*) echo "${ESTADO_SIMULADO:-Succeeded}";;
     'account show '*|'storage account show '*|'acr list '*) :;;
