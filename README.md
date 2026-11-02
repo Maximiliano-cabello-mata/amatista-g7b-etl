@@ -30,3 +30,11 @@ Lo siguiente es la fase F0 del plan.
 - [¿Ya existe esto?](docs/investigacion/2026-11-01_novedad_kernel_3d.md): investigación del estado del arte: qué existe, en qué se diferencia, por qué falta lo que falta y si la necesidad es actual, futura o no prevista.
 - [Ofertas y GitHub](docs/OFERTAS_Y_GITHUB.md): qué oferta del Developer Pack y qué función de GitHub cumple cada papel, y cuándo activarla.
 - [Propuesta de estadía](docs/estadia/2026-11-01_propuesta_estadia.md): la versión integrada Amatista + G7B como trabajo final.
+
+## Primer laboratorio Colab y publicación del warehouse
+
+El PR #4 desarrolla `g7b_almacen` (bronce → Parquet → DuckDB). La rama de integración de seguridad
+`chatgpt/g7b-publicacion-segura-colab-20261101` agrega una compuerta de publicación por
+versión. Los consumidores deben leer `publicado/actual.json`, **no** el candidato
+`oro/perfiles.json`. Para ejecutar la sonda y el almacén desde celdas de Colab sin archivo
+adjunto: [guía completa](docs/COLAB_LABORATORIO.md).
