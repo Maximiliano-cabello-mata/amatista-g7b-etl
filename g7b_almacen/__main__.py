@@ -17,7 +17,7 @@ import os
 import sys
 
 from . import almacen as alm
-from . import calidad, cubo, opendata, orquesta, plata, vigia
+from . import calidad, cubo, opendata, orquesta, plata, publicacion, vigia
 
 
 def agregar_sonda(almacen, carpeta, salida=print):
@@ -62,7 +62,12 @@ def main(argv=None):
         print(json.dumps(resumen, ensure_ascii=False))
         return
     if opciones.orden == "calidad":
-        print(json.dumps(calidad.evaluar(almacen), ensure_ascii=False))
+        reporte = calidad.evaluar(almacen)
+        if reporte["aprobado"]:
+            publicacion.publicar(almacen, reporte)
+        print(json.dumps(reporte, ensure_ascii=False))
+        if not reporte["aprobado"]:
+            sys.exit("Compuerta de calidad NO aprobada; se conserva la publicación anterior")
         return
     if opciones.orden == "latido":
         with vigia.monitor("g7b-latido"):
@@ -74,7 +79,15 @@ def main(argv=None):
     if opciones.orden in ("construir", "todo"):
         with vigia.monitor("g7b-cubo"):
             datos = cubo.construir(almacen)
+        reporte = calidad.evaluar(almacen)
+        if reporte["aprobado"]:
+            actual = publicacion.publicar(almacen, reporte)
+            print(f"publicado: {actual['version']} (aprobado)")
+        else:
+            print("Calidad NO aprobada: no se actualiza publicado/actual.json")
         print(json.dumps(datos["conteos"], ensure_ascii=False))
+        if not reporte["aprobado"]:
+            sys.exit(2)
 
 
 if __name__ == "__main__":
