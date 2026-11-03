@@ -20,6 +20,8 @@ Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs
 
 ## Documentos
 
+- [Telemetría: captura y controles](docs/TELEMETRIA.md): sonda existente y Blender Open Data, separados de la documentación. Prueba local: 1,000 benchmarks públicos / 3,000 mediciones y tres mediciones de sonda, todavía en revisión. La subida real a Azure y la continuidad deben comprobarse en Actions.
+
 - [Visión](docs/VISION.md): el norte del proyecto y su relación con Amatista.
 - [Plan](docs/PLAN.md): qué es G7B, reglas de calidad, fuentes, telemetría, arquitectura, visualización, fases. **Es el documento rector.**
 - [Arquitectura cloud (historia)](ARQUITECTURA_CLOUD.md): primer despliegue en Zyte y MongoDB, y los errores resueltos.
