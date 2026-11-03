@@ -6,7 +6,7 @@ G7B reúne lo que se sabe (documentación de herramientas libres, técnicas publ
 
 **Estado (2026-11-02):** prueba manual real de extremo a extremo completada: Zyte → Azure Bronce → embudo → Azure Plata → MongoDB. Se importaron **2,353 registros**: 987 aceptados, 52 en revisión y 1,314 rechazados; el publicador reportó **987 documentos nuevos** y 0 actualizados. Esa cifra no es el total actual de MongoDB. Ver la [bitácora técnica y las seis ejecuciones](docs/bitacoras/2026-11-02_integracion_real_g7b.md).
 
-**Producción continua: pendiente de validación.** Falta comprobar el conteo posterior en MongoDB, la idempotencia, muestras de calidad y la continuidad de la autenticación Azure. Los workflows programados requieren `G7B_INGESTA_ACTIVA=true`; esta prueba manual no acredita su operación continua. La prioridad de telemetría y el cubo permanece en el [plan, sección 0](docs/PLAN.md#0-rumbo-actualizado-2026-11-01-tarde).
+**Producción continua: pendiente de validación.** Falta comprobar el conteo posterior en MongoDB, la idempotencia, corregir los problemas de calidad observados y la continuidad de la autenticación Azure. Los workflows programados requieren `G7B_INGESTA_ACTIVA=true`; esta prueba manual no acredita su operación continua. La prioridad de telemetría y el cubo permanece en el [plan, sección 0](docs/PLAN.md#0-rumbo-actualizado-2026-11-01-tarde).
 
 **Proyecto hermano:** [Amatista](https://github.com/Maximiliano-cabello-mata/amatista), la plataforma que enseña y, desde el 2026-11-01, un centro de conocimiento 3D. Son proyectos separados que se alimentan: G7B mide y decide; Amatista enseña, recomienda y guarda los datos personales. Ver [VISION.md](docs/VISION.md).
 
@@ -19,6 +19,8 @@ G7B reúne lo que se sabe (documentación de herramientas libres, técnicas publ
 Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs/bitacoras/2026-11-02_integracion_real_g7b.md#8-trabajo-pendiente), en coordinación con la fase F0 del plan.
 
 ## Documentos
+
+- [Observaciones de calidad del lote documental](docs/reportes/2026-11-02_observaciones_documentacion_g7b.md): análisis de los 987 aceptados, lectura de 28 documentos, utilidad comprobada, omisiones y correcciones pendientes.
 
 - [Visión](docs/VISION.md): el norte del proyecto y su relación con Amatista.
 - [Plan](docs/PLAN.md): qué es G7B, reglas de calidad, fuentes, telemetría, arquitectura, visualización, fases. **Es el documento rector.**
