@@ -1,0 +1,60 @@
+name: Telemetría G7B
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/telemetria.yml'
+      - 'g7b_telemetria/**'
+  workflow_dispatch:
+    inputs:
+      publicar_azure:
+        description: Guardar y verificar en Azure
+        type: boolean
+        default: true
+  schedule:
+    - cron: '23 10 * * 2'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: telemetria-g7b
+  cancel-in-progress: false
+
+jobs:
+  capturar:
+    runs-on: ubuntu-24.04
+    environment: amatista1
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-lago.txt
+      - name: Instalar Blender de Ubuntu
+        run: sudo apt-get update && sudo apt-get install -y blender
+      - name: Medir CPU en el runner (no representa computadoras personales)
+        run: blender -b --factory-startup --python sonda/g7b_sonda.py -- --salida resultados-sonda --escena ligera --perfiles ligero --repeticiones 3 --sin-render
+      - name: Capturar y verificar las dos fuentes
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          PUBLICAR: ${{ github.event_name != 'workflow_dispatch' || inputs.publicar_azure }}
+        run: |
+          args=()
+          if [ "$PUBLICAR" = "true" ]; then
+            test -n "$AZURE_LAGO_URL" || { echo 'Falta AZURE_LAGO_URL en amatista1'; exit 1; }
+            args+=(--azure)
+          fi
+          python -m g7b_telemetria.capturar sonda --entrada resultados-sonda --salida captura/sonda "${args[@]}"
+          python -m g7b_telemetria.capturar blender-open-data --salida captura/opendata --limite 1000 "${args[@]}"
+      - name: Conservar informes y mediciones (sin snapshot completo)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: telemetria-${{ github.run_id }}
+          retention-days: 14
+          path: |
+            captura/**/informe.json
+            captura/**/mediciones.jsonl

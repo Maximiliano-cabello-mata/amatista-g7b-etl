@@ -28,7 +28,7 @@ from .embudo import ACEPTADO, RECHAZADO, REVISION, UMBRALES, Indice, evaluar
 PROCESADOS = "control/procesados.json"
 INDICE = "control/indice_embudo.json"
 CONTEOS = "control/embudo.json"
-EXCLUIR = ("bronce/sonda/",)  # las mediciones tienen su propio camino
+EXCLUIR = ("bronce/sonda/", "bronce/telemetria/")  # recorrido numérico separado
 FRAGMENTO_METADATOS = 300
 
 

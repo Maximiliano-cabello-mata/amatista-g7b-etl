@@ -1,0 +1,2 @@
+-r requirements-lago.txt
+duckdb==2.0.0
