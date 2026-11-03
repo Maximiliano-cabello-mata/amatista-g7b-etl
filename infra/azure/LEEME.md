@@ -1,6 +1,6 @@
 # Configurar Azure (el lago de datos de G7B)
 
-**Actualización 2026-11-02:** el storage `g7blago09b52a0e`, el entorno `g7b-env-laboratorio-jobs-v3` y el Job `g7b-smoke-laboratorio` figuran en el inventario final reportado por el usuario. Despliegue, RBAC y smoke: `Succeeded`. Ver [bitácora](../../docs/bitacoras/2026-11-02.md) y [runbook vigente](../../docs/AZURE_24_7_CLOUD_SHELL.md). Los pasos de creación que siguen son una guía inicial, no una instrucción para recrear recursos existentes. Acceso del Job al lago, ETL real, presupuesto y revocación SAS no verificados en esta revisión.
+**Actualización 2026-11-02:** el storage `g7blago09b52a0e`, el entorno `g7b-env-laboratorio-jobs-v3` y el Job `g7b-smoke-laboratorio` figuran en el inventario final reportado por el usuario. Despliegue, RBAC y smoke: `Succeeded`. Ver [bitácora](../../docs/bitacoras/2026-11-02.md) y [runbook vigente](../../docs/azure/AZURE_24_7_CLOUD_SHELL.md). Los pasos de creación que siguen son una guía inicial, no una instrucción para recrear recursos existentes. Acceso del Job al lago, ETL real, presupuesto y revocación SAS no verificados en esta revisión.
 
 Azure guarda **todo lo que se extrae, tal como llegó** (zona bronce del [plan](../../docs/PLAN.md#7-arquitectura)), y después lo validado y lo curado (plata y oro). Zyte borra sus datos a los 120 días; el lago no.
 

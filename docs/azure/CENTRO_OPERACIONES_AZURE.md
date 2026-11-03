@@ -1,6 +1,6 @@
 # Centro de Operaciones G7B — Azure y ofertas estudiantiles (arquitectura de ejecución)
 
-**Fecha:** 2026-11-02. **Estado:** laboratorio v3 y auditor privado ejecutados con exito; marcador de la ejecucion a665997 localizado en Log Analytics segun salida del usuario. Entrega persistida comprobada; valores agregados y ETL no acreditados. Prioridad: consolidar la base y preparar migracion, no investigar una averia no demostrada. [Cierre operativo](CIERRE_AZURE.md). [Bitacora](bitacoras/2026-11-02.md).
+**Fecha:** 2026-11-02. **Estado:** laboratorio v3 y auditor privado ejecutados con exito; marcador de la ejecucion a665997 localizado en Log Analytics segun salida del usuario. Entrega persistida comprobada; valores agregados y ETL no acreditados. Prioridad: consolidar la base y preparar migracion, no investigar una averia no demostrada. [Cierre operativo](CIERRE_AZURE.md). [Bitacora](../bitacoras/2026-11-02.md).
 **Regla:** las ofertas son capacidades de la fábrica de datos, no nuevas bases de datos arbitrarias.
 
 ## 1. Resultado que debe producir el sistema

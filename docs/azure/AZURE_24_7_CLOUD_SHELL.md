@@ -1,6 +1,6 @@
 # G7B — Azure 24/7 con crédito estudiantil (Cloud Shell)
 
-**Estado (2026-11-02):** laboratorio v3 y smoke manual completados según logs reportados por el usuario; no ejecutados ni consultados directamente en Azure durante esta revisión. [Bitácora](bitacoras/2026-11-02.md). Este runbook sirve para inspección y cambios posteriores; no requiere repetir el despliegue exitoso.
+**Estado (2026-11-02):** laboratorio v3 y smoke manual completados según logs reportados por el usuario; no ejecutados ni consultados directamente en Azure durante esta revisión. [Bitácora](../bitacoras/2026-11-02.md). Este runbook sirve para inspección y cambios posteriores; no requiere repetir el despliegue exitoso.
 
 Entorno vigente: `g7b-env-laboratorio-jobs-v3`, API del entorno `2026-07-01`, `environmentMode: WorkloadProfiles`, perfil `Consumption`. Los intentos v1/v2 fallaron con `ExpressEnvironmentResourceNotSupported` y sus dos entornos Express fueron eliminados, según el usuario. No recrearlos.
 

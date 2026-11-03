@@ -3,7 +3,7 @@
 Fecha: 2026-11-02. Un solo camino, de principio a fin, para que G7B quede **funcional y automático** con las ofertas del GitHub Student Developer Pack, y para que **Amatista, Geoda y G7B se alimenten entre sí**.
 
 - **Reúne** lo que se construyó con los dos agentes (PR #1 a #10): ingesta de texto, lago, warehouse, publicación segura, Azure privado y catálogo de ofertas.
-- **Manda sobre lo anterior:** donde otro documento diga algo distinto ([PLAN.md](PLAN.md), [OFERTAS_Y_GITHUB.md](OFERTAS_Y_GITHUB.md), `CIERRE_AZURE.md`, `infra/ofertas/catalogo.json`), vale este plan. Esos documentos quedan como detalle o como historia.
+- **Manda sobre lo anterior:** donde otro documento diga algo distinto ([PLAN.md](PLAN.md), [OFERTAS_Y_GITHUB.md](OFERTAS_Y_GITHUB.md), `azure/CIERRE_AZURE.md`, `infra/ofertas/catalogo.json`), vale este plan. Esos documentos quedan como detalle o como historia.
 - **Del lado de Amatista,** la misma conexión está en su repo: `docs/arquitectura/2026-11-02_conexion_g7b_y_geoda.md`.
 
 **Cómo leerlo:** cada paso dice quién lo hace y cómo saber que quedó.

@@ -1,41 +1,59 @@
 # G7B
 
-Base de conocimiento y de mediciones para un 3D libre que funcione en cualquier computadora. Proyecto separado de [Amatista](https://github.com/Maximiliano-cabello-mata/amatista): Amatista lo consume como un cliente más.
+**El motor de datos del 3D libre.** G7B mide cómo corre el software 3D libre en computadoras reales, de las más viejas a las más potentes, y reúne lo que se sabe de él: documentación, técnicas, texturas y herramientas. Con eso decide cómo debe trabajar cada equipo. Cada dato lleva su fuente, su versión y su licencia.
 
-G7B reúne lo que se sabe (documentación de herramientas libres, técnicas publicadas por la industria y equivalencias con Maya y 3ds Max) y lo que se mide (rendimiento en computadoras reales, de las más viejas a las más potentes). Cada dato lleva fuente, versión y licencia. No es un motor 3D nuevo ni un fork de Blender: alimenta con datos al Corazón Amatista y a Blender Amatista.
+Es el proyecto hermano de **[Amatista](https://github.com/Maximiliano-cabello-mata/amatista)**, la plataforma que enseña 3D con Blender y A-Frame.
+- **Separados:** cada uno tiene su repo y sus nubes.
+- **Unidos por contratos JSON:** G7B mide y decide; Amatista enseña, recomienda y es la única que guarda datos de personas.
 
-**Estado (2026-11-02):** prueba manual real de extremo a extremo completada: Zyte → Azure Bronce → embudo → Azure Plata → MongoDB. Se importaron **2,353 registros**: 987 aceptados, 52 en revisión y 1,314 rechazados; el publicador reportó **987 documentos nuevos** y 0 actualizados. Esa cifra no es el total actual de MongoDB. Ver la [bitácora técnica y las seis ejecuciones](docs/bitacoras/2026-11-02_integracion_real_g7b.md).
+```text
+  internet ──► Geodar Radar ──► Azure (lago) ──► embudo ──► MongoDB (documentos y catálogos)
+  equipos  ──► sonda ──────────► Azure (lago) ──► cubo DuckDB ──► Geoda ──► perfiles.json ──► Amatista
+```
 
-**Producción continua: pendiente de validación.** Falta comprobar el conteo posterior en MongoDB, la idempotencia, muestras de calidad y la continuidad de la autenticación Azure. Los workflows programados requieren `G7B_INGESTA_ACTIVA=true`; esta prueba manual no acredita su operación continua. La prioridad de telemetría y el cubo permanece en el [plan, sección 0](docs/PLAN.md#0-rumbo-actualizado-2026-11-01-tarde).
+## Hack4Edu
 
-**Proyecto hermano:** [Amatista](https://github.com/Maximiliano-cabello-mata/amatista), la plataforma que enseña y, desde el 2026-11-01, un centro de conocimiento 3D. Son proyectos separados que se alimentan: G7B mide y decide; Amatista enseña, recomienda y guarda los datos personales. Ver [VISION.md](docs/VISION.md).
+Este repo participa en **Hack4Edu** junto con Amatista. La etiqueta de Git **`hack4edu`** marca el corte: lo anterior es lo que ya teníamos; lo posterior, lo trabajado en estos días. Evidencia y comandos para comprobarlo: **[docs/hack4edu/](docs/hack4edu/README.md)**.
 
-- `motor_extraccion/`: las arañas de Scrapy que corren en Zyte: `blender_docs` (el manual en varias versiones, estructurado), `manual_sphinx` (cualquier manual hecho con Sphinx) y `paginas` (genérica). Se despliegan solas con cada push a `main`.
-- `sonda/`: la sonda de rendimiento v0, que mide Blender en cualquier computadora ([cómo correrla](sonda/LEEME.md)).
-- `g7b_lago/`: el lago de datos en Azure: copia de Zyte al lago y subida de mediciones.
-- `fuentes/` y `g7b_ingesta/`: catálogo de fuentes, sensores, disparadores y el embudo de calidad ([cómo funciona](docs/INGESTA.md)).
-- `infra/`: [qué nube está lista y qué falta](infra/LEEME.md), y [cómo configurar Azure](infra/azure/LEEME.md).
+```bash
+git log --oneline hack4edu..main      # lo trabajado durante Hack4Edu
+```
 
-Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs/bitacoras/2026-11-02_integracion_real_g7b.md#8-trabajo-pendiente), en coordinación con la fase F0 del plan.
+## Las piezas
+
+| Pieza | Qué hace | Carpeta | Estado |
+|---|---|---|---|
+| **Geodar Radar** | Vigila 31 fuentes de 3D en internet (foros, manuales, artículos, texturas CC0, herramientas libres, telemetría web) y enruta cada dato a su destino | `geodar/`, `g7b_ingesta/`, `fuentes/` | ✅ Pruebas en verde; probar en vivo con Actions antes de encender |
+| **Arañas** | El manual de Blender en 4 versiones y manuales Sphinx, en Zyte | `motor_extraccion/` | ✅ En producción: 987 documentos publicados |
+| **Lago** | Azure Blob: bronce (crudo) → plata → oro | `g7b_lago/`, `infra/azure/` | ✅ En producción |
+| **Embudo** | 5 etapas de calidad antes de MongoDB, con motivos | `g7b_ingesta/` | ✅ En producción |
+| **Sonda** | Mide Blender (vista 3D, edición, animación, render) en cualquier equipo | `sonda/` | ✅ v0.2 |
+| **Telemetría** | Sonda y Blender Open Data con controles numéricos → Azure | `g7b_telemetria/` | ✅ Verificada en Azure el 3-nov |
+| **Cubo** | Parquet + DuckDB versionado, seis dimensiones | `g7b_almacen/` | ✅ 3,003 mediciones, verificado en Azure |
+| **Geoda** | El kernel: nivel del equipo (N0–N4), perfiles con evidencia, costos y plan reversible | `geoda/` | 🟡 Cimientos (0.1.0) |
+| **Azure privado** | Jobs con identidad administrada, OIDC y catálogo de ofertas | `infra/azure/`, `infra/ofertas/` | 🟡 Laboratorio desplegado |
+| **Análisis** | Cuadernos de Deepnote (cubo y calidad documental) | `analisis/` | ✅ |
+
+## Probarlo
+
+```bash
+pip install -r requirements-dev.txt          # incluye lo del lago, el cubo y las pruebas
+python -m pytest pruebas -q                  # 112 pruebas; 9 más con Azurite (AZURE_PRUEBAS_CONEXION)
+python -m geodar mapa                        # dónde están los sensores
+python -m geoda perfiles                     # perfiles por nivel (sin cubo: reglas base)
+python -m geoda decidir --huella equipo.json # el plan para un equipo
+```
 
 ## Documentos
 
-- [Cubo de telemetría](docs/CUBO.md): **publicado y verificado en Azure** el 2026-11-03, con 3,003 mediciones (tres aceptadas y 3,000 en revisión). Parquet + DuckDB versionados, seis dimensiones y deduplicación. Se reconstruye tras cada captura exitosa. Incluye cuaderno de consulta para Deepnote; no genera recomendaciones de Geoda.
+El índice completo, ordenado, está en **[docs/README.md](docs/README.md)**. Los de entrada:
+- [Visión](docs/VISION.md): el norte, y cómo se unen Amatista, G7B y Geoda.
+- [Plan maestro](docs/PLAN_MAESTRO.md): el camino a seguir. Manda sobre los demás planes.
+- [Geoda](docs/GEODA.md): cómo está estructurado el kernel y qué ya existe.
+- [Geodar Radar](docs/GEODAR_RADAR.md) y su [mapa de sensores](docs/GEODAR_RADAR_MAPA.md).
+- [Telemetría](docs/TELEMETRIA.md) y [cubo](docs/CUBO.md): lo verificado en Azure.
+- [CHANGELOG](CHANGELOG.md): qué cambió y cuándo, antes y durante Hack4Edu.
 
-- [Telemetría: captura y controles](docs/TELEMETRIA.md): primera ejecución cloud verificada el 2026-11-03: tres mediciones de sonda aceptadas y 3,000 mediciones públicas en revisión, con escritura y lectura comprobadas en Azure. [Ejecución 41707925151](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41707925151). Programación semanal habilitada; continuidad aún por observar. Cubo y Geoda pendientes.
+## Licencias
 
-- [Visión](docs/VISION.md): el norte del proyecto y su relación con Amatista.
-- [Plan](docs/PLAN.md): qué es G7B, reglas de calidad, fuentes, telemetría, arquitectura, visualización, fases. **Es el documento rector.**
-- [Arquitectura cloud (historia)](ARQUITECTURA_CLOUD.md): primer despliegue en Zyte y MongoDB, y los errores resueltos.
-- [Ingesta](docs/INGESTA.md): sensores, disparadores, el embudo de calidad y la publicación en MongoDB.
-- [Bitácoras](docs/bitacoras/): lo que se hizo cada día, los errores y el plan del día siguiente. Última: [2026-11-02 — integración real G7B](docs/bitacoras/2026-11-02_integracion_real_g7b.md).
-- [Integración con Amatista](docs/investigacion/2026-11-01_integracion_amatista_g7b.md): cómo se conectan los dos proyectos, flujos y orden.
-- [Reporte de propuestas](docs/reportes/2026-11-01_propuestas.md): cuáles son realistas, cuáles no y hacia dónde va el proyecto.
-- [Fichas técnicas](docs/FICHAS_TECNICAS.md): la definición exacta de cada concepto interno (Geoda, Corazón, niveles N0 a N4, perfil, fluidez, cubo...).
-- [Horizonte](docs/reportes/2026-11-01_horizonte.md): hasta dónde pueden llegar Amatista, G7B y Geoda, por etapas, y dónde está el techo.
-- [¿Ya existe esto?](docs/investigacion/2026-11-01_novedad_kernel_3d.md): investigación del estado del arte: qué existe, en qué se diferencia, por qué falta lo que falta y si la necesidad es actual, futura o no prevista.
-- [Ofertas y GitHub](docs/OFERTAS_Y_GITHUB.md): qué oferta del Developer Pack y qué función de GitHub cumple cada papel, y cuándo activarla.
-- [Propuesta de estadía](docs/estadia/2026-11-01_propuesta_estadia.md): la versión integrada Amatista + G7B como trabajo final.
-- **[Geodar Radar](docs/GEODAR_RADAR.md): la herramienta de captura.** Sensores en foros, documentación, catálogos de texturas y modelos, herramientas libres y telemetría pública; documentos y catálogos a MongoDB, telemetría y señales a Azure. `python -m geodar --help` · [mapa de sensores](docs/GEODAR_RADAR_MAPA.md).
-- **[Plan maestro](docs/PLAN_MAESTRO.md): el camino a seguir.** Cada oferta, cómo se reclama y se conecta, Azure paso a paso, el panel en Atlas Charts y la conexión Amatista ↔ G7B ↔ Geoda. Manda sobre los demás planes.
-- [Revisión del 2026-11-02 y plan de ofertas](docs/reportes/2026-11-02_revision_y_ofertas.md): qué entró en las PR #4 a #9, qué está alineado con el plan y qué hace cada oferta del Developer Pack por el fin final.
+El código que usa la API de Blender es GPL-3.0 o posterior; para el resto de G7B se propone AGPL-3.0. Para los datos publicados se propone CC BY 4.0 o CC0, con DOI. «Blender» es una marca de la Blender Foundation.
