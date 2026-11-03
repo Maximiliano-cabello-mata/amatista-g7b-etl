@@ -103,3 +103,25 @@ el cubo mediante el puntero vigente, verifica su hash y lo abre en solo lectura.
 Se reconstruye completo con un máximo de un millón de filas de entrada; no es
 incremental. El conjunto actual es pequeño. Se deberán revisar memoria, costos,
 retención y particionado al crecer, y ampliar la muestra pública de captura.
+
+## Primera publicación verificada — 2026-11-03
+
+El [PR #15](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/pull/15)
+se integró tras 62 pruebas aprobadas, incluida la publicación/descarga con Azurite.
+La [ejecución 41712113585](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41712113585)
+construyó y publicó el cubo usando los datos reales del lago, y completó una
+descarga independiente mediante el puntero vigente:
+
+- Versión: `20261103T202349Z-529801f82baa`.
+- Archivo: `oro/cubos/20261103T202349Z-529801f82baa/cubo.duckdb`.
+- SHA-256 del DuckDB descargado: `0340fa1346428b3846c60b3df670bf74d2adc5a8189416eaf9b3e1ac18cacc78`.
+- 3,003 mediciones únicas: tres de sonda aceptadas y 3,000 de render en revisión.
+- Cero duplicados en esta entrada; la deduplicación fue probada con duplicados
+  deliberados en las pruebas automatizadas.
+- Parquet comparado con DuckDB; todos los artefactos publicados verificados por
+  lectura y hash; archivo vigente reabierto en solo lectura con 3,003 filas.
+
+Esta evidencia corresponde al cubo cloud. La prueba local anterior también tiene
+3,003 filas pero usa la sonda local variable: sus tres mediciones están en revisión.
+Son conjuntos distintos y sus hashes no deben coincidir. El cuaderno de Deepnote
+se entrega sin credenciales ni salidas; todavía no fue ejecutado en ese workspace.

@@ -20,7 +20,7 @@ Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs
 
 ## Documentos
 
-- [Cubo de telemetría](docs/CUBO.md): Parquet y DuckDB versionados en Azure, dimensiones, deduplicación, controles de calidad y consultas desde Deepnote. Conserva separados los datos en revisión; no genera recomendaciones de Geoda.
+- [Cubo de telemetría](docs/CUBO.md): **publicado y verificado en Azure** el 2026-11-03, con 3,003 mediciones (tres aceptadas y 3,000 en revisión). Parquet + DuckDB versionados, seis dimensiones y deduplicación. Se reconstruye tras cada captura exitosa. Incluye cuaderno de consulta para Deepnote; no genera recomendaciones de Geoda.
 
 - [Telemetría: captura y controles](docs/TELEMETRIA.md): primera ejecución cloud verificada el 2026-11-03: tres mediciones de sonda aceptadas y 3,000 mediciones públicas en revisión, con escritura y lectura comprobadas en Azure. [Ejecución 41707925151](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41707925151). Programación semanal habilitada; continuidad aún por observar. Cubo y Geoda pendientes.
 
