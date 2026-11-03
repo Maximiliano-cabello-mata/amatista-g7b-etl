@@ -1,0 +1,752 @@
+{
+  "schema": "g7b.ofertas/1",
+  "actualizado": "2026-11-01",
+  "principio": "Cada oferta es una capacidad con dueño, permisos mínimos y puerta de activación, no una obligación de conexión.",
+  "control": {
+    "fuente_de_verdad": "Azure privado para datos; GitHub para código; catálogo no contiene credenciales",
+    "restriccion": "Ningún servicio se marca instalado o conectado solo por figurar en el pack",
+    "secretos": "Prohibidas claves y cadenas SAS en repositorios y logs",
+    "datos_terceros": "Solo públicos, sintéticos o agregados autorizados; nunca el lago bruto",
+    "costos": "No activar servicios de cuota temporal sin hipótesis, presupuesto, límites y fecha de cierre"
+  },
+  "ofertas": [
+    {
+      "servicio": ".TECH",
+      "grupo": "capacidad_opcional",
+      "funcion": "Dominio de marca o laboratorio no sensible",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "1Password",
+      "grupo": "nucleo",
+      "funcion": "Custodia de credenciales humanas, recuperación y emergencia",
+      "estado": "piloto_pendiente",
+      "conectado": false,
+      "acceso": "por_solicitar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Adafruit",
+      "grupo": "capacidad_opcional",
+      "funcion": "Telemetría de sensores de laboratorio opcional",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "AlgoExpert",
+      "grupo": "formacion_personal",
+      "funcion": "Entrevistas técnicas y algoritmos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Appfigures",
+      "grupo": "capacidad_opcional",
+      "funcion": "Medición de distribución móvil si se publica app",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Appwrite",
+      "grupo": "capacidad_opcional",
+      "funcion": "Prototipos aislados sin acceso privilegiado al núcleo",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Arduino",
+      "grupo": "capacidad_opcional",
+      "funcion": "Sondas físicas futuras en laboratorios, proyecto separado",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "AstraSecurity",
+      "grupo": "capacidad_opcional",
+      "funcion": "Auditoría web cuando exista superficie pública",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Blackfire",
+      "grupo": "capacidad_opcional",
+      "funcion": "Perfilado de procesos y API, según compatibilidad",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Blockchair",
+      "grupo": "capacidad_opcional",
+      "funcion": "Datos de blockchain solo si una pregunta validada lo requiere",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Boot.dev",
+      "grupo": "formacion_personal",
+      "funcion": "Aprendizaje backend y procesos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Bootstrap Studio",
+      "grupo": "capacidad_opcional",
+      "funcion": "Maquetación visual del front-end administrativo",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "BrowserStack",
+      "grupo": "nucleo",
+      "funcion": "Sonda web de compatibilidad y rendimiento en dispositivos",
+      "estado": "piloto_pendiente",
+      "conectado": false,
+      "acceso": "por_solicitar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Camber",
+      "grupo": "nucleo",
+      "funcion": "Experimentación CPU/GPU con snapshots aprobados",
+      "estado": "piloto_pendiente",
+      "conectado": false,
+      "acceso": "por_solicitar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "CARTO",
+      "grupo": "capacidad_opcional",
+      "funcion": "Análisis agregado de cobertura regional si hay datos autorizados",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Clerk",
+      "grupo": "capacidad_opcional",
+      "funcion": "Autenticación de prototipo, no una identidad adicional en producción",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Codecov",
+      "grupo": "nucleo",
+      "funcion": "Control de cobertura de pruebas y regresiones",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Codedex",
+      "grupo": "formacion_personal",
+      "funcion": "Formación corta",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "CodeScene",
+      "grupo": "nucleo",
+      "funcion": "Revisión de deuda técnica en componentes críticos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "ConfigCat",
+      "grupo": "capacidad_opcional",
+      "funcion": "Pruebas de feature flags antes de elegir proveedor",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Dashlane",
+      "grupo": "productividad_individual",
+      "funcion": "Gestor de contraseñas alternativo; no duplicar la fuente oficial",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "DataCamp",
+      "grupo": "formacion_personal",
+      "funcion": "Formación aplicada a estadística, experimentación y SQL",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Datadog",
+      "grupo": "capacidad_opcional",
+      "funcion": "Evaluación comparativa de observabilidad, no duplicar telemetría permanente",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Deepnote",
+      "grupo": "nucleo",
+      "funcion": "Notebooks científicos con datasets filtrados y permisos",
+      "estado": "piloto_pendiente",
+      "conectado": false,
+      "acceso": "por_solicitar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "DeepScan",
+      "grupo": "capacidad_opcional",
+      "funcion": "Análisis estático de frontend JS",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "DevCycle",
+      "grupo": "capacidad_opcional",
+      "funcion": "Alternativa de feature flags, solo en laboratorio",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Doppler",
+      "grupo": "nucleo",
+      "funcion": "Gestión de secretos para conectores que todavía los necesiten",
+      "estado": "piloto_pendiente",
+      "conectado": false,
+      "acceso": "por_solicitar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Educative",
+      "grupo": "formacion_personal",
+      "funcion": "Formación de backend y ciencia de datos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "FrontendMasters",
+      "grupo": "formacion_personal",
+      "funcion": "Formación frontend para consola",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitHub",
+      "grupo": "nucleo",
+      "funcion": "Control de versiones, revisión y CI sin llaves persistentes",
+      "estado": "infraestructura_existente_por_verificar",
+      "conectado": false,
+      "acceso": "revisar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitHub Campus Experts",
+      "grupo": "capacidad_opcional",
+      "funcion": "Vínculo con laboratorios universitarios",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitHub Codespaces",
+      "grupo": "nucleo",
+      "funcion": "Desarrollo y pruebas reproducibles sin tocar producción",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitHub Copilot",
+      "grupo": "nucleo",
+      "funcion": "Asistencia al programador sin acceso a datos privados",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitHub Desktop",
+      "grupo": "capacidad_opcional",
+      "funcion": "Cliente Git local",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitHub Pages",
+      "grupo": "capacidad_opcional",
+      "funcion": "Publicación de documentación no sensible",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitKraken",
+      "grupo": "capacidad_opcional",
+      "funcion": "Gestión visual del flujo Git",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GitLens",
+      "grupo": "capacidad_opcional",
+      "funcion": "Revisión de historial de ramas",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "GoRails",
+      "grupo": "capacidad_opcional",
+      "funcion": "Formación Ruby/Rails si fuera necesaria",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "HazeOver",
+      "grupo": "productividad_individual",
+      "funcion": "Concentración en Mac",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Heroku",
+      "grupo": "capacidad_opcional",
+      "funcion": "API o prototipo aislado; sin datos personales ni acceso al lago productivo",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Honeybadger",
+      "grupo": "capacidad_opcional",
+      "funcion": "Evaluación comparativa de alertas de errores",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Icons8",
+      "grupo": "capacidad_opcional",
+      "funcion": "Recursos de diseño con licencia adecuada",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "IconScout",
+      "grupo": "capacidad_opcional",
+      "funcion": "Recursos de diseño con licencia adecuada",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Imgbot",
+      "grupo": "capacidad_opcional",
+      "funcion": "Optimización de recursos gráficos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "InterviewCake",
+      "grupo": "formacion_personal",
+      "funcion": "Estructuras de datos y algoritmos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "JetBrains",
+      "grupo": "nucleo",
+      "funcion": "IDE para desarrollo Python/ETL",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "LambdaTest",
+      "grupo": "capacidad_opcional",
+      "funcion": "Matriz de navegadores complementaria a BrowserStack cuando sea necesaria",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "LocalStack",
+      "grupo": "capacidad_opcional",
+      "funcion": "Pruebas de compatibilidad S3/AWS fuera del núcleo Azure",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Microsoft 365",
+      "grupo": "nucleo",
+      "funcion": "Reportes internos y análisis tabular a partir de exportaciones",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Microsoft Azure",
+      "grupo": "nucleo",
+      "funcion": "Lago privado, jobs bajo demanda e identidades administradas",
+      "estado": "infraestructura_existente_por_verificar",
+      "conectado": false,
+      "acceso": "revisar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Microsoft Azure (for ages 13-17)",
+      "grupo": "capacidad_opcional",
+      "funcion": "Oferta alternativa por edad, no compatible con la cuenta de adulto",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Microsoft Visual Studio Dev Essentials",
+      "grupo": "capacidad_opcional",
+      "funcion": "Créditos temporales para benchmarks Azure planificados",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "MongoDB",
+      "grupo": "nucleo",
+      "funcion": "Catálogo de conocimiento técnico versionado",
+      "estado": "infraestructura_existente_por_verificar",
+      "conectado": false,
+      "acceso": "revisar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Name.com",
+      "grupo": "capacidad_opcional",
+      "funcion": "Dominio auxiliar para documentación pública cuando convenga",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "New Relic",
+      "grupo": "nucleo",
+      "funcion": "Observabilidad ampliada para servicios, si aporta capacidad distinta",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Notion",
+      "grupo": "capacidad_opcional",
+      "funcion": "Planificación administrativa de tareas, sin secretos",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Notion Template Collection",
+      "grupo": "capacidad_opcional",
+      "funcion": "Plantillas de organización sin datos sensibles",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Octicons",
+      "grupo": "capacidad_opcional",
+      "funcion": "Iconos accesibles para interfaces",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Pageclip",
+      "grupo": "capacidad_opcional",
+      "funcion": "Recepción de formularios públicos no sensibles",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "POEditor",
+      "grupo": "capacidad_opcional",
+      "funcion": "Traducción y localización de materiales y panel",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Polypane",
+      "grupo": "capacidad_opcional",
+      "funcion": "Validación de diseño responsive",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "PomoDone",
+      "grupo": "productividad_individual",
+      "funcion": "Gestión individual del tiempo",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "PopSQL",
+      "grupo": "capacidad_opcional",
+      "funcion": "Cliente colaborativo para SQL cuando se requiera",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Requestly",
+      "grupo": "capacidad_opcional",
+      "funcion": "Depuración de API con datos de prueba",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Scrimba",
+      "grupo": "formacion_personal",
+      "funcion": "Formación frontend",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Sentry",
+      "grupo": "nucleo",
+      "funcion": "Seguimiento de fallas en pipelines y servicios",
+      "estado": "piloto_pendiente",
+      "conectado": false,
+      "acceso": "por_solicitar",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "SimpleAnalytics",
+      "grupo": "capacidad_opcional",
+      "funcion": "Analítica de un sitio público con privacidad",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "SQLGate",
+      "grupo": "capacidad_opcional",
+      "funcion": "Cliente SQL para conectar fuentes compatibles",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Stripe",
+      "grupo": "capacidad_opcional",
+      "funcion": "Pagos futuros de Amatista, nunca parte del motor científico",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "SymfonyCasts",
+      "grupo": "formacion_personal",
+      "funcion": "Capacitación PHP opcional",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Termius",
+      "grupo": "nucleo",
+      "funcion": "Acceso SSH restringido a equipos de laboratorio",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Testmail",
+      "grupo": "capacidad_opcional",
+      "funcion": "Pruebas de notificaciones sin usar correos reales",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Themeisle",
+      "grupo": "capacidad_opcional",
+      "funcion": "Sitio público informativo opcional",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "ToDiagram",
+      "grupo": "capacidad_opcional",
+      "funcion": "Inspección visual de JSON/YAML no sensibles",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Tower",
+      "grupo": "capacidad_opcional",
+      "funcion": "Cliente Git alternativo",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Travis CI",
+      "grupo": "capacidad_opcional",
+      "funcion": "Comparación puntual con GitHub Actions",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Vaadin",
+      "grupo": "capacidad_opcional",
+      "funcion": "Evaluación de componentes PWA si se usa Java",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Visme",
+      "grupo": "capacidad_opcional",
+      "funcion": "Divulgación y presentación de resultados agregados",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Visual Studio Code",
+      "grupo": "nucleo",
+      "funcion": "Edición del proyecto e inspección técnica",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "WorkingCopy",
+      "grupo": "capacidad_opcional",
+      "funcion": "Revisión de Git desde iOS",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Xojo",
+      "grupo": "capacidad_opcional",
+      "funcion": "Herramienta alternativa de desarrollo, no núcleo",
+      "estado": "evaluar",
+      "conectado": false,
+      "acceso": "sin_permisos",
+      "responsable": "administrador_g7b"
+    },
+    {
+      "servicio": "Zyte",
+      "grupo": "nucleo",
+      "funcion": "Extracción programada de documentación pública y permitida",
+      "estado": "infraestructura_existente_por_verificar",
+      "conectado": false,
+      "acceso": "revisar",
+      "responsable": "administrador_g7b"
+    }
+  ]
+}
