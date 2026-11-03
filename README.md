@@ -20,7 +20,7 @@ Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs
 
 ## Documentos
 
-- [Telemetría: captura y controles](docs/TELEMETRIA.md): sonda existente y Blender Open Data, separados de la documentación. Prueba local: 1,000 benchmarks públicos / 3,000 mediciones y tres mediciones de sonda, todavía en revisión. La subida real a Azure y la continuidad deben comprobarse en Actions.
+- [Telemetría: captura y controles](docs/TELEMETRIA.md): primera ejecución cloud verificada el 2026-11-03: tres mediciones de sonda aceptadas y 3,000 mediciones públicas en revisión, con escritura y lectura comprobadas en Azure. [Ejecución 41707925151](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41707925151). Programación semanal habilitada; continuidad aún por observar. Cubo y Geoda pendientes.
 
 - [Visión](docs/VISION.md): el norte del proyecto y su relación con Amatista.
 - [Plan](docs/PLAN.md): qué es G7B, reglas de calidad, fuentes, telemetría, arquitectura, visualización, fases. **Es el documento rector.**

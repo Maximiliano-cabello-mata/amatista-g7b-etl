@@ -92,7 +92,7 @@ y permiten reintentar una subida parcial. Los informes distinguen captura local 
 
 ## Criterios pendientes antes del cubo
 
-1. Ver una ejecución cloud completa y comprobar recurrencia y autenticación.
+1. Comprobar recurrencia y continuidad de autenticación; primera ejecución cloud completa verificada abajo.
 2. Reducir variación local; ampliar equipos y versiones con consentimiento.
 3. Soportar snapshot completo/incremental y revisar anomalías de benchmarks públicos.
 4. Crear tablas Parquet, hechos/dimensiones y deduplicación global; no combinar
@@ -100,3 +100,27 @@ y permiten reintentar una subida parcial. Los informes distinguen captura local 
 5. Usar Deepnote para análisis reproducible y Camber para trabajos necesarios;
    activar una oferta no demuestra una integración. Geoda consumirá contratos
    y perfiles validados posteriormente.
+
+## Activación verificada
+
+El [PR #14](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/pull/14)
+se integró en main (`ec4335bd2a1602ccc636906ca036f198f8393499`) después de
+dos ejecuciones de Pruebas correctas: 41707674079 y 41707694154.
+
+La [corrida 41707925151](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41707925151)
+terminó con éxito el 2026-11-03. Los logs confirman:
+
+- Sonda del runner: una corrida, tres mediciones aceptadas por los controles
+  de esta versión, `subida_y_lectura_verificadas`.
+  Lote `776ae8990714ab31c8d60f9e876b3f1d0eec10c775521777e8190ce4ddc798c1`.
+- Open Data: 1,000 benchmarks, 3,000 mediciones en revisión,
+  `subida_y_lectura_verificadas`; mismo hash que la muestra local.
+- Artefacto `telemetria-41707925151`, ID 13267960117, con informes y mediciones.
+  Su retención termina el 2026-11-17; las copias del lago son independientes.
+
+La sonda del runner tuvo medianas 0.173 s en edición, 0.0469 s en modificadores
+y 271.1818 fps de animación interna. No son mediciones de la computadora del
+propietario ni certifican fluidez de ventana. La sonda local anterior continúa
+en revisión y no fue subida por esta corrida. Aceptación de esquema y estabilidad
+no equivale a recomendación validada. Primera ejecución correcta no demuestra
+todavía semanas de operación continua.
