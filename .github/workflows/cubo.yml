@@ -1,0 +1,48 @@
+name: Cubo G7B
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'g7b_almacen/**'
+      - 'requirements-cubo.txt'
+      - '.github/workflows/cubo.yml'
+  workflow_run:
+    workflows: ['Telemetría G7B']
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cubo-g7b-publicacion
+  cancel-in-progress: false
+
+jobs:
+  construir:
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    environment: amatista1
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-cubo.txt
+      - name: Construir, publicar y verificar
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+        run: |
+          test -n "$AZURE_LAGO_URL" || { echo 'Falta AZURE_LAGO_URL en amatista1'; exit 1; }
+          python -m g7b_almacen.cubo --azure --salida resultado-cubo
+          python -m g7b_almacen.descargar verificacion/cubo.duckdb
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cubo-${{ github.run_id }}
+          path: resultado-cubo/
+          retention-days: 14
