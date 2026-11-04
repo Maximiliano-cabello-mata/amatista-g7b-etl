@@ -57,6 +57,25 @@ Cada prueba de la sonda lleva una etiqueta de calidad: `ok` (repetida y estable,
 
 Así el add-on aplica un perfil medido, no una corazonada, y si G7B no responde usa la copia incluida.
 
+### 5.1 Publicación segura para consumidores
+
+`oro/` contiene los **candidatos** recién calculados. No debe usarse directamente en
+Amatista ni en un tablero público: podrían existir antes de pasar la compuerta.
+
+Después de aprobar la calidad, `g7b_almacen/publicacion.py` genera archivos inmutables
+bajo `publicado/versiones/<hash>/` y, **al final**, actualiza
+`publicado/actual.json` (contrato `g7b.publicacion/1`). El manifiesto publica las
+rutas y hashes SHA-256 de `perfiles.json`, `resumen.json` y `calidad.json`.
+Si falla la calidad o la escritura de una versión, el puntero anterior no se cambia.
+No se publica automáticamente un cubo con cero datos ni un candidato sin contrato de perfiles.
+
+El consumidor debe obtener el manifiesto, comprobar su estado `calidad_aprobada`,
+verificar el hash del JSON solicitado y aplicar perfiles solo con opción de deshacer.
+El cubo DuckDB y los archivos Parquet siguen en `oro/` para investigación; la
+publicación estable inicial está limitada a esos tres JSON.
+
+Para una prueba **sin nube y sin notebooks**, ver [laboratorio Colab](COLAB_LABORATORIO.md).
+
 ## 6. Qué entra y qué no
 
 - **Sí:** datos públicos de rendimiento de 3D libre, con fuente y licencia (Blender Open Data hoy; el catálogo se amplía a otros programas y librerías). Mediciones de la sonda sin datos personales.
