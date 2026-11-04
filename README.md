@@ -47,6 +47,7 @@ python -m geoda decidir --huella equipo.json # el plan para un equipo
 ## Documentos
 
 El índice completo, ordenado, está en **[docs/README.md](docs/README.md)**. Los de entrada:
+- [Puente G7B → Geoda → Amatista](docs/GEODA_PUENTE_24_7.md): publica estados agregados verificados tras ingesta y cubo; sin recomendaciones sin evidencia. Incluye activación controlada y operación 24/7.
 - [Visión](docs/VISION.md): el norte, y cómo se unen Amatista, G7B y Geoda.
 - [Plan maestro](docs/PLAN_MAESTRO.md): el camino a seguir. Manda sobre los demás planes.
 - [Geoda](docs/GEODA.md): cómo está estructurado el kernel y qué ya existe.

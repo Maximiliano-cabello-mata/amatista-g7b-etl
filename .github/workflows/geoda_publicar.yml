@@ -1,0 +1,55 @@
+name: Publicar estado para Geoda
+
+# Las extracciones documentales alimentan MongoDB; las mediciones alimentan
+# el cubo. Geoda recibe conteos y SOLO futuros perfiles validados, nunca texto
+# documental presentado como rendimiento ni huellas técnicas individuales.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "7 */6 * * *"
+  workflow_run:
+    workflows: ["Procesar bronce", "Cubo G7B"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geoda-publicacion
+  cancel-in-progress: false
+
+jobs:
+  publicar:
+    if: ${{ (github.event_name == 'workflow_dispatch' || vars.G7B_GEODA_PUBLICAR_ACTIVA == 'true') && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+    runs-on: ubuntu-24.04
+    environment: amatista1
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r requirements-cubo.txt
+      - name: Verificar cubo y MongoDB; generar feed agregado
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+        run: |
+          test -n "$AZURE_LAGO_URL" && test -n "$MONGO_URI" || {
+            echo "Faltan credenciales en el environment amatista1"; exit 1;
+          }
+          python -m g7b_almacen.geoda_estado --salida publicacion/geoda.json
+      - name: Publicar solo si cambió (sin datos personales)
+        run: |
+          git add -- publicacion/geoda.json
+          if git diff --cached --quiet; then
+            echo "Sin cambios de cubo o documentos: ninguna publicación nueva"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "data(geoda): actualizar estado agregado verificado [skip ci]"
+          git push origin HEAD:main
