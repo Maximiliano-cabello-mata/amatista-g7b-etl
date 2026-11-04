@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: telemetria-g7b
@@ -33,6 +34,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-lago.txt
+      - name: Autenticar Azure mediante OIDC (sin SAS)
+        if: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Instalar Blender de Ubuntu
         run: sudo apt-get update && sudo apt-get install -y blender
       - name: Medir CPU en el runner (no representa computadoras personales)
@@ -40,11 +48,12 @@ jobs:
       - name: Capturar y verificar las dos fuentes
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          AZURE_STORAGE_ACCOUNT_URL: ${{ vars.AZURE_STORAGE_ACCOUNT_URL }}
           PUBLICAR: ${{ github.event_name != 'workflow_dispatch' || inputs.publicar_azure }}
         run: |
           args=()
           if [ "$PUBLICAR" = "true" ]; then
-            test -n "$AZURE_LAGO_URL" || { echo 'Falta AZURE_LAGO_URL en amatista1'; exit 1; }
+            { test -n "$AZURE_LAGO_URL" || test -n "$AZURE_STORAGE_ACCOUNT_URL"; } || { echo 'Falta acceso Azure: OIDC o SAS'; exit 1; }
             args+=(--azure)
           fi
           python -m g7b_telemetria.capturar sonda --entrada resultados-sonda --salida captura/sonda "${args[@]}"
