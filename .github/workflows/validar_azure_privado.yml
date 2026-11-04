@@ -1,0 +1,82 @@
+name: Validar arquitectura privada de Azure
+
+on:
+  push:
+    branches:
+      - chatgpt/g7b-arquitectura-privada-ofertas-20261101
+    paths:
+      - .github/workflows/validar_azure_privado.yml
+      - infra/azure/g7b-control-privado.bicep
+      - infra/azure/validar_y_aprovisionar.sh
+      - infra/ofertas/catalogo.json
+      - infra/azure/activar_diagnostico.sh
+      - infra/azure/worker/**
+      - g7b_ops/**
+      - pruebas/test_activar_diagnostico.sh
+      - infra/azure/revisar_operacion.*
+      - pruebas/test_revision_operacion.py
+      - pruebas/test_guardia_aprovisionamiento.sh
+      - infra/azure/consolidar_azure.*
+      - infra/azure/base_operativa.json
+      - infra/azure/g7b-operacion.bicep
+      - infra/azure/g7b-ruta-logs.bicep
+      - pruebas/test_consolidar_azure.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build_bicep:
+    name: Bicep sin credenciales y controles de seguridad
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compilar IaC sin contacto con la suscripcion
+        shell: bash
+        run: |
+          az bicep install
+          az bicep build --file infra/azure/g7b-control-privado.bicep --outfile /tmp/g7b-azure.json
+          az bicep build --file infra/azure/g7b-operacion.bicep --outfile /tmp/g7b-operacion.json
+          az bicep build --file infra/azure/g7b-ruta-logs.bicep --outfile /tmp/g7b-ruta-logs.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          arm = json.loads(Path("/tmp/g7b-azure.json").read_text())
+          recursos = json.dumps(arm).lower()
+          assert "microsoft.app/jobs" in recursos
+          assert "microsoft.authorization/roleassignments" in recursos
+          assert "manual" in recursos
+          assert "accountkey=" not in recursos and "sig=" not in recursos
+          print("G7B_BICEP_VALIDO")
+          operacion = json.loads(Path("/tmp/g7b-operacion.json").read_text())
+          jobs = [r for r in operacion["resources"] if r["type"].lower() == "microsoft.app/jobs"]
+          assert len(jobs) == 1
+          assert "quickstart-jobs" not in json.dumps(operacion)
+          assert "sha256:aa21dd18" in json.dumps(operacion)
+          assert not any(r["type"].lower() in ("microsoft.storage/storageaccounts", "microsoft.app/managedenvironments", "microsoft.containerregistry/registries", "microsoft.operationalinsights/workspaces") for r in operacion["resources"])
+          ruta = json.loads(Path("/tmp/g7b-ruta-logs.json").read_text())
+          assert len(ruta["resources"]) == 1
+          assert ruta["resources"][0]["type"] == "Microsoft.Insights/diagnosticSettings"
+          PY
+      - name: Reglas y sintaxis del inventario
+        shell: bash
+        run: |
+          bash -n infra/azure/validar_y_aprovisionar.sh
+          bash -n infra/azure/diagnosticar_cloud_shell.sh
+          bash -n infra/azure/activar_diagnostico.sh
+          bash pruebas/test_activar_diagnostico.sh
+          bash -n infra/azure/revisar_operacion.sh
+          python -m unittest discover -s pruebas -p test_revision_operacion.py -v
+          bash pruebas/test_guardia_aprovisionamiento.sh
+          bash -n infra/azure/consolidar_azure.sh
+          python -m unittest discover -s pruebas -p test_consolidar_azure.py -v
+          python -m compileall -q g7b_ops
+          python herramientas/validar_catalogo.py
+      - name: Preparar instrucciones
+        run: |
+          echo "### Arquitectura analizada sin acceso a Azure ni despliegues" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Bicep compilado: correcto" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Permisos: lectura sobre el contenedor del lago" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Job: solo arranque manual; sin endpoint HTTP" >> "$GITHUB_STEP_SUMMARY"
