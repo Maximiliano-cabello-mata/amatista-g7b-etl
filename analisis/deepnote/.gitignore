@@ -1,0 +1,7 @@
+resultados_deepnote/
+.ipynb_checkpoints/
+__pycache__/
+*.jsonl
+*.jsonl.gz
+.env
+.env.*
