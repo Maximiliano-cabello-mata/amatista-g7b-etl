@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "procedencia": "Salidas de Cloud Shell proporcionadas por el usuario el 2026-11-02; no consulta directa del agente",
+  "subscription": "04408599-cf01-476f-9bab-6c57566a15a4",
+  "resourceGroup": "g7b",
+  "region": "westus2",
+  "environment": "g7b-env-laboratorio-jobs-v3",
+  "job": "g7b-smoke-laboratorio",
+  "image": "g7bacr09b52a0e.azurecr.io/g7b/auditoria@sha256:aa21dd18f24ed19e24b7d32e2fe6ea514e97e873fbc677c15b22996ddec8319d",
+  "workspace": "g7b-logs-laboratorio",
+  "workspaceCustomerId": "10e6b6a1-08e3-4a9b-a497-306757fb29c0",
+  "logsDestination": "log-analytics",
+  "execution": {
+    "name": "g7b-smoke-laboratorio-a665997",
+    "status": "Succeeded",
+    "start": "2026-11-02T16:48:30Z",
+    "end": "2026-11-02T16:49:03Z",
+    "markerTime": "2026-11-02T16:49:00.3267357Z",
+    "table": "ContainerAppConsoleLogs_CL",
+    "markers": 1
+  },
+  "limites": ["Conteos internos del marcador aun no recuperados", "No acredita escritura ni ETL", "No acredita alertas, presupuesto o revocacion SAS", "No acredita funcionamiento de una ruta migrada"]
+}

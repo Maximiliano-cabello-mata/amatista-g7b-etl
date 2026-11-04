@@ -1,5 +1,7 @@
 # Configurar Azure (el lago de datos de G7B)
 
+**Actualización 2026-11-02:** el storage `g7blago09b52a0e`, el entorno `g7b-env-laboratorio-jobs-v3` y el Job `g7b-smoke-laboratorio` figuran en el inventario final reportado por el usuario. Despliegue, RBAC y smoke: `Succeeded`. Ver [bitácora](../../docs/bitacoras/2026-11-02.md) y [runbook vigente](../../docs/AZURE_24_7_CLOUD_SHELL.md). Los pasos de creación que siguen son una guía inicial, no una instrucción para recrear recursos existentes. Acceso del Job al lago, ETL real, presupuesto y revocación SAS no verificados en esta revisión.
+
 Azure guarda **todo lo que se extrae, tal como llegó** (zona bronce del [plan](../../docs/PLAN.md#7-arquitectura)), y después lo validado y lo curado (plata y oro). Zyte borra sus datos a los 120 días; el lago no.
 
 **Qué se crea:**
@@ -147,7 +149,7 @@ Las mediciones reales van a `bronce/sonda/` y las sintéticas a `sintetico/sonda
 Corre esto en Cloud Shell (cambia el nombre por el de tu cuenta):
 
 ```bash
-az storage account keys renew -g g7b -n g7blagoxxxxxx --key primary
+az storage account keys renew -g g7b -n g7blagoxxxxxx --key primary --output none
 ```
 
 Esto invalida todas las llaves que imprimió el script. Después vuelve a correr el script para obtener una nueva y actualízala en GitHub y Doppler.
@@ -155,7 +157,7 @@ Esto invalida todas las llaves que imprimió el script. Después vuelve a correr
 ## Qué ya está probado y qué no
 
 - **Probado aquí:** el código del lago y las dos herramientas (`zyte_a_lago` y `subir_mediciones`), contra Azurite, el emulador oficial de Azure Storage. Las mismas pruebas corren en GitHub Actions con cada cambio.
-- **No probado:** el script `crear_lago.sh` en una cuenta real de Azure, porque no tengo acceso a la tuya. Se revisó solo su sintaxis. Si un paso falla, copia el mensaje de error (sin la llave) y lo corregimos.
+- **Evidencia actual:** existencia del storage y despliegue del laboratorio v3 confirmados por los logs reportados por el usuario el 2026-11-02. No se consultó Azure directamente en esta revisión ni se certificó la ejecución de cada paso de esta guía. El smoke no prueba acceso al lago ni ETL real.
 
 ## Paso 9. Encender la ingesta
 

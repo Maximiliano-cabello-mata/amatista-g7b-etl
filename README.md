@@ -6,7 +6,9 @@ G7B reúne lo que se sabe (documentación de herramientas libres, técnicas publ
 
 **Estado (2026-11-02):** prueba manual real de extremo a extremo completada: Zyte → Azure Bronce → embudo → Azure Plata → MongoDB. Se importaron **2,353 registros**: 987 aceptados, 52 en revisión y 1,314 rechazados; el publicador reportó **987 documentos nuevos** y 0 actualizados. Esa cifra no es el total actual de MongoDB. Ver la [bitácora técnica y las seis ejecuciones](docs/bitacoras/2026-11-02_integracion_real_g7b.md).
 
-**Producción continua: pendiente de validación.** Falta comprobar el conteo posterior en MongoDB, la idempotencia, muestras de calidad y la continuidad de la autenticación Azure. Los workflows programados requieren `G7B_INGESTA_ACTIVA=true`; esta prueba manual no acredita su operación continua. La prioridad de telemetría y el cubo permanece en el [plan, sección 0](docs/PLAN.md#0-rumbo-actualizado-2026-11-01-tarde).
+**Producción continua: pendiente de validación.** Falta comprobar el conteo posterior en MongoDB, la idempotencia, corregir los problemas de calidad observados y la continuidad de la autenticación Azure. Los workflows programados requieren `G7B_INGESTA_ACTIVA=true`; esta prueba manual no acredita su operación continua. La prioridad de telemetría y el cubo permanece en el [plan, sección 0](docs/PLAN.md#0-rumbo-actualizado-2026-11-01-tarde).
+
+**Cierre operativo Azure (2026-11-02):** Azure v3 y auditor privado ejecutados con exito segun las salidas del usuario; ultima ejecucion documentada de 16:48:30 a 16:49:03 UTC. La entrega persistida del marcador de esa ejecucion ya fue comprobada por el usuario en Log Analytics. El auditor enumera metadatos; no es ETL. Prioridad: [cierre operativo de Azure](docs/CIERRE_AZURE.md), con revision unica de solo lectura, configuracion reproducible y alertas pendientes. Ver [bitacora](docs/bitacoras/2026-11-02.md). Presupuesto y remediacion SAS no verificados independientemente; el run historico 404 no demuestra revocacion. La ingesta programada sigue documentada como apagada, sin revalidacion aqui.
 
 **Proyecto hermano:** [Amatista](https://github.com/Maximiliano-cabello-mata/amatista), la plataforma que enseña y, desde el 2026-11-01, un centro de conocimiento 3D. Son proyectos separados que se alimentan: G7B mide y decide; Amatista enseña, recomienda y guarda los datos personales. Ver [VISION.md](docs/VISION.md).
 
@@ -20,8 +22,9 @@ Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs
 
 ## Documentos
 
-- [Puente G7B → Geoda → Amatista](docs/GEODA_PUENTE_24_7.md): publicador de conteos agregados tras procesar y construir el cubo; sus recomendaciones de rendimiento seguirán desactivadas hasta obtener evidencia. Incluye la operación continua y la activación segura.
+- [Puente G7B → Geoda → Amatista](docs/GEODA_PUENTE_24_7.md): publica estados agregados verificados tras ingesta y cubo; sin recomendaciones sin evidencia. Incluye activación controlada y operación 24/7.
 
+- [Observaciones de calidad del lote documental](docs/reportes/2026-11-02_observaciones_documentacion_g7b.md): análisis de los 987 aceptados, lectura de 28 documentos, utilidad comprobada, omisiones y correcciones pendientes.
 - [Cubo de telemetría](docs/CUBO.md): **publicado y verificado en Azure** el 2026-11-03, con 3,003 mediciones (tres aceptadas y 3,000 en revisión). Parquet + DuckDB versionados, seis dimensiones y deduplicación. Se reconstruye tras cada captura exitosa. Incluye cuaderno de consulta para Deepnote; no genera recomendaciones de Geoda.
 
 - [Telemetría: captura y controles](docs/TELEMETRIA.md): primera ejecución cloud verificada el 2026-11-03: tres mediciones de sonda aceptadas y 3,000 mediciones públicas en revisión, con escritura y lectura comprobadas en Azure. [Ejecución 41707925151](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41707925151). Programación semanal habilitada; continuidad aún por observar. Cubo y Geoda pendientes.
