@@ -22,6 +22,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: ingesta
@@ -42,9 +43,17 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements-lago.txt
+      - name: Autenticar Azure mediante OIDC (sin SAS)
+        if: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Vigilar
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          AZURE_STORAGE_ACCOUNT_URL: ${{ vars.AZURE_STORAGE_ACCOUNT_URL }}
           ZYTE_API_KEY: ${{ secrets.ZYTE_API_KEY }}
           ZYTE_PROJECT_ID: ${{ vars.ZYTE_PROJECT_ID || '883618' }}
           STACKEXCHANGE_KEY: ${{ secrets.STACKEXCHANGE_KEY }}
