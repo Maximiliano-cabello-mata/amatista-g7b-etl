@@ -1,0 +1,20 @@
+{
+  "contrato": "g7b.laboratorios/1",
+  "revision": 1,
+  "laboratorios": {
+    "deepnote": {
+      "activo": true,
+      "tareas": [
+        "captura_y_cubo",
+        "calidad_del_cubo"
+      ]
+    },
+    "camber": {
+      "activo": true,
+      "tareas": [
+        "salud_de_geoda",
+        "cobertura_de_render"
+      ]
+    }
+  }
+}

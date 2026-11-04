@@ -1,0 +1,46 @@
+name: Cuadernos G7B
+on:
+  schedule:
+    - cron: '41 12 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['analisis/laboratorios/**', '.github/workflows/laboratorios.yml']
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: cuadernos-g7b
+  cancel-in-progress: false
+jobs:
+  analizar:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install duckdb==2.0.0 nbconvert ipykernel
+      - name: Obtener último cubo publicado
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/cubo.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          [[ "$id" =~ ^[0-9]+$ ]]
+          gh run download "$id" --repo "$GITHUB_REPOSITORY" --name "cubo-$id" --dir "$RUNNER_TEMP/insumo"
+          echo "G7B_CUBO_DIR=$RUNNER_TEMP/insumo" >> "$GITHUB_ENV"
+      - name: Ejecutar ambos cuadernos
+        working-directory: analisis/laboratorios
+        run: |
+          for lab in deepnote camber; do
+            jupyter nbconvert --execute --to notebook --output "ejecutado_$lab.ipynb" --ExecutePreprocessor.timeout=180 "G7B_$lab.ipynb"
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: informes-laboratorios-${{ github.run_id }}
+          path: analisis/laboratorios/resultado_*.json
+          if-no-files-found: error
+          retention-days: 14
