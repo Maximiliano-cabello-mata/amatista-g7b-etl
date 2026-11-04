@@ -4,6 +4,9 @@ name: Publicar estado para Geoda
 # el cubo. Geoda recibe conteos y SOLO futuros perfiles validados, nunca texto
 # documental presentado como rendimiento ni huellas técnicas individuales.
 on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/geoda_publicar.yml']
   workflow_dispatch:
   schedule:
     - cron: "7 */6 * * *"
@@ -21,7 +24,7 @@ concurrency:
 
 jobs:
   publicar:
-    if: ${{ (github.event_name == 'workflow_dispatch' || vars.G7B_GEODA_PUBLICAR_ACTIVA == 'true') && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
+    if: ${{ (github.event_name == 'workflow_dispatch' || (vars.G7B_GEODA_PUBLICAR_ACTIVA == 'true' || (vars.G7B_GEODA_PUBLICAR_ACTIVA == '' && github.repository == 'Maximiliano-cabello-mata/amatista-g7b-etl'))) && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success') }}
     runs-on: ubuntu-24.04
     environment: amatista1
     timeout-minutes: 15
