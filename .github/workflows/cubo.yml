@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: cubo-g7b-publicacion
@@ -34,11 +35,19 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-cubo.txt
+      - name: Autenticar Azure mediante OIDC (sin SAS)
+        if: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Construir, publicar y verificar
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          AZURE_STORAGE_ACCOUNT_URL: ${{ vars.AZURE_STORAGE_ACCOUNT_URL }}
         run: |
-          test -n "$AZURE_LAGO_URL" || { echo 'Falta AZURE_LAGO_URL en amatista1'; exit 1; }
+          { test -n "$AZURE_LAGO_URL" || test -n "$AZURE_STORAGE_ACCOUNT_URL"; } || { echo 'Falta acceso Azure: OIDC o SAS'; exit 1; }
           python -m g7b_almacen.cubo --azure --salida resultado-cubo
           python -m g7b_almacen.descargar verificacion/cubo.duckdb
       - uses: actions/upload-artifact@v4
