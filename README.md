@@ -21,6 +21,9 @@ Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs
 ## Documentos
 
 - [Observaciones de calidad del lote documental](docs/reportes/2026-11-02_observaciones_documentacion_g7b.md): análisis de los 987 aceptados, lectura de 28 documentos, utilidad comprobada, omisiones y correcciones pendientes.
+- [Cubo de telemetría](docs/CUBO.md): **publicado y verificado en Azure** el 2026-11-03, con 3,003 mediciones (tres aceptadas y 3,000 en revisión). Parquet + DuckDB versionados, seis dimensiones y deduplicación. Se reconstruye tras cada captura exitosa. Incluye cuaderno de consulta para Deepnote; no genera recomendaciones de Geoda.
+
+- [Telemetría: captura y controles](docs/TELEMETRIA.md): primera ejecución cloud verificada el 2026-11-03: tres mediciones de sonda aceptadas y 3,000 mediciones públicas en revisión, con escritura y lectura comprobadas en Azure. [Ejecución 41707925151](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/41707925151). Programación semanal habilitada; continuidad aún por observar. Cubo y Geoda pendientes.
 
 - [Visión](docs/VISION.md): el norte del proyecto y su relación con Amatista.
 - [Plan](docs/PLAN.md): qué es G7B, reglas de calidad, fuentes, telemetría, arquitectura, visualización, fases. **Es el documento rector.**
