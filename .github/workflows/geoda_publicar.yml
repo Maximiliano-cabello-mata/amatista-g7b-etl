@@ -14,6 +14,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write
 
 concurrency:
   group: geoda-publicacion
@@ -33,12 +34,20 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install -r requirements-cubo.txt
+      - name: Autenticar Azure mediante OIDC (sin SAS)
+        if: ${{ vars.AZURE_CLIENT_ID != '' && vars.AZURE_TENANT_ID != '' && vars.AZURE_SUBSCRIPTION_ID != '' }}
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: Verificar cubo y MongoDB; generar feed agregado
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          AZURE_STORAGE_ACCOUNT_URL: ${{ vars.AZURE_STORAGE_ACCOUNT_URL }}
           MONGO_URI: ${{ secrets.MONGO_URI }}
         run: |
-          test -n "$AZURE_LAGO_URL" && test -n "$MONGO_URI" || {
+          { test -n "$AZURE_LAGO_URL" || test -n "$AZURE_STORAGE_ACCOUNT_URL"; } && test -n "$MONGO_URI" || {
             echo "Faltan credenciales en el environment amatista1"; exit 1;
           }
           python -m g7b_almacen.geoda_estado --salida publicacion/geoda.json
