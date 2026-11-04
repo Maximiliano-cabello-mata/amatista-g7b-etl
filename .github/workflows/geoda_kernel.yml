@@ -1,0 +1,47 @@
+name: Geoda kernel
+on:
+  push:
+    branches: [main]
+    paths: ['geoda/**', '.github/workflows/geoda_kernel.yml']
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['Cubo G7B']
+    types: [completed]
+    branches: [main]
+permissions:
+  contents: read
+  actions: read
+jobs:
+  planificar:
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)) }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install duckdb==2.0.0
+      - id: origen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_CUBO: ${{ github.event.workflow_run.id }}
+        run: |
+          id="$RUN_CUBO"
+          if [ -z "$id" ]; then
+            id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/cubo.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          fi
+          [[ "$id" =~ ^[0-9]+$ ]] || { echo 'No hay ejecución válida de Cubo G7B'; exit 1; }
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.origen.outputs.id }}
+          name: cubo-${{ steps.origen.outputs.id }}
+          path: insumo
+      - run: python -m geoda.ejecutar --entrada insumo --salida salida
+      - uses: actions/upload-artifact@v4
+        with:
+          name: geoda-${{ github.run_id }}-cubo-${{ steps.origen.outputs.id }}
+          path: salida/
+          retention-days: 14

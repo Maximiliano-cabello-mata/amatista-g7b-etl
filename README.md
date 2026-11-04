@@ -1,5 +1,7 @@
 # G7B
 
+[Geoda en GitHub Actions](docs/GEODA_KERNEL.md): planificador de laboratorio que procesa el cubo verificado después de cada construcción exitosa. Sus resultados se conservan como artefactos separados del estado público de Amatista.
+
 Base de conocimiento y de mediciones para un 3D libre que funcione en cualquier computadora. Proyecto separado de [Amatista](https://github.com/Maximiliano-cabello-mata/amatista): Amatista lo consume como un cliente más.
 
 G7B reúne lo que se sabe (documentación de herramientas libres, técnicas publicadas por la industria y equivalencias con Maya y 3ds Max) y lo que se mide (rendimiento en computadoras reales, de las más viejas a las más potentes). Cada dato lleva fuente, versión y licencia. No es un motor 3D nuevo ni un fork de Blender: alimenta con datos al Corazón Amatista y a Blender Amatista.
