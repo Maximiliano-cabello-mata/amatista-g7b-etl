@@ -8,8 +8,9 @@
     tmp/...                                 se borra solo a los 7 días
 
 Credenciales, en este orden:
-    AZURE_LAGO_URL                URL del contenedor con su firma SAS (lo que imprime infra/azure/crear_lago.sh)
-    AZURE_STORAGE_CONNECTION_STRING + AZURE_LAGO_CONTENEDOR (por omisión "lago"); sirve para Azurite en pruebas
+    AZURE_STORAGE_ACCOUNT_URL + sesión de Azure CLI/OIDC (sin secretos; para ejecución continua).
+    AZURE_LAGO_URL                URL del contenedor con su firma SAS (modo legado/temporal).
+    AZURE_STORAGE_CONNECTION_STRING + AZURE_LAGO_CONTENEDOR (por omisión "lago"); Azurite en pruebas.
 """
 import gzip
 import io
@@ -19,6 +20,16 @@ from datetime import date
 
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.storage.blob import ContainerClient, ContentSettings
+
+def credencial_azure():
+    """Usa la identidad de Azure CLI que inicializa azure/login@v2 en Actions.
+
+    DefaultAzureCredential también admite Managed Identity en otros servidores.
+    No se solicitan ni imprimen claves en la aplicación.
+    """
+    from azure.identity import DefaultAzureCredential
+    return DefaultAzureCredential(exclude_interactive_browser_credential=True)
+
 
 ZONAS = ("bronce", "plata", "oro", "sintetico", "control", "tmp")
 
@@ -34,6 +45,18 @@ class Lago:
 
     @classmethod
     def desde_entorno(cls):
+        # Preferir identidad Azure: una SAS temporal caducada no debe bloquear
+        # los workflows que ya se autenticaron con azure/login y OIDC.
+        cuenta = os.environ.get("AZURE_STORAGE_ACCOUNT_URL", "").strip().rstrip("/")
+        if cuenta:
+            from urllib.parse import urlsplit
+            partes = urlsplit(cuenta)
+            if (partes.scheme != "https" or not partes.hostname
+                    or not partes.hostname.endswith(".blob.core.windows.net")
+                    or partes.path or partes.query or partes.fragment or partes.port):
+                raise ValueError("AZURE_STORAGE_ACCOUNT_URL no es una cuenta Blob HTTPS válida")
+            nombre = os.environ.get("AZURE_LAGO_CONTENEDOR", "lago")
+            return cls(ContainerClient(account_url=cuenta, container_name=nombre, credential=credencial_azure()))
         url = os.environ.get("AZURE_LAGO_URL")
         if url:
             return cls(ContainerClient.from_container_url(url))
@@ -41,7 +64,7 @@ class Lago:
         if conexion:
             nombre = os.environ.get("AZURE_LAGO_CONTENEDOR", "lago")
             return cls(ContainerClient.from_connection_string(conexion, nombre))
-        raise RuntimeError("Falta AZURE_LAGO_URL (o AZURE_STORAGE_CONNECTION_STRING para pruebas).")
+        raise RuntimeError("Falta AZURE_STORAGE_ACCOUNT_URL con identidad, AZURE_LAGO_URL o conexión Azurite.")
 
     @staticmethod
     def _validar(ruta):
