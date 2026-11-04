@@ -29,9 +29,16 @@ No publica correos, usuarios, huellas técnicas, nombres de equipos, documentos 
 2. En el environment `amatista1` comprobar que `AZURE_LAGO_URL` **sigue vigente** y `MONGO_URI` es válido. La SAS temporal usada el 3 de noviembre caduca en 24 h. **No habilitar trabajos programados usando una SAS vencida.**
 3. Ejecutar manualmente `Publicar estado para Geoda` desde Actions. Confirmar `G7B_GEODA_PUBLICACION_VERIFICADA`, archivo `publicacion/geoda.json` en `main` y que no contiene información privada.
 4. Desplegar la API y PWA de Amatista; comprobar `/api/g7b/v1/estado` y `#/geoda`.
-5. Solo tras credenciales duraderas, control de costos y pruebas de reintento, habilitar las variables `G7B_INGESTA_ACTIVA=true` y `G7B_GEODA_PUBLICAR_ACTIVA=true` en el environment `amatista1`. Los cron de vigilancia, descarga, procesamiento y publicación podrán trabajar sin Cloud Shell abierta.
+5. Solo tras credenciales duraderas, control de costos y pruebas de reintento, habilitar las variables `G7B_INGESTA_ACTIVA=true` y `G7B_GEODA_PUBLICAR_ACTIVA=true` como variables **del repositorio** (los `jobs.if` se evalúan antes de entrar al environment `amatista1`). Los cron de vigilancia, descarga, procesamiento y publicación podrán trabajar sin Cloud Shell abierta.
 
 La nueva variable de publicación **empieza desactivada**, porque debe valer explícitamente `true`; las ejecuciones manuales están permitidas.
+
+Ejemplo de activación (solo después de corregir credenciales y revisar costos):
+
+```bash
+gh variable set G7B_INGESTA_ACTIVA --body true --repo Maximiliano-cabello-mata/amatista-g7b-etl
+gh variable set G7B_GEODA_PUBLICAR_ACTIVA --body true --repo Maximiliano-cabello-mata/amatista-g7b-etl
+```
 
 ## Disponibilidad y límites
 
