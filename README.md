@@ -22,6 +22,8 @@ Los siguientes pasos de ingesta están en la [bitácora, trabajo pendiente](docs
 
 ## Documentos
 
+- [Puente G7B → Geoda → Amatista](docs/GEODA_PUENTE_24_7.md): publica estados agregados verificados tras ingesta y cubo; sin recomendaciones sin evidencia. Incluye activación controlada y operación 24/7.
+
 - [Observaciones de calidad del lote documental](docs/reportes/2026-11-02_observaciones_documentacion_g7b.md): análisis de los 987 aceptados, lectura de 28 documentos, utilidad comprobada, omisiones y correcciones pendientes.
 - [Cubo de telemetría](docs/CUBO.md): **publicado y verificado en Azure** el 2026-11-03, con 3,003 mediciones (tres aceptadas y 3,000 en revisión). Parquet + DuckDB versionados, seis dimensiones y deduplicación. Se reconstruye tras cada captura exitosa. Incluye cuaderno de consulta para Deepnote; no genera recomendaciones de Geoda.
 
