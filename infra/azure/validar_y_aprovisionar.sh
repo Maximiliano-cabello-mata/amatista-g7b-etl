@@ -15,7 +15,7 @@ EXISTENTES=$(az resource list --resource-group "$GRUPO" --resource-type Microsof
   --query "[?name=='g7b-env-${FASE}-jobs-v3'].name" --output tsv)
 if [[ -n "$EXISTENTES" ]]; then
   echo 'BLOQUEADO: el entorno v3 ya existe. Esta plantilla inicial no es una actualizacion segura.' >&2
-  echo 'Usar bash infra/azure/revisar_operacion.sh y seguir docs/CIERRE_AZURE.md.' >&2
+  echo 'Usar bash infra/azure/revisar_operacion.sh y seguir docs/azure/CIERRE_AZURE.md.' >&2
   exit 2
 fi
 

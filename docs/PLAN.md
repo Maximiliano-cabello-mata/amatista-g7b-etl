@@ -1,6 +1,9 @@
 # Plan de G7B: datos de calidad para un 3D libre que funcione en cualquier computadora
 
-Fecha: 2026-11-01. Documento rector de este repositorio. Si otro documento contradice este, manda este. Reemplaza las fases A, B y C de [ARQUITECTURA_CLOUD.md](../ARQUITECTURA_CLOUD.md), que se conserva como historia del primer despliegue.
+Fecha: 2026-11-01. Documento rector de este repositorio. Si otro documento contradice este, manda este. Reemplaza las fases A, B y C de [ARQUITECTURA_CLOUD.md](historia/ARQUITECTURA_CLOUD.md), que se conserva como historia del primer despliegue.
+
+
+> **2026-11-02:** el orden de trabajo y la configuración de cada servicio están ahora en el [plan maestro](PLAN_MAESTRO.md), que manda sobre este documento donde difieran.
 
 ## 0. Rumbo actualizado (2026-11-01, tarde)
 

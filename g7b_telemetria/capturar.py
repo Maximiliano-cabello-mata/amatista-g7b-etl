@@ -50,7 +50,9 @@ def sonda(dato):
         raise ValueError('se requiere contrato de sonda y medición explícitamente real')
     base = {'fuente': 'sonda', 'fecha': fecha(dato['fecha']),
             'version': texto(dato['blender']['version']), 'escena': texto(dato['escena']['nombre']),
-            'equipo': {k: dato['equipo'].get(k) for k in ('cpu', 'ram_gb', 'so', 'arquitectura', 'huella')},
+            # nivel y GPU: los necesita Geoda para clasificar el equipo (no identifican a nadie).
+            'equipo': {k: dato['equipo'].get(k) for k in ('cpu', 'ram_gb', 'so', 'arquitectura', 'huella',
+                                                         'nivel', 'nivel_estimado', 'gpu_vista', 'gpu_cycles')},
             'sonda': texto(dato['sonda']), 'sin_ventana': dato['blender']['sin_ventana'],
             'licencia': 'propia; publicación agregada', 'preguntas': ['P1', 'P2']}
     filas = []

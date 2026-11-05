@@ -39,6 +39,15 @@ def fuente_de(ruta, registro):
     return partes[2] if partes[1] == "zyte" else partes[1]
 
 
+def es_documento(ruta, fuentes):
+    """El embudo es para documentos: catálogos, telemetría y señales siguen su propio camino (Geodar)."""
+    partes = ruta.split("/")
+    if len(partes) < 3 or partes[1] == "zyte":
+        return True
+    fuente = fuentes.get(partes[1])
+    return fuente is None or cat.destino(fuente) == "documentos"
+
+
 def a_documento(registro, lago, fuente):
     """Convierte un registro crudo (de cualquier extractor) en {url, titulo, texto, metadatos}."""
     url = registro.get("url") or registro.get("enlace")
@@ -74,7 +83,8 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print):
     indice = Indice.desde_dict(lago.leer_json(INDICE))
     conteos = lago.leer_json(CONTEOS, por_omision={}) or {}
     pendientes = [r for r in lago.listar("bronce/")
-                  if r.endswith(".jsonl.gz") and not r.startswith(EXCLUIR) and r not in procesados]
+                  if r.endswith(".jsonl.gz") and not r.startswith(EXCLUIR) and r not in procesados
+                  and es_documento(r, fuentes)]
     total = Counter()
     motivos = Counter()   # (estado, etapa, motivo) -> cuántos: para ajustar umbrales con datos
     ejemplos = {}

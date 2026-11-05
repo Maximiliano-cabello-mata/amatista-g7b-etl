@@ -32,7 +32,7 @@ IMAGEN_ANTERIOR=$(az containerapp job show -g "$GRUPO" -n "$JOB" --query 'proper
 echo "Job: $JOB; imagen actual: $IMAGEN_ANTERIOR"
 az acr list --query '[].{nombre:name,grupo:resourceGroup,sku:sku.name}' -o table
 if [[ "$MODO" == --revisar ]]; then
-  echo 'REVISION COMPLETA: no se modificaron recursos. Si no hay ACR, seguir docs/WORKER_AZURE.md.'
+  echo 'REVISION COMPLETA: no se modificaron recursos. Si no hay ACR, seguir docs/azure/WORKER_AZURE.md.'
   exit 0
 fi
 : "${G7B_ACR:?Indica el nombre de un ACR existente y aprobado}"

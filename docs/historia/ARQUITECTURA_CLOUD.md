@@ -1,6 +1,6 @@
 # Arquitectura Cloud y Estrategia de Infraestructura - Amatista G7B
 
-> **Nota del 2026-11-01:** este documento queda como historia del primer despliegue (secciones 1 y 2). La hoja de ruta de la sección 3 la reemplaza [docs/PLAN.md](docs/PLAN.md). Fase A: los modelos `.glb` de A-Frame pertenecen a Amatista, que vive en Oracle, no a G7B. Fase B: la API de G7B se sirve desde Heroku y Azure se usa como lago de datos. Fase C: el procesamiento pesado va a Camber y a la PC local, y Azure solo para una semana de benchmarks planeada.
+> **Nota del 2026-11-01:** este documento queda como historia del primer despliegue (secciones 1 y 2). La hoja de ruta de la sección 3 la reemplaza [docs/PLAN.md](../PLAN.md). Fase A: los modelos `.glb` de A-Frame pertenecen a Amatista, que vive en Oracle, no a G7B. Fase B: la API de G7B se sirve desde Heroku y Azure se usa como lago de datos. Fase C: el procesamiento pesado va a Camber y a la PC local, y Azure solo para una semana de benchmarks planeada.
 
 Este documento detalla la topología de la nube del proyecto Amatista, la configuración de bases de datos, el registro de errores superados durante la construcción del motor ETL, y la hoja de ruta para aprovechar los créditos de Microsoft Azure.
 

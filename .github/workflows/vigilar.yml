@@ -1,7 +1,7 @@
-name: Vigilar fuentes
+name: Vigilar fuentes (Geodar Radar)
 
-# Cada 6 horas revisa las fuentes del catálogo a las que les toca (frecuencia_horas)
-# y lanza la extracción solo si hay algo nuevo (docs/INGESTA.md).
+# Cada 6 horas Geodar Radar revisa las fuentes del catálogo a las que les toca (frecuencia_horas)
+# y lanza la extracción solo si hay algo nuevo (docs/GEODAR_RADAR.md). Después revisa su salud.
 on:
   schedule:
     - cron: "23 */6 * * *"
@@ -48,6 +48,7 @@ jobs:
           ZYTE_API_KEY: ${{ secrets.ZYTE_API_KEY }}
           ZYTE_PROJECT_ID: ${{ vars.ZYTE_PROJECT_ID || '883618' }}
           STACKEXCHANGE_KEY: ${{ secrets.STACKEXCHANGE_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}   # más cuota para el sensor de versiones de GitHub
           FUENTE: ${{ inputs.fuente }}
           FORZAR: ${{ inputs.forzar }}
           SIMULACRO: ${{ inputs.simulacro }}
@@ -56,4 +57,9 @@ jobs:
           if [ -n "$FUENTE" ]; then args+=(--fuente "$FUENTE"); fi
           if [ "$FORZAR" = "true" ]; then args+=(--forzar); fi
           if [ "$SIMULACRO" = "true" ]; then args+=(--simulacro); fi
-          python -m g7b_ingesta.vigilar "${args[@]}"
+          python -m geodar vigilar "${args[@]}"
+      - name: Salud de los sensores
+        if: ${{ always() && inputs.simulacro != true }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+        run: python -m geodar salud --guardar

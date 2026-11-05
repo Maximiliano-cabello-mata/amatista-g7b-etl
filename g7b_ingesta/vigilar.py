@@ -121,11 +121,14 @@ def vigilar(catalogo, lago, obtener=red.obtener, zyte=None, proyecto_id=None, so
                 registro["accion"] = "nada nuevo"
             if not simulacro:
                 estado_nuevo["ultima_revision"] = ahora.isoformat(timespec="seconds")
+                estado_nuevo.pop("ultimo_error", None)  # volvió a responder: el error viejo ya no cuenta
+                estado_nuevo.pop("ultimo_error_en", None)
                 estados[fuente["id"]] = estado_nuevo
         except Exception as error:  # una fuente rota no detiene a las demás
             registro["error"] = f"{type(error).__name__}: {str(error)[:200]}"
             if not simulacro:
                 estado["ultimo_error"] = registro["error"]
+                estado["ultimo_error_en"] = ahora.isoformat(timespec="seconds")
                 estados[fuente["id"]] = estado
         bitacora.append(registro)
         salida(json.dumps(registro, ensure_ascii=False))

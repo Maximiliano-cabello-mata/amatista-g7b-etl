@@ -83,3 +83,13 @@ def test_zip_licencia_y_esquema(tmp_path):
 
 def test_sin_datos_no_publica(tmp_path):
     with pytest.raises(ValueError): capturar([{}], 'sonda', tmp_path)
+
+
+def test_conserva_nivel_y_gpu_para_geoda_sin_datos_personales():
+    d = medicion()
+    d['equipo'] = {'cpu': 'prueba', 'nivel': 'N2', 'nivel_estimado': True, 'huella': 'abc',
+                   'gpu_vista': {'modelo': 'Intel UHD 620', 'version': '4.6'}, 'so_version': '6.1',
+                   'gpu_cycles': [], 'usuario': 'no-debe-pasar'}
+    equipo = sonda(d)[0]['equipo']
+    assert equipo['nivel'] == 'N2' and equipo['gpu_vista']['modelo'] == 'Intel UHD 620'
+    assert 'usuario' not in equipo and 'so_version' not in equipo
