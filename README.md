@@ -25,7 +25,7 @@ git log --oneline hack4edu..main      # lo trabajado durante Hack4Edu
 
 | Pieza | Qué hace | Carpeta | Estado |
 |---|---|---|---|
-| **Geodar Radar** | Vigila 31 fuentes de 3D en internet (foros, manuales, artículos, texturas CC0, herramientas libres, telemetría web) y enruta cada dato a su destino | `geodar/`, `g7b_ingesta/`, `fuentes/` | ✅ Pruebas en verde; probar en vivo con Actions antes de encender |
+| **Geodar Radar** | Vigila 33 fuentes de 3D en internet (foros, manuales, artículos, texturas CC0, herramientas libres, telemetría web) y enruta cada dato a su destino | `geodar/`, `g7b_ingesta/`, `fuentes/` | ✅ Pruebas en verde; probar en vivo con Actions antes de encender |
 | **Arañas** | El manual de Blender en 4 versiones y manuales Sphinx, en Zyte | `motor_extraccion/` | ✅ En producción: 987 documentos publicados |
 | **Lago** | Azure Blob: bronce (crudo) → plata → oro | `g7b_lago/`, `infra/azure/` | ✅ En producción |
 | **Embudo** | 5 etapas de calidad antes de MongoDB, con motivos | `g7b_ingesta/` | ✅ En producción |

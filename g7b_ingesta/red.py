@@ -4,6 +4,8 @@ from dataclasses import dataclass, field
 from urllib.parse import urlparse
 
 AGENTE = "G7B-bot/0.1 (Geodar Radar; +https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl)"
+# Estado propio (no es de HTTP): el robots.txt del sitio no deja pasar al bot. No se pide la página.
+NO_PERMITIDO = 999
 _ROBOTS = {}
 
 # APIs públicas y documentadas: se rigen por sus propias condiciones (límites, llave, identificación),
@@ -48,6 +50,6 @@ def obtener(url, cabeceras=None, tiempo=30):
     import requests
 
     if not permitido(url):
-        return Respuesta(999, {"motivo": "robots.txt no lo permite"})
+        return Respuesta(NO_PERMITIDO, {"motivo": "robots.txt no lo permite"})
     r = requests.get(url, headers={"User-Agent": AGENTE, **(cabeceras or {})}, timeout=tiempo)
     return Respuesta(r.status_code, {k.lower(): v for k, v in r.headers.items()}, r.content)

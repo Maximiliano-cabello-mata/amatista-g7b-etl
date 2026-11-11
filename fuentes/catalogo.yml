@@ -160,7 +160,8 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}
     frecuencia_horas: 72
     dominios: [godotengine.org]
-    activa: true
+    revisar: "Su robots.txt no deja pasar al bot (11 nov 2026). Inactiva; se respeta."
+    activa: false
 
   - id: blendernation
     nombre: BlenderNation (noticias y tutoriales de la comunidad)
@@ -177,6 +178,45 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}
     frecuencia_horas: 24
     dominios: [www.blendernation.com]
+    revisar: "Su robots.txt no deja pasar al bot (11 nov 2026). Inactiva; se respeta."
+    activa: false
+
+  # Reemplazan a godot-blog y blendernation, cuyo robots.txt no deja pasar al bot.
+  # Probadas en vivo con «geodar probar» el 11 de noviembre de 2026.
+  - id: freecad-blog
+    nombre: Blog de FreeCAD
+    tipo: noticias
+    programa: freecad
+    familia: F5
+    destino: documentos
+    licencia: derechos_reservados
+    licencia_verificada: true
+    condiciones: "Se trata como derechos reservados: solo se guardan el título y el enlace."
+    modo: solo_metadatos
+    preguntas: [P5]
+    sensor: {tipo: rss, url: "https://blog.freecad.org/feed/"}
+    extractor: directo
+    umbrales: {valor_min: 0, valor_revision: 0}
+    frecuencia_horas: 72
+    dominios: [blog.freecad.org]
+    activa: true
+
+  - id: krita-noticias
+    nombre: Noticias de Krita
+    tipo: noticias
+    programa: krita
+    familia: F5
+    destino: documentos
+    licencia: derechos_reservados
+    licencia_verificada: true
+    condiciones: "Se trata como derechos reservados: solo se guardan el título y el enlace."
+    modo: solo_metadatos
+    preguntas: [P5]
+    sensor: {tipo: rss, url: "https://krita.org/en/index.xml"}
+    extractor: directo
+    umbrales: {valor_min: 0, valor_revision: 0}
+    frecuencia_horas: 72
+    dominios: [krita.org]
     activa: true
 
   - id: blender-notas-version

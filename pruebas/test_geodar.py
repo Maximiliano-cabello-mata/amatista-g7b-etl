@@ -191,6 +191,22 @@ def test_vigilar_olvida_el_error_cuando_la_fuente_vuelve():
     assert "ultimo_error" not in lago.leer_json(ESTADO)["blender-devtalk"]
 
 
+def test_vigilar_omite_sin_error_lo_que_robots_no_permite():
+    from g7b_ingesta.red import NO_PERMITIDO
+    from g7b_ingesta.vigilar import ESTADO, vigilar
+
+    lago, catalogo = LagoMemoria(), _catalogo("blender-devtalk")
+    cerrado = responder({"latest.json": Respuesta(NO_PERMITIDO, {"motivo": "robots.txt no lo permite"})})
+    bitacora = vigilar(catalogo, lago, obtener=cerrado, ahora=AHORA, salida=lambda *_: None)
+    # Se respeta y se anota, pero no es un error: la tarea programada no debe quedar en rojo.
+    assert bitacora[0]["omitida"] == "robots.txt no lo permite" and "error" not in bitacora[0]
+    estado = lago.leer_json(ESTADO)["blender-devtalk"]
+    assert estado["omitida"] and "ultimo_error" not in estado
+    # Una falla de verdad (404) sigue siendo un error.
+    roto = vigilar(catalogo, lago, obtener=responder({}), forzar=True, ahora=AHORA, salida=lambda *_: None)
+    assert "HTTP 404" in roto[0]["error"]
+
+
 # ---------------------------------------------------------------- la orden geodar
 
 def test_mapa_markdown_lista_todo_por_familia():
