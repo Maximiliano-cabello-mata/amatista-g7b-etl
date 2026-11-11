@@ -32,6 +32,28 @@ Se lanzó a mano `Vigilar fuentes (Geodar Radar)` en modo simulacro ([ejecución
 
 Es el único bloqueo: con una firma nueva en el secreto `AZURE_LAGO_URL` del entorno `amatista1`, los horarios que ya existen (radar cada 6 horas, Zyte al lago y procesado a diario) vuelven a correr solos.
 
+## Flujo reactivado (11 de noviembre, 00:44 a 01:05 UTC)
+
+Con la firma nueva guardada en el secreto, se corrió cada tarea a mano y en orden:
+
+| # | Tarea | Ejecución | Resultado |
+|---|---|---|---|
+| 1 | Radar en simulacro | [42933696471](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42933696471) | Azure aceptó la firma. 20 de 22 fuentes bien; `godot-blog` y `blendernation` bloqueadas por su `robots.txt` |
+| 2 | Probar todas las fuentes, con las candidatas | [42934566192](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42934566192) | `freecad-blog` y `krita-noticias` responden; se activan en lugar de las dos bloqueadas |
+| 3 | Radar de verdad, con el catálogo corregido | [42934853554](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42934853554) | ✅ Verde. Escribió en el lago |
+| 4 | Telemetría | [42935203859](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42935203859) | ✅ Verde. Guardó y verificó en Azure |
+| 5 | Cubo | [42935705846](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42935705846) | ✅ Verde. 3.006 mediciones: 5 aceptadas y 3.001 en revisión |
+| 6 | Kernel de Geoda | [42936154406](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42936154406) | ✅ Verde |
+| 7 | Publicar estado para Geoda | commit `abfef59` | ✅ Existe `publicacion/geoda.json` en `main` |
+| 8 | Puente en la API de Amatista | `GET /api/g7b/v1/estado` | ✅ `"estado":"conectado"`, 995 documentos y el cubo nuevo |
+| 9 | Embudo (Procesar bronce) | [42935199307](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42935199307) | Seguía corriendo a los 14 minutos; procesa lo acumulado de una semana |
+
+Observaciones:
+
+- **Las cadenas automáticas no se dispararon** al lanzar a mano: el cubo no arrancó solo tras la telemetría, ni el kernel tras el cubo. Hubo que lanzarlos. Falta comprobar que sí se encadenan cuando la telemetría corre por su horario.
+- **Geoda sigue sin recomendar.** De 3.006 mediciones solo 5 están aceptadas; las demás están «en revisión» y `recomendaciones_habilitadas` es `false`. El flujo entrega, pero Geoda todavía decide con reglas base.
+- **El radar programado seguirá en rojo en `main`** hasta que se fusione el cambio del catálogo y de `vigilar` de este PR.
+
 ## Diagnóstico
 
 El código está sano y las dos puntas externas responden: la fuente que recorren las arañas y la cuenta de Azure. Lo que está detenido es la **operación**:
