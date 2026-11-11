@@ -1,8 +1,8 @@
 # Geodar Radar: mapa de sensores
 
-Generado con `python -m geodar mapa --markdown` el 2026-11-02, desde [`fuentes/catalogo.yml`](../fuentes/catalogo.yml). No se edita a mano: se cambia el catálogo y se vuelve a generar. Cómo funciona: [GEODAR_RADAR.md](GEODAR_RADAR.md).
+Generado con `python -m geodar mapa --markdown` el 2026-11-11, desde [`fuentes/catalogo.yml`](../fuentes/catalogo.yml). No se edita a mano: se cambia el catálogo y se vuelve a generar. Cómo funciona: [GEODAR_RADAR.md](GEODAR_RADAR.md).
 
-**31 fuentes:** 19 ✅ activa, 6 🔒 licencia por confirmar, 4 ⏸️ inactiva, 2 🔗 la trae otra tarea.
+**33 fuentes:** 19 ✅ activa, 6 ⏸️ inactiva, 6 🔒 licencia por confirmar, 2 🔗 la trae otra tarea.
 
 ## A dónde va cada cosa
 
@@ -58,8 +58,10 @@ Todo entra primero crudo a Azure (`bronce/<fuente>/<fecha>/`), así nada se pier
 | **blender-manual**<br>Manual de Blender (LTS vigente) | docs.blender.org | `pagina` | `zyte` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 168 h |
 | **blender-noticias**<br>Noticias de blender.org | www.blender.org | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 24 h |
 | **blender-code-blog**<br>Blog de desarrollo de Blender (code.blender.org) | code.blender.org | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 72 h |
-| **godot-blog**<br>Blog de Godot | godotengine.org | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 72 h |
-| **blendernation**<br>BlenderNation (noticias y tutoriales de la comunidad) | www.blendernation.com | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 24 h |
+| **godot-blog**<br>Blog de Godot | godotengine.org | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ⏸️ inactiva | 72 h |
+| **blendernation**<br>BlenderNation (noticias y tutoriales de la comunidad) | www.blendernation.com | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ⏸️ inactiva | 24 h |
+| **freecad-blog**<br>Blog de FreeCAD | blog.freecad.org | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 72 h |
+| **krita-noticias**<br>Noticias de Krita | krita.org | `rss` | `directo` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 72 h |
 | **blender-notas-version**<br>Notas de versión de Blender | developer.blender.org | `pagina` | `zyte` | `documentos` | por_confirmar (texto_completo) | 🔒 licencia por confirmar | 168 h |
 | **blender-api-python**<br>Referencia de la API de Python de Blender | docs.blender.org | `pagina` | `zyte` | `documentos` | por_confirmar (texto_completo) | 🔒 licencia por confirmar | 168 h |
 | **godot-docs**<br>Documentación de Godot (estable) | docs.godotengine.org | `pagina` | `zyte` | `documentos` | CC-BY-3.0 (texto_completo) | 🔒 licencia por confirmar | 168 h |

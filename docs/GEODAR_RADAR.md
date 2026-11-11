@@ -32,7 +32,7 @@ Fecha: 2026-11-02. **Geodar Radar** es la herramienta de G7B para **vigilar y ex
 
 ## 2. Dónde están los sensores
 
-31 fuentes, agrupadas por familia. La lista completa, con su estado, está en el [mapa](GEODAR_RADAR_MAPA.md).
+33 fuentes, agrupadas por familia. La lista completa, con su estado, está en el [mapa](GEODAR_RADAR_MAPA.md).
 
 | Familia | Qué vigila | Dónde |
 |---|---|---|

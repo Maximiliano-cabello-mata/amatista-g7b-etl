@@ -160,7 +160,8 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}
     frecuencia_horas: 72
     dominios: [godotengine.org]
-    activa: true
+    revisar: "Su robots.txt no deja pasar al bot (11 nov 2026). Inactiva; se respeta."
+    activa: false
 
   - id: blendernation
     nombre: BlenderNation (noticias y tutoriales de la comunidad)
@@ -177,69 +178,20 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}
     frecuencia_horas: 24
     dominios: [www.blendernation.com]
-    activa: true
-
-  # Candidatas a reemplazar a godot-blog y blendernation (su robots.txt no deja pasar al bot).
-  # Inactivas hasta probarlas en vivo con «geodar probar» y confirmar su licencia.
-  - id: godot-versiones
-    nombre: Versiones de Godot (GitHub)
-    tipo: noticias
-    programa: godot
-    familia: F5
-    destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
-    modo: solo_metadatos
-    preguntas: [P5]
-    sensor: {tipo: rss, url: "https://github.com/godotengine/godot/releases.atom"}
-    extractor: directo
-    umbrales: {valor_min: 0, valor_revision: 0}
-    frecuencia_horas: 72
-    dominios: [github.com]
+    revisar: "Su robots.txt no deja pasar al bot (11 nov 2026). Inactiva; se respeta."
     activa: false
 
-  - id: blender-studio-blog
-    nombre: Blog de Blender Studio
-    tipo: noticias
-    programa: blender
-    familia: F5
-    destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
-    modo: solo_metadatos
-    preguntas: [P2, P5]
-    sensor: {tipo: rss, url: "https://studio.blender.org/blog/feed/"}
-    extractor: directo
-    umbrales: {valor_min: 0, valor_revision: 0}
-    frecuencia_horas: 24
-    dominios: [studio.blender.org]
-    activa: false
-
-  - id: blender-proyectos
-    nombre: Actividad del repositorio de Blender
-    tipo: noticias
-    programa: blender
-    familia: F5
-    destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
-    modo: solo_metadatos
-    preguntas: [P2]
-    sensor: {tipo: rss, url: "https://projects.blender.org/blender/blender.rss"}
-    extractor: directo
-    umbrales: {valor_min: 0, valor_revision: 0}
-    frecuencia_horas: 24
-    dominios: [projects.blender.org]
-    activa: false
-
+  # Reemplazan a godot-blog y blendernation, cuyo robots.txt no deja pasar al bot.
+  # Probadas en vivo con «geodar probar» el 11 de noviembre de 2026.
   - id: freecad-blog
     nombre: Blog de FreeCAD
     tipo: noticias
     programa: freecad
     familia: F5
     destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
+    licencia: derechos_reservados
+    licencia_verificada: true
+    condiciones: "Se trata como derechos reservados: solo se guardan el título y el enlace."
     modo: solo_metadatos
     preguntas: [P5]
     sensor: {tipo: rss, url: "https://blog.freecad.org/feed/"}
@@ -247,7 +199,7 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}
     frecuencia_horas: 72
     dominios: [blog.freecad.org]
-    activa: false
+    activa: true
 
   - id: krita-noticias
     nombre: Noticias de Krita
@@ -255,8 +207,9 @@ fuentes:
     programa: krita
     familia: F5
     destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
+    licencia: derechos_reservados
+    licencia_verificada: true
+    condiciones: "Se trata como derechos reservados: solo se guardan el título y el enlace."
     modo: solo_metadatos
     preguntas: [P5]
     sensor: {tipo: rss, url: "https://krita.org/en/index.xml"}
@@ -264,24 +217,7 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}
     frecuencia_horas: 72
     dominios: [krita.org]
-    activa: false
-
-  - id: khronos-blog
-    nombre: Blog de Khronos (glTF, WebGL, Vulkan)
-    tipo: noticias
-    programa: khronos
-    familia: F5
-    destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
-    modo: solo_metadatos
-    preguntas: [P5]
-    sensor: {tipo: rss, url: "https://www.khronos.org/blog/rss.xml"}
-    extractor: directo
-    umbrales: {valor_min: 0, valor_revision: 0}
-    frecuencia_horas: 72
-    dominios: [www.khronos.org]
-    activa: false
+    activa: true
 
   - id: blender-notas-version
     nombre: Notas de versión de Blender
