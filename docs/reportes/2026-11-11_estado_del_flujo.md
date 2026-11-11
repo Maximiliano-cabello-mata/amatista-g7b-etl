@@ -23,6 +23,15 @@ equipos  ──► sonda ───────────► Azure (lago) ─�
 | MongoDB | — | No probado: necesita `MONGO_URI` |
 | Sonda dentro de Blender | — | No probado en esta revisión |
 
+## Confirmado con una ejecución real (11 de noviembre, 00:22 UTC)
+
+Se lanzó a mano `Vigilar fuentes (Geodar Radar)` en modo simulacro ([ejecución 42930800992](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/42930800992)). Dos resultados:
+
+- **GitHub Actions sí funciona.** La ejecución arrancó, instaló dependencias y corrió el radar. Es la número 22 de ese flujo; las anteriores ya no aparecen en la lista.
+- **La firma de Azure está vencida.** Azure respondió `AuthenticationFailed`: «Signed expiry time [Wed, 04 Nov 2026 01:01:00 GMT]». Venció el 3 de noviembre por la tarde, hora de México. Desde entonces fallan todas las tareas programadas que tocan el lago.
+
+Es el único bloqueo: con una firma nueva en el secreto `AZURE_LAGO_URL` del entorno `amatista1`, los horarios que ya existen (radar cada 6 horas, Zyte al lago y procesado a diario) vuelven a correr solos.
+
 ## Diagnóstico
 
 El código está sano y las dos puntas externas responden: la fuente que recorren las arañas y la cuenta de Azure. Lo que está detenido es la **operación**:
