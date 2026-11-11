@@ -22,6 +22,7 @@ from g7b_lago import Lago, ruta_bronce
 
 from . import catalogo as cat
 from . import red
+from .red import NO_PERMITIDO
 from .sensores import SENSORES
 
 ESTADO = "control/sensores.json"
@@ -125,11 +126,22 @@ def vigilar(catalogo, lago, obtener=red.obtener, zyte=None, proyecto_id=None, so
                 estado_nuevo.pop("ultimo_error_en", None)
                 estados[fuente["id"]] = estado_nuevo
         except Exception as error:  # una fuente rota no detiene a las demás
-            registro["error"] = f"{type(error).__name__}: {str(error)[:200]}"
-            if not simulacro:
-                estado["ultimo_error"] = registro["error"]
-                estado["ultimo_error_en"] = ahora.isoformat(timespec="seconds")
-                estados[fuente["id"]] = estado
+            if str(error) == f"HTTP {NO_PERMITIDO}":
+                # El sitio no quiere al bot (robots.txt). Se respeta y se anota como omitida:
+                # no es una falla del flujo y no debe poner en rojo la tarea cada 6 horas.
+                registro["omitida"] = "robots.txt no lo permite"
+                if not simulacro:
+                    estado["omitida"] = registro["omitida"]
+                    estado["ultima_revision"] = ahora.isoformat(timespec="seconds")
+                    estado.pop("ultimo_error", None)
+                    estado.pop("ultimo_error_en", None)
+                    estados[fuente["id"]] = estado
+            else:
+                registro["error"] = f"{type(error).__name__}: {str(error)[:200]}"
+                if not simulacro:
+                    estado["ultimo_error"] = registro["error"]
+                    estado["ultimo_error_en"] = ahora.isoformat(timespec="seconds")
+                    estados[fuente["id"]] = estado
         bitacora.append(registro)
         salida(json.dumps(registro, ensure_ascii=False))
     if not simulacro and bitacora:
