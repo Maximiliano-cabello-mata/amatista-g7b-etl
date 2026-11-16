@@ -1,6 +1,6 @@
 {
   "conocimiento": {
-    "documentos": 995,
+    "documentos": 1021,
     "origen": "mongo_conocimiento_3d"
   },
   "contrato": "g7b.geoda.estado/1",
@@ -9,9 +9,9 @@
     "mediciones": 3006,
     "recomendaciones_habilitadas": false,
     "revision": 3001,
-    "version": "20261111T010053Z-1c19c1634836"
+    "version": "20261116T024000Z-62e343420cb4"
   },
   "nota": "El conocimiento extraído no equivale a mediciones; se usan perfiles locales base.",
   "perfiles": [],
-  "version": "20261111T010053Z-1c19c1634836"
+  "version": "20261116T024000Z-62e343420cb4"
 }
