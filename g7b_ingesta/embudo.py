@@ -147,6 +147,11 @@ def evaluar(doc, fuente, taxonomia, indice, umbrales=UMBRALES):
         return Resultado(RECHAZADO, "entrada",
                          [f"modo solo_metadatos: el texto excede {u['resumen_metadatos_max']} caracteres"])
 
+    if (doc.get("metadatos") or {}).get("duplicado_de"):
+        # La araña la extrajo una sola vez y aquí solo llega el alias: no hay texto que evaluar.
+        return Resultado(RECHAZADO, "duplicados",
+                         ["la misma página ya se extrajo en otra ruta del manual"])  # cuál: en bronce
+
     # 2. Calidad
     lista = tx.palabras(completo)
     minimo = u["palabras_min_metadatos"] if modo == "solo_metadatos" else u["palabras_min"]

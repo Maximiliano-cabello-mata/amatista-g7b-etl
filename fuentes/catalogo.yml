@@ -101,13 +101,21 @@ fuentes:
     licencia_verificada: true
     modo: texto_completo
     preguntas: [P1, P2, P6]
-    sensor: {tipo: pagina, url: "https://docs.blender.org/manual/en/latest/"}
+    # Mira el inventario de Sphinx (objects.inv) de cada versión: la araña vuelve a recorrer una
+    # versión solo si su inventario cambió o si pasaron refresco_dias. Antes se miraba la portada,
+    # que se reconstruye a diario, y cada revisión relanzaba el manual entero.
+    # 2.79 no va: el robots.txt de docs.blender.org prohíbe /*/2.79/ a todos los bots.
+    sensor:
+      tipo: sphinx
+      base: "https://docs.blender.org/manual/en/"
+      versiones: ["5.2", "4.5", "3.6"]
+      refresco_dias: 30
     extractor: zyte
     umbrales: {valor_min: 0, valor_revision: 0}   # documentación oficial: vale por ser la fuente primaria
     zyte:
-      arana: blender_docs      # secciones completas, propiedades y código, en varias versiones
-      argumentos: {max_paginas: 3000}
-    frecuencia_horas: 168
+      arana: blender_docs      # secciones completas, propiedades y código, guiada por objects.inv
+      argumentos: {max_paginas: 3000, max_por_version: 1200}
+    frecuencia_horas: 24       # revisar el inventario cuesta tres archivos pequeños
     dominios: [docs.blender.org]
     alias: ["Blender Docs"]  # nombre con el que la araña antigua marcaba sus registros
     activa: true

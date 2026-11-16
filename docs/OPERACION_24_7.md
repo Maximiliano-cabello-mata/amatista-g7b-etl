@@ -87,12 +87,12 @@ Del lago real: 2.570 documentos evaluados, 995 aceptados, 70 en revisión y 1.50
 | Causa | Documentos | Diagnóstico |
 |---|---|---|
 | No responde ninguna pregunta del plan | 383 | Correcto con la taxonomía de hoy. Es lo que el reprocesamiento recupera cuando el plan crezca |
-| Casi duplicado o duplicado exacto | 560 | Casi todo es la misma página del manual en 5.2, 4.5, 3.6 y 2.79. No es basura: es información de versión que hoy se descarta (ver «Siguiente») |
+| Casi duplicado o duplicado exacto | 560 | Casi todo es la misma página del manual en 5.2, 4.5 y 3.6. No es basura: es información de versión que hoy se descarta (ver «Siguiente») |
 | Texto insuficiente, página índice o líneas repetidas | 409 | Correcto: páginas índice, menús y fichas casi vacías |
 | Fuente desconocida | 142 | **Error.** 112 son la araña antigua («Blender Docs») y 30 son `krita-noticias` y `freecad-blog`, que llegaron antes que el catálogo. Corregido: alias en el catálogo y reprocesamiento |
 | Genérico (sin medidas, versiones ni ajustes) | 3 | Correcto |
 | Idioma «desconocido» | 8 | **Error.** Resúmenes cortos sin palabras vacías. Corregido: solo se rechaza por idioma un texto de 80 palabras o más |
-| Revisión por «versiones anteriores a 2.80» | 41 | **Error.** Era el manual 2.79, que se extrae a propósito para equipos viejos. Corregido: una página con versión declarada no se marca |
+| Revisión por «versiones anteriores a 2.80» | 41 | **Error.** Eran páginas del manual (5.2, 4.5, 3.6) que mencionan 2.79. Corregido: una página con versión declarada no se marca por mencionar otra |
 
 Además, «mixto» (español e inglés juntos) ya es un idioma admitido.
 
@@ -122,6 +122,6 @@ El PR #22 se fusionó a las 02:39 UTC. El horario `11 */6 * * *` debía disparar
 
 ### Qué dicen estos números
 
-- **Los rechazos crecieron de 1.505 a 6.212 sin que se perdiera nada.** 4.684 son los dos trabajos nuevos de Zyte, que volvieron a recorrer el mismo manual: misma configuración, mismas 2.353 páginas, rechazadas por duplicado exacto. Eso es correcto, pero gasta la unidad gratuita de Zyte y abulta los conteos. Conviene relanzar la araña solo cuando cambie su configuración o el manual (ver [revisión de la auditoría](auditorias/2026-11-16_revision_de_la_auditoria.md), punto 2).
+- **Los rechazos crecieron de 1.505 a 6.212 sin que se perdiera nada.** 4.684 son los dos trabajos nuevos de Zyte, que volvieron a recorrer el mismo manual: misma configuración, mismas 2.353 páginas, rechazadas por duplicado exacto. Eso es correcto, pero gasta la unidad gratuita de Zyte y abulta los conteos. Resuelto en la [araña de manuales](ARANA_MANUALES.md): ahora se relanza solo la versión cuyo inventario cambió, y nunca dos recorridos a la vez.
 - **Los 56 en revisión incluyen las mismas 11 páginas del manual repetidas en tres trabajos**: el índice de repetidos solo cuenta lo aceptado. No afecta a MongoDB, porque lo que está en revisión no se publica.
 - **Aceptados 1.021**, frente a 1.020 en la simulación. El reprocesamiento se comportó como en las pruebas.

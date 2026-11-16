@@ -7,6 +7,11 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 - **Ciclo 24/7** (`.github/workflows/ciclo.yml`): un solo reloj que lanza en orden extracción, análisis, la parte semanal (telemetría, cubo y kernel de Geoda) y la entrega, espera cada tarea y abre un issue `g7b-alerta` si algo falla o hay fuentes atrasadas. Las demás tareas dejan de tener horario propio y encadenamientos. Se puede disparar desde un programador externo ([operación 24/7](docs/OPERACION_24_7.md)).
 - **Reprocesamiento** (`g7b_ingesta/procesar.py`): cada archivo de bronce guarda su huella de reglas y se reevalúa solo cuando cambian la taxonomía, los umbrales, el catálogo de su fuente o la versión del embudo. Sin duplicar conteos ni chocar con el índice de repetidos. A mano: `--fuente`, `--lote`, `--forzar`.
+- **Araña de manuales estable** ([araña de manuales](docs/ARANA_MANUALES.md)):
+  - `blender_docs` pide exactamente las páginas del inventario `objects.inv` de cada versión, una vez cada una y sin seguir enlaces, con cobertura por versión en las estadísticas.
+  - La misma página publicada en dos rutas sale una sola vez, más un alias.
+  - El sensor `sphinx` relanza solo la versión cuyo inventario cambió (o a los 30 días), y nunca dos trabajos a la vez.
+  - 2.79 sale de la lista: el `robots.txt` del sitio la prohíbe. Esa, y no el tope de páginas, era la razón de que no tuviera ninguna.
 - **Primera vuelta del ciclo** (16 nov, 15:33 UTC): todo en verde, 147 registros nuevos, 1.021 aceptados (+26 en MongoDB). El horario de GitHub omitió las dos vueltas anteriores: hace falta el programador externo.
 - **Araña (PR #21) corregida**: `_texto()` fallaba en cada página (`re.sub` sin reemplazo) y las tildes se habían convertido en `�`, incluido el `¶` que se limpia de los títulos. Ahora también se limpia `\uf0c1`. Esto había dejado en rojo Pruebas y Desplegar a Zyte.
 - **Auditoría del 15 de noviembre** movida a `docs/auditorias/`, con su [revisión punto por punto](docs/auditorias/2026-11-16_revision_de_la_auditoria.md).

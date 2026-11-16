@@ -43,6 +43,7 @@ Ordenados por para qué sirven. Si dos documentos dicen cosas distintas, manda e
 | [historia/ARQUITECTURA_CLOUD.md](historia/ARQUITECTURA_CLOUD.md) | El primer despliegue en Zyte y MongoDB (31 de octubre) |
 | [reportes/](reportes/) | Propuestas, horizonte, revisión de ofertas y observaciones de calidad |
 | [auditorias/](auditorias/) | Auditoría de arañas y Azure (15 nov) y su revisión contra el código y el lago (16 nov) |
+| [ARANA_MANUALES.md](ARANA_MANUALES.md) | Araña de manuales Sphinx guiada por objects.inv: cada página una vez, solo cuando cambia, con cobertura medida |
 | [OPERACION_24_7.md](OPERACION_24_7.md) | Ciclo de 6 horas, aviso, programador externo, reprocesamiento y primera vuelta real |
 | [investigacion/](investigacion/) | Estado del arte e integración con Amatista |
 | [estadia/](estadia/) | La propuesta de estadía (Amatista + G7B) |

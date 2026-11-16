@@ -17,7 +17,7 @@ Revisión punto por punto de [la auditoría de arañas y Azure](2026-11-15_audit
 
 | # | Afirmación | Veredicto | Lo comprobado |
 |---|---|---|---|
-| 1 | 10 secciones semilla y un tope global de 3.000 páginas, que deja a 2.79 sin nada | ✅ | En `883618-1-13` hay 925 páginas de 5.2, 771 de 4.5, 657 de 3.6 y **ninguna de 2.79**. Faltan animación, escultura, UV, física, composición y Grease Pencil |
+| 1 | 10 secciones semilla y un tope global de 3.000 páginas, que deja a 2.79 sin nada | ⚠️ | Es cierto que en `883618-1-13` hay 925 páginas de 5.2, 771 de 4.5, 657 de 3.6 y **ninguna de 2.79**, y que faltan animación, escultura, UV, física, composición y Grease Pencil. **Pero el tope no es la causa** (corregido el 16 nov, segunda revisión): el `robots.txt` de docs.blender.org prohíbe `/*/2.79/` a todos los bots, y la araña lo respeta. La 2.79 sale de la lista de versiones ([araña de manuales](../ARANA_MANUALES.md)) |
 | 2 | Las tablas y los avisos se pierden | 🔧 en código, ⚠️ en producción | El PR #21 (`fragmentos_sphinx.py`) extrae tablas, avisos, código e imágenes por apartado. **No está desplegado en Zyte**: el despliegue del 16 de noviembre falló por un error en ese PR (sección 5 de este documento) |
 | 3 | `<dd>` anidados duplican texto; `` queda en los títulos | 🔧 en parte | Los fragmentos nuevos no duplican listas ni definiciones. `limpio()` ahora quita también ``. El campo `contenido` de página completa conserva el comportamiento anterior |
 | 4 | El embudo rechaza el 55,8 % del manual «por falta de palabras clave» | ❌ en la causa, ✅ en el umbral | El 55,8 % (1.332 de 2.353) es correcto, pero la causa principal es otra. La mayoría son **la misma página en otra versión** (casi duplicado), páginas índice y textos cortos. Por relevancia se rechazan 383 en todo el lago. `relevancia_min: 2.0` sí se aplica al manual, porque el catálogo no lo cambia |
@@ -26,7 +26,7 @@ Revisión punto por punto de [la auditoría de arañas y Azure](2026-11-15_audit
 ### Qué conviene hacer, en orden
 
 1. **Corregir y desplegar el PR #21** (hecho en el PR de esta revisión, falta fusionar). El siguiente trabajo de Zyte ya trae tablas y avisos.
-2. **Tope por versión y secciones completas** (defecto 1): `max_paginas` contado por versión y semilla `index.html` de cada versión. Es la mejora con más impacto: hoy 2.79 queda vacía.
+2. **Tope por versión y secciones completas** (defecto 1): hecho el tope por versión (`max_por_version`) y la lista de páginas desde el inventario `objects.inv` ([araña de manuales](../ARANA_MANUALES.md)). Ampliar las secciones queda pendiente y es una decisión de contenido: el manual completo son unas 6.400 páginas en tres versiones. 2.79 no se puede recorrer: `robots.txt` la prohíbe.
 3. **Variantes de versión en vez de duplicados** (no lo propone la auditoría y pesa más que el defecto 4): la página de 4.5 igual a la de 5.2 se guarda como variante del documento aceptado, con su versión.
 4. **Relevancia como etiqueta en documentación oficial** (defecto 4): `relevancia_min: 0` para `blender-manual` y etiqueta `P6` cuando no coincida nada. Gracias a la huella de reglas, el cambio en el catálogo reevalúa solo el manual, sin tocar lo demás.
 5. **Conservar la estructura hasta MongoDB** (defecto 5). Cuidado con el límite de 512 MB de Atlas M0: hoy la base ocupa 3,15 MB, con margen de sobra.
