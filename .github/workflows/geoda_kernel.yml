@@ -4,10 +4,7 @@ on:
     branches: [main]
     paths: ['geoda/**', '.github/workflows/geoda_kernel.yml']
   workflow_dispatch:
-  workflow_run:
-    workflows: ['Cubo G7B']
-    types: [completed]
-    branches: [main]
+  # Sin workflow_run: el ciclo (ciclo.yml) lo lanza después del cubo.
 permissions:
   contents: read
   actions: read

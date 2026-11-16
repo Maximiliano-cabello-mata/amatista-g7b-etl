@@ -109,6 +109,7 @@ fuentes:
       argumentos: {max_paginas: 3000}
     frecuencia_horas: 168
     dominios: [docs.blender.org]
+    alias: ["Blender Docs"]  # nombre con el que la araña antigua marcaba sus registros
     activa: true
 
   - id: blender-noticias

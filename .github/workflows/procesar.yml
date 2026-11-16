@@ -6,14 +6,25 @@ name: Procesar bronce
 #   senales     → oro/senales/semanal.json en Azure (+ g7b_panel.senales para Atlas Charts)
 #   telemetria  → se queda en bronce para el cubo del warehouse
 on:
-  schedule:
-    - cron: "47 10 * * *"  # 10:47 UTC = 04:47 en la Ciudad de México
+  # Sin horario propio: lo lanza el ciclo (ciclo.yml), que es el único reloj del flujo.
   workflow_dispatch:
     inputs:
       simulacro:
         description: "Evaluar sin escribir"
         type: boolean
         default: true
+      fuente:
+        description: "Reevaluar solo esta fuente (id del catálogo); vacío = todas"
+        type: string
+        default: ""
+      lote:
+        description: "Reevaluar solo los archivos de bronce que empiezan así (ej. bronce/arxiv-cs-gr/2026-11-11/)"
+        type: string
+        default: ""
+      forzar:
+        description: "Reevaluar aunque las reglas no hayan cambiado"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,12 +53,17 @@ jobs:
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
           SIMULACRO: ${{ inputs.simulacro }}
+          FUENTE: ${{ inputs.fuente }}
+          LOTE: ${{ inputs.lote }}
+          FORZAR: ${{ inputs.forzar }}
         run: |
-          if [ "$SIMULACRO" = "true" ]; then
-            python -m geodar procesar --simulacro
-          else
-            python -m geodar procesar
-          fi
+          # Además de lo nuevo, reevalúa solo lo que se evaluó con reglas distintas (procesar.py).
+          args=()
+          if [ "$SIMULACRO" = "true" ]; then args+=(--simulacro); fi
+          if [ -n "$FUENTE" ]; then args+=(--fuente "$FUENTE"); fi
+          if [ -n "$LOTE" ]; then args+=(--lote "$LOTE"); fi
+          if [ "$FORZAR" = "true" ]; then args+=(--forzar); fi
+          python -m geodar procesar "${args[@]}"
       - name: Publicar lo aceptado en MongoDB (oro)
         if: ${{ env.MONGO_URI != '' }}
         env:

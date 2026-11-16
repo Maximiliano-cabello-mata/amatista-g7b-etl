@@ -2,6 +2,13 @@
 
 La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo trabajado durante Hack4Edu. Comprobación: `git log --oneline hack4edu..main`.
 
+
+## Sin publicar · 16 de noviembre de 2026
+
+- **Ciclo 24/7** (`.github/workflows/ciclo.yml`): un solo reloj que lanza en orden extracción, análisis, la parte semanal (telemetría, cubo y kernel de Geoda) y la entrega, espera cada tarea y abre un issue `g7b-alerta` si algo falla o hay fuentes atrasadas. Las demás tareas dejan de tener horario propio y encadenamientos. Se puede disparar desde un programador externo ([operación 24/7](docs/OPERACION_24_7.md)).
+- **Reprocesamiento** (`g7b_ingesta/procesar.py`): cada archivo de bronce guarda su huella de reglas y se reevalúa solo cuando cambian la taxonomía, los umbrales, el catálogo de su fuente o la versión del embudo. Sin duplicar conteos ni chocar con el índice de repetidos. A mano: `--fuente`, `--lote`, `--forzar`.
+- **Embudo 2**: «mixto» es un idioma admitido; un resumen corto no se rechaza por idioma desconocido; el manual 2.79 no se marca como desactualizado. Alias «Blender Docs» para la araña antigua.
+
 ## Durante Hack4Edu (después de la etiqueta `hack4edu`)
 
 ### 3 de noviembre de 2026

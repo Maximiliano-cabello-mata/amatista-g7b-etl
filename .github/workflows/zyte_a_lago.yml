@@ -3,8 +3,7 @@ name: Zyte al lago
 # Copia cada noche a Azure (bronce) los trabajos terminados en Zyte.
 # Necesita los secretos ZYTE_API_KEY y AZURE_LAGO_URL (infra/azure/LEEME.md).
 on:
-  schedule:
-    - cron: "17 9 * * *"  # 09:17 UTC = 03:17 en la Ciudad de México
+  # Sin horario propio: lo lanza el ciclo (ciclo.yml), que es el único reloj del flujo.
   workflow_dispatch:
     inputs:
       simulacro:

@@ -1,0 +1,81 @@
+name: Ciclo G7B (24/7)
+
+# El único reloj del flujo de datos. Cada vuelta lanza las tareas en orden, espera a que termine cada
+# una y al final revisa la frescura del lago. Si algo falló o los datos se quedaron viejos, abre (o
+# actualiza) un aviso en Issues con la etiqueta «g7b-alerta»; cuando una vuelta sale bien, lo cierra.
+#
+#   extracción ── vigilar (Geodar Radar) → Zyte al lago
+#   análisis   ── procesar (embudo; reevalúa lo que cambió de reglas) → MongoDB
+#   semanal    ── telemetría → cubo → kernel de Geoda      (martes, primera vuelta del día, o «completo»)
+#   entrega    ── publicar estado para Geoda → API de Amatista
+#
+# Disparadores (docs/OPERACION_24_7.md):
+#   schedule             cada 6 horas, si GitHub dispara los horarios de este repositorio
+#   workflow_dispatch    a mano, o por la API desde un programador externo (cron-job.org)
+#   repository_dispatch  tipo «ciclo», para programadores que solo hacen un POST
+on:
+  schedule:
+    - cron: "11 */6 * * *"
+  workflow_dispatch:
+    inputs:
+      completo:
+        description: "Incluir telemetría, cubo y kernel de Geoda aunque no sea la vuelta semanal"
+        type: boolean
+        default: false
+  repository_dispatch:
+    types: [ciclo]
+
+permissions:
+  actions: write    # lanzar las tareas y seguirlas
+  contents: read
+  issues: write     # el aviso
+
+concurrency:
+  group: g7b-ciclo
+  cancel-in-progress: false
+
+jobs:
+  ciclo:
+    runs-on: ubuntu-latest
+    # Los secretos (AZURE_LAGO_URL) viven en el environment «amatista1»: hacen falta para revisar la frescura.
+    environment: amatista1
+    timeout-minutes: 180
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lanzar las tareas en orden
+        id: tareas
+        env:
+          COMPLETO: ${{ inputs.completo || github.event.client_payload.completo }}
+        run: bash .github/scripts/ciclo.sh
+
+      - uses: actions/setup-python@v5
+        if: ${{ always() }}
+        with:
+          python-version: "3.12"
+
+      - name: Frescura del lago
+        id: frescura
+        if: ${{ always() }}
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+        run: |
+          pip install -q -r requirements-lago.txt
+          if salida="$(python -m geodar salud 2>&1)"; then
+            echo "atrasadas=" >> "$GITHUB_OUTPUT"
+          else
+            malas="$(printf '%s\n' "$salida" | python .github/scripts/atrasadas.py)"
+            echo "atrasadas=${malas:-no se pudo leer la salud del radar}" >> "$GITHUB_OUTPUT"
+          fi
+          printf '%s\n' "$salida" | tail -1
+
+      - name: Aviso
+        if: ${{ always() }}
+        env:
+          FALLAS: ${{ steps.tareas.outputs.fallas }}
+          ATRASADAS: ${{ steps.frescura.outputs.atrasadas }}
+          VUELTA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: bash .github/scripts/aviso.sh

@@ -4,6 +4,8 @@ Estado al 11 de noviembre de 2026. El flujo va por etapas y cada una espera a la
 
 Diagnóstico de partida: [estado del flujo](reportes/2026-11-11_estado_del_flujo.md).
 
+> **Actualización 16 de noviembre:** el flujo ahora tiene un solo reloj, el ciclo (`ciclo.yml`), que lanza las tareas en orden y avisa con un issue si algo falla. Como GitHub no está disparando los horarios de este repositorio, hace falta un programador externo. Ver [operación 24/7](OPERACION_24_7.md). Las tablas de abajo describen los horarios anteriores.
+
 ## Etapa 0 · Destrabar (responsable, unos 15 minutos)
 
 | # | Tarea | Hecho cuando |
