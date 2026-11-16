@@ -8,10 +8,7 @@ on:
       - 'g7b_almacen/**'
       - 'requirements-cubo.txt'
       - '.github/workflows/cubo.yml'
-  workflow_run:
-    workflows: ['Telemetría G7B']
-    types: [completed]
-    branches: [main]
+  # Sin workflow_run: el ciclo (ciclo.yml) lo lanza después de la telemetría y espera su resultado.
 
 permissions:
   contents: read

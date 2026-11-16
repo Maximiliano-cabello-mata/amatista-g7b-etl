@@ -3,8 +3,7 @@ name: Vigilar fuentes (Geodar Radar)
 # Cada 6 horas Geodar Radar revisa las fuentes del catálogo a las que les toca (frecuencia_horas)
 # y lanza la extracción solo si hay algo nuevo (docs/GEODAR_RADAR.md). Después revisa su salud.
 on:
-  schedule:
-    - cron: "23 */6 * * *"
+  # Sin horario propio: lo lanza el ciclo (ciclo.yml), que es el único reloj del flujo.
   workflow_dispatch:
     inputs:
       fuente:

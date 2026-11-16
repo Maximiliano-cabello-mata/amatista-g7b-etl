@@ -8,12 +8,7 @@ on:
     branches: [main]
     paths: ['.github/workflows/geoda_publicar.yml']
   workflow_dispatch:
-  schedule:
-    - cron: "7 */6 * * *"
-  workflow_run:
-    workflows: ["Procesar bronce", "Cubo G7B"]
-    types: [completed]
-    branches: [main]
+  # Sin horario ni workflow_run: el ciclo (ciclo.yml) la lanza al final de cada vuelta.
 
 permissions:
   contents: write

@@ -12,8 +12,7 @@ on:
         description: Guardar y verificar en Azure
         type: boolean
         default: true
-  schedule:
-    - cron: '23 10 * * 2'
+  # Sin horario propio: el ciclo (ciclo.yml) la lanza una vez por semana.
 
 permissions:
   contents: read

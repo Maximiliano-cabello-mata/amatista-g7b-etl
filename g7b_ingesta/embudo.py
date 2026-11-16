@@ -18,6 +18,11 @@ from . import texto as tx
 
 ACEPTADO, REVISION, RECHAZADO = "aceptado", "revision", "rechazado"
 
+# Súbelo cuando cambie la lógica de este archivo: todo bronce se vuelve a evaluar con ella (procesar.py).
+# 2: «mixto» (español e inglés) es un idioma soportado; un texto corto sin palabras vacías no se rechaza
+#    por idioma; la página de un manual con versión declarada (2.79) no se marca como desactualizada.
+VERSION_EMBUDO = 2
+
 UMBRALES = {
     "palabras_min": 40,
     "palabras_max": 200_000,
@@ -31,6 +36,7 @@ UMBRALES = {
     "hamming_casi_duplicado": 3,
     "resumen_metadatos_max": 1200,    # caracteres de texto propio permitidos en solo_metadatos
     "version_desactualizada": (2, 80),  # antes de 2.80 la interfaz de Blender era otra
+    "palabras_idioma": 80,            # por debajo, un idioma «desconocido» no basta para rechazar
 }
 
 _SENALES_VALOR = [
@@ -72,6 +78,14 @@ class Indice:
     def agregar(self, huella, simhash):
         self.exactas.add(huella)
         self.aproximadas.append(simhash)
+
+    def quitar(self, huella, simhash):
+        """Lo contrario de agregar: para volver a evaluar un documento sin que choque consigo mismo."""
+        self.exactas.discard(huella)
+        if isinstance(simhash, str):
+            simhash = int(simhash, 16) if simhash else None
+        if simhash is not None and simhash in self.aproximadas:
+            self.aproximadas.remove(simhash)
 
     def como_dict(self):
         return {"exactas": sorted(self.exactas), "aproximadas": [f"{h:016x}" for h in self.aproximadas]}
@@ -154,7 +168,9 @@ def evaluar(doc, fuente, taxonomia, indice, umbrales=UMBRALES):
         if len(listas) / len(lineas) > 0.6 and sum(len(l) for l in listas) / len(listas) < 60:
             return Resultado(RECHAZADO, "calidad", ["página índice: casi todo son listas de enlaces cortos"])
     lengua = tx.idioma(completo)
-    if lengua not in ("es", "en"):
+    # «mixto» es español e inglés juntos: los dos se admiten. «desconocido» solo dice que hay pocas palabras
+    # vacías; en un resumen corto es lo normal, así que solo se rechaza en textos largos.
+    if lengua not in ("es", "en", "mixto") and not (lengua == "desconocido" and len(lista) < u["palabras_idioma"]):
         return Resultado(RECHAZADO, "calidad", [f"idioma no soportado: {lengua}"])
 
     # 3. Duplicados
@@ -196,7 +212,10 @@ def evaluar(doc, fuente, taxonomia, indice, umbrales=UMBRALES):
     versiones = tx.versiones_blender(completo)
     if versiones:
         puntajes["versiones_blender"] = [f"{a}.{b}" for a, b in versiones]
-        if max(versiones) < u["version_desactualizada"]:
+        # Una página de manual con su versión declarada (metadatos.version) es de esa versión a propósito:
+        # el manual 2.79 se extrae para equipos viejos (nivel N1). No es un texto desactualizado.
+        declarada = (doc.get("metadatos") or {}).get("version")
+        if max(versiones) < u["version_desactualizada"] and not declarada:
             motivos.append("solo menciona versiones de Blender anteriores a 2.80: puede estar desactualizado")
 
     if valor < u["valor_revision"]:
