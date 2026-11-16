@@ -1,15 +1,15 @@
-"""Ara�a estructurada para manuales hechos con Sphinx (Blender, Godot y otros), en varias versiones.
+"""Araña estructurada para manuales hechos con Sphinx (Blender, Godot y otros), en varias versiones.
 
-Recorre cada secci�n completa (todas sus p�ginas, no solo el �ndice) y por p�gina guarda, en orden:
-t�tulos, p�rrafos, listas, cada propiedad con su nombre y descripci�n (<dt>/<dd>) y los bloques de
-c�digo, m�s las llamadas bpy.* encontradas. No escribe en MongoDB: lo crudo va al lago (zyte_a_lago)
-y el embudo filtra despu�s.
+Recorre cada sección completa (todas sus páginas, no solo el índice) y por página guarda, en orden:
+títulos, párrafos, listas, cada propiedad con su nombre y descripción (<dt>/<dd>) y los bloques de
+código, más las llamadas bpy.* encontradas. No escribe en MongoDB: lo crudo va al lago (zyte_a_lago)
+y el embudo filtra después.
 
     scrapy crawl manual_sphinx -a fuente=blender-manual -a base=https://docs.blender.org/manual/en/ \
         -a versiones='["5.2"]' -a secciones='["render/cycles/index.html"]' -a max_paginas=50
 
-Las p�ginas sin contenido se descartan aqu� mismo y se cuentan en las estad�sticas del trabajo
-(g7b/descartadas_sin_contenido), para que se vea cu�ntas fueron.
+Las páginas sin contenido se descartan aquí mismo y se cuentan en las estadísticas del trabajo
+(g7b/descartadas_sin_contenido), para que se vea cuántas fueron.
 """
 import hashlib
 import json
@@ -30,7 +30,7 @@ _BLOQUES = (".//h2 | .//h3 | .//p[not(ancestor::li or ancestor::dd or ancestor::
 
 
 def limpio(texto):
-    return _ESPACIOS.sub(" ", (texto or "").replace("�", "")).strip()
+    return _ESPACIOS.sub(" ", (texto or "").replace("¶", "").replace("\uf0c1", "")).strip()
 
 
 def texto_de(selector, sin_pre=True):
@@ -42,7 +42,7 @@ class ManualSphinxSpider(scrapy.Spider):
     name = "manual_sphinx"
     guardar_en_mongo = False
 
-    # Valores por omisi�n; las subclases (como blender_docs) los cambian.
+    # Valores por omisión; las subclases (como blender_docs) los cambian.
     fuente_por_omision = ""
     programa = ""
     base = ""
@@ -65,7 +65,7 @@ class ManualSphinxSpider(scrapy.Spider):
             raise ValueError("anclas_objetivo debe ser una lista JSON de anclas no vacias")
         self.allowed_domains = [urlparse(self.base).hostname]
 
-    async def start(self):  # Scrapy 2.13 o m�s nuevo
+    async def start(self):  # Scrapy 2.13 o más nuevo
         for peticion in self.start_requests():
             yield peticion
 
@@ -81,8 +81,8 @@ class ManualSphinxSpider(scrapy.Spider):
         if "html" not in response.headers.get("Content-Type", b"").decode("latin-1"):
             return
         if self.paginas >= self.max_paginas:
-            # Cerrar el trabajo y descartar la cola: sin esto, al llegar al tope segu�a descargando
-            # lo encolado (una prueba con max_paginas=20 baj� 370 p�ginas).
+            # Cerrar el trabajo y descartar la cola: sin esto, al llegar al tope seguía descargando
+            # lo encolado (una prueba con max_paginas=20 bajó 370 páginas).
             raise CloseSpider("max_paginas")
         self.paginas += 1
         documento = self.extraer(response, version, seccion)
@@ -90,7 +90,7 @@ class ManualSphinxSpider(scrapy.Spider):
             yield documento
         elif getattr(self, "crawler", None):
             self.crawler.stats.inc_value("g7b/descartadas_sin_contenido")
-        # Toda la secci�n: cualquier enlace dentro de su carpeta, a cualquier profundidad.
+        # Toda la sección: cualquier enlace dentro de su carpeta, a cualquier profundidad.
         for href in response.css("a::attr(href)").getall():
             url = response.urljoin(href).split("#", 1)[0]
             if url.startswith(prefijo) and url.endswith(".html") and self.paginas < self.max_paginas:

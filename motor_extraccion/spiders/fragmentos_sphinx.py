@@ -6,16 +6,16 @@ from urllib.parse import quote
 
 
 def _texto(nodo):
-    return re.sub(r"\s+", " ".join(nodo.xpath(
+    return re.sub(r"\s+", " ", " ".join(nodo.xpath(
         ".//text()[not(ancestor::a[contains(@class, 'headerlink')])]"
     ))).strip()
 
 
 def extraer_fragmentos(contenedor, response, fuente, programa, version, titulo):
-    """Asigna cada bloque al encabezado m�s cercano, sin duplicar subsecciones.
+    """Asigna cada bloque al encabezado más cercano, sin duplicar subsecciones.
 
-    Sin ancla real se cita la p�gina y se identifica por ordinal local;
-    ese ordinal puede variar cuando se edita la estructura de la p�gina.
+    Sin ancla real se cita la página y se identifica por ordinal local;
+    ese ordinal puede variar cuando se edita la estructura de la página.
     """
     url = response.url.split("#", 1)[0]
     grupos, pila = [], []

@@ -103,3 +103,25 @@ Con estas correcciones, la simulación sobre una copia del lago da 1.020 aceptad
 - **Variantes de versión:** guardar la página del manual de cada versión como variante del documento aceptado, en lugar de rechazarla como duplicada.
 - **Noticias:** de 79 documentos de fuentes de noticias, casi ninguno pasa. Solo se guarda el título por derechos de autor, y un título rara vez responde una pregunta del plan. Conviene tratarlas como señales de tendencia, igual que los foros.
 - **Retirar de MongoDB** lo que deja de estar aceptado.
+
+## 5. Primera vuelta real (16 de noviembre de 2026)
+
+El PR #22 se fusionó a las 02:39 UTC. El horario `11 */6 * * *` debía disparar a las 03:11 y a las 09:11, y **no lo hizo**. El primer disparo por horario llegó a las 15:33 (programado a las 15:11). Es la primera ejecución por `schedule` en el repositorio desde el 11 de noviembre. GitHub retrasa y a veces omite los horarios, así que **el programador externo (sección 2) sigue siendo necesario**.
+
+[Ejecución 43897649802](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/43897649802), 5 minutos, todo en verde:
+
+| Tarea | Resultado |
+|---|---|
+| Vigilar | 147 registros nuevos de 10 fuentes. Hubo 65 temas de Blender Artists, 29 de Godot, 27 de Three.js, 12 de DevTalk, 6 artículos de arXiv, 4 preguntas de Stack Exchange y 4 entradas más entre blogs y herramientas. 19 de 19 sensores al día |
+| Zyte al lago | Trajo los trabajos `883618-1-14` y `883618-1-15`, de 2.353 páginas cada uno |
+| Procesar | Reevaluó los 20 archivos anteriores por cambio de reglas, más 6 nuevos. Total del lago: **1.021 aceptados**, 56 en revisión y 6.212 rechazados |
+| Publicar en MongoDB | 26 documentos nuevos, 995 sin cambios. La base ocupa 3,15 MB de 512 MB |
+| Catálogos y señales | 1 herramienta nueva; 133 temas de foros resumidos como señales |
+| Publicar estado para Geoda | Correcto |
+| Aviso | Sin fallas ni fuentes atrasadas, así que no se abrió issue |
+
+### Qué dicen estos números
+
+- **Los rechazos crecieron de 1.505 a 6.212 sin que se perdiera nada.** 4.684 son los dos trabajos nuevos de Zyte, que volvieron a recorrer el mismo manual: misma configuración, mismas 2.353 páginas, rechazadas por duplicado exacto. Eso es correcto, pero gasta la unidad gratuita de Zyte y abulta los conteos. Conviene relanzar la araña solo cuando cambie su configuración o el manual (ver [revisión de la auditoría](auditorias/2026-11-16_revision_de_la_auditoria.md), punto 2).
+- **Los 56 en revisión incluyen las mismas 11 páginas del manual repetidas en tres trabajos**: el índice de repetidos solo cuenta lo aceptado. No afecta a MongoDB, porque lo que está en revisión no se publica.
+- **Aceptados 1.021**, frente a 1.020 en la simulación. El reprocesamiento se comportó como en las pruebas.

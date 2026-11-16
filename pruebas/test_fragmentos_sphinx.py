@@ -1,4 +1,4 @@
-"""Contrato de fragmentos: fixtures locales, sin Mongo, Azure ni tr�fico HTTP."""
+"""Contrato de fragmentos: fixtures locales, sin Mongo, Azure ni tráfico HTTP."""
 import json
 
 import pytest
@@ -8,7 +8,7 @@ from motor_extraccion.spiders.blender_docs import BlenderDocsSpider
 
 URL = "https://docs.blender.org/manual/en/4.5/modeling/modifiers/bevel.html"
 HTML = """<article role="main"><section id="bevel">
-<h1>Bevel<a class="headerlink" href="#bevel">�</a></h1><p>Round edges.</p>
+<h1>Bevel<a class="headerlink" href="#bevel">¶</a></h1><p>Round edges.</p>
 <section id="options"><h2>Options</h2>
 <div class="admonition warning"><p>Warning</p><p>Apply scale first.</p></div>
 <table><tr><th>Setting</th><th>Value</th></tr><tr><td>Segments</td><td>2</td></tr></table>
@@ -35,7 +35,7 @@ def test_jerarquia_anclas_y_no_mezclar_apartados():
     assert fragmentos["width"]["url"] == URL + "#width"
     assert "Size of the bevel" not in fragmentos["options"]["contenido"]
     assert fragmentos["width"]["contenido"].count("Child") == 1
-    assert "�" not in fragmentos["bevel"]["titulo"]
+    assert "¶" not in fragmentos["bevel"]["titulo"]
     assert doc["schema_version"] == 2
     assert doc["doc_id"] and doc["contenido"]  # contrato anterior sigue disponible
 
