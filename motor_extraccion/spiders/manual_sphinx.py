@@ -1,15 +1,15 @@
-"""Araña estructurada para manuales hechos con Sphinx (Blender, Godot y otros), en varias versiones.
+"""Ara�a estructurada para manuales hechos con Sphinx (Blender, Godot y otros), en varias versiones.
 
-Recorre cada sección completa (todas sus páginas, no solo el índice) y por página guarda, en orden:
-títulos, párrafos, listas, cada propiedad con su nombre y descripción (<dt>/<dd>) y los bloques de
-código, más las llamadas bpy.* encontradas. No escribe en MongoDB: lo crudo va al lago (zyte_a_lago)
-y el embudo filtra después.
+Recorre cada secci�n completa (todas sus p�ginas, no solo el �ndice) y por p�gina guarda, en orden:
+t�tulos, p�rrafos, listas, cada propiedad con su nombre y descripci�n (<dt>/<dd>) y los bloques de
+c�digo, m�s las llamadas bpy.* encontradas. No escribe en MongoDB: lo crudo va al lago (zyte_a_lago)
+y el embudo filtra despu�s.
 
     scrapy crawl manual_sphinx -a fuente=blender-manual -a base=https://docs.blender.org/manual/en/ \
         -a versiones='["5.2"]' -a secciones='["render/cycles/index.html"]' -a max_paginas=50
 
-Las páginas sin contenido se descartan aquí mismo y se cuentan en las estadísticas del trabajo
-(g7b/descartadas_sin_contenido), para que se vea cuántas fueron.
+Las p�ginas sin contenido se descartan aqu� mismo y se cuentan en las estad�sticas del trabajo
+(g7b/descartadas_sin_contenido), para que se vea cu�ntas fueron.
 """
 import hashlib
 import json
@@ -20,6 +20,8 @@ from urllib.parse import urlparse
 import scrapy
 from scrapy.exceptions import CloseSpider
 
+from .fragmentos_sphinx import extraer_fragmentos
+
 _ESPACIOS = re.compile(r"\s+")
 _BPY = re.compile(r"\bbpy\.[A-Za-z_][A-Za-z0-9_.]*")
 _CONTENEDORES = ("article[role='main']", "div[role='main']", "div.body", "div.document")
@@ -28,7 +30,7 @@ _BLOQUES = (".//h2 | .//h3 | .//p[not(ancestor::li or ancestor::dd or ancestor::
 
 
 def limpio(texto):
-    return _ESPACIOS.sub(" ", (texto or "").replace("¶", "")).strip()
+    return _ESPACIOS.sub(" ", (texto or "").replace("�", "")).strip()
 
 
 def texto_de(selector, sin_pre=True):
@@ -40,7 +42,7 @@ class ManualSphinxSpider(scrapy.Spider):
     name = "manual_sphinx"
     guardar_en_mongo = False
 
-    # Valores por omisión; las subclases (como blender_docs) los cambian.
+    # Valores por omisi�n; las subclases (como blender_docs) los cambian.
     fuente_por_omision = ""
     programa = ""
     base = ""
@@ -48,6 +50,7 @@ class ManualSphinxSpider(scrapy.Spider):
     secciones = []
 
     def __init__(self, fuente=None, base=None, versiones=None, secciones=None, max_paginas="3000",
+                 anclas_objetivo=None,
                  *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fuente = fuente or self.fuente_por_omision
@@ -56,9 +59,13 @@ class ManualSphinxSpider(scrapy.Spider):
         self.secciones = json.loads(secciones) if secciones else list(self.secciones)
         self.max_paginas = int(max_paginas)
         self.paginas = 0
+        self.anclas_objetivo = json.loads(anclas_objetivo) if anclas_objetivo else []
+        if not isinstance(self.anclas_objetivo, list) or any(
+                not isinstance(a, str) or not a for a in self.anclas_objetivo):
+            raise ValueError("anclas_objetivo debe ser una lista JSON de anclas no vacias")
         self.allowed_domains = [urlparse(self.base).hostname]
 
-    async def start(self):  # Scrapy 2.13 o más nuevo
+    async def start(self):  # Scrapy 2.13 o m�s nuevo
         for peticion in self.start_requests():
             yield peticion
 
@@ -74,8 +81,8 @@ class ManualSphinxSpider(scrapy.Spider):
         if "html" not in response.headers.get("Content-Type", b"").decode("latin-1"):
             return
         if self.paginas >= self.max_paginas:
-            # Cerrar el trabajo y descartar la cola: sin esto, al llegar al tope seguía descargando
-            # lo encolado (una prueba con max_paginas=20 bajó 370 páginas).
+            # Cerrar el trabajo y descartar la cola: sin esto, al llegar al tope segu�a descargando
+            # lo encolado (una prueba con max_paginas=20 baj� 370 p�ginas).
             raise CloseSpider("max_paginas")
         self.paginas += 1
         documento = self.extraer(response, version, seccion)
@@ -83,7 +90,7 @@ class ManualSphinxSpider(scrapy.Spider):
             yield documento
         elif getattr(self, "crawler", None):
             self.crawler.stats.inc_value("g7b/descartadas_sin_contenido")
-        # Toda la sección: cualquier enlace dentro de su carpeta, a cualquier profundidad.
+        # Toda la secci�n: cualquier enlace dentro de su carpeta, a cualquier profundidad.
         for href in response.css("a::attr(href)").getall():
             url = response.urljoin(href).split("#", 1)[0]
             if url.startswith(prefijo) and url.endswith(".html") and self.paginas < self.max_paginas:
@@ -100,7 +107,14 @@ class ManualSphinxSpider(scrapy.Spider):
         if contenedor is None:
             return None
         titulo = limpio(" ".join(contenedor.css("h1 ::text").getall())) or \
-            limpio((response.css("title::text").get() or "").split("—")[0])
+            limpio((response.css("title::text").get() or "").split("-")[0])
+        fragmentos = extraer_fragmentos(contenedor, response, self.fuente, self.programa, version, titulo)
+        if self.anclas_objetivo:
+            fragmentos = [f for f in fragmentos if f["ancla"] in self.anclas_objetivo]
+            if not fragmentos:
+                if getattr(self, "crawler", None):
+                    self.crawler.stats.inc_value("g7b/sin_anclas_objetivo")
+                return None
         lineas, jerarquia, propiedades, codigos = [], [], [], []
         nombre_pendiente = None
         for nodo in contenedor.xpath(_BLOQUES):
@@ -135,10 +149,13 @@ class ManualSphinxSpider(scrapy.Spider):
                     lineas.append(texto)
         contenido = "\n\n".join(lineas).strip()
         prosa = "\n".join(l for l in lineas if not l.startswith("```"))
-        if not prosa.strip():
+        if not prosa.strip() and not fragmentos:
             return None
         url = response.url.split("#", 1)[0]
         return {
+            "schema_version": 2,
+            "extractor_version": "manual_sphinx/2",
+            "fragmentos": fragmentos,
             "doc_id": hashlib.sha256(url.encode("utf-8")).hexdigest(),
             "fuente": self.fuente,
             "url": url,
@@ -152,6 +169,10 @@ class ManualSphinxSpider(scrapy.Spider):
             "bloques_codigo": codigos,
             "operadores_bpy": sorted(set(_BPY.findall(contenido))),
             "conteo_palabras": len(prosa.split()),
-            "hash_contenido": hashlib.sha256(contenido.encode("utf-8")).hexdigest(),
+            "hash_contenido": hashlib.sha256(json.dumps(
+                {"contenido": contenido, "fragmentos": fragmentos, "schema_version": 2},
+                ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest(),
             "extraido_en": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         }
+
+
