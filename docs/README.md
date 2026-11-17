@@ -40,12 +40,13 @@ Ordenados por para qué sirven. Si dos documentos dicen cosas distintas, manda e
 
 | Documento | Qué registra |
 |---|---|
-| [bitacoras/](bitacoras/) | Cada día: lo hecho, los errores y el plan siguiente (1, 2 y 3 de noviembre) |
+| [bitacoras/](bitacoras/) | Cada día: lo hecho, los errores y el plan siguiente (1, 2 y 3 de noviembre; [16 y 17 de noviembre](bitacoras/2026-11-17.md)) |
 | [historia/ARQUITECTURA_CLOUD.md](historia/ARQUITECTURA_CLOUD.md) | El primer despliegue en Zyte y MongoDB (31 de octubre) |
 | [reportes/](reportes/) | Propuestas, horizonte, revisión de ofertas y observaciones de calidad |
 | [auditorias/](auditorias/) | Auditoría de arañas y Azure (15 nov) y su revisión contra el código y el lago (16 nov) |
+| [TAREAS_ARANAS.md](TAREAS_ARANAS.md) | **Lista viva de pendientes** de la araña de documentación y del radar de telemetría (qué sigue, con «hecho cuando») |
 | [ESTANDAR_TELEMETRIA.md](ESTANDAR_TELEMETRIA.md) | Radar de telemetría frente a arañas de documentación, estándar `g7b.hardware/1`, Open Data por tandas y reportes de error de Blender |
 | [ARANA_MANUALES.md](ARANA_MANUALES.md) | Araña de manuales Sphinx guiada por objects.inv: cada página una vez, solo cuando cambia, con cobertura medida |
 | [OPERACION_24_7.md](OPERACION_24_7.md) | Ciclo de 6 horas, aviso, programador externo, reprocesamiento y primera vuelta real |
-| [investigacion/](investigacion/) | Estado del arte e integración con Amatista. **Para empezar, tres documentos del 17 de noviembre:** [el nicho, fuentes y metodología](investigacion/2026-11-17_nicho_fuentes_y_metodologia.md) (APIs gratuitas por pregunta y qué construir), [arañas para conocimiento de nicho](investigacion/2026-11-17_aranas_nicho/README.md) (reporte con 12 decisiones, probado frente a teórico) y [qué IA usar](investigacion/2026-11-17_decision_ia.md) (local frente a Gemini gratuito) |
+| [investigacion/](investigacion/) | Estado del arte e integración con Amatista. **Para empezar, tres documentos del 17 de noviembre:** [el nicho, fuentes y metodología](investigacion/2026-11-17_nicho_fuentes_y_metodologia.md) (APIs gratuitas por pregunta y qué construir), [arañas para conocimiento de nicho](investigacion/2026-11-17_aranas_nicho/README.md) (reporte con 12 decisiones, probado frente a teórico) y [qué IA usar](investigacion/2026-11-17_decision_ia.md) (local frente a Gemini gratuito). Además: [revisión de arañas de telemetría del navegador](investigacion/2026-11-17_aranas_telemetria_navegador/REVISION.md) e [índice de fuentes consultadas](investigacion/2026-11-17_fuentes_consultadas.md) |
 | [estadia/](estadia/) | La propuesta de estadía (Amatista + G7B) |
