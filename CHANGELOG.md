@@ -7,6 +7,12 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 - **Ciclo 24/7** (`.github/workflows/ciclo.yml`): un solo reloj que lanza en orden extracción, análisis, la parte semanal (telemetría, cubo y kernel de Geoda) y la entrega, espera cada tarea y abre un issue `g7b-alerta` si algo falla o hay fuentes atrasadas. Las demás tareas dejan de tener horario propio y encadenamientos. Se puede disparar desde un programador externo ([operación 24/7](docs/OPERACION_24_7.md)).
 - **Reprocesamiento** (`g7b_ingesta/procesar.py`): cada archivo de bronce guarda su huella de reglas y se reevalúa solo cuando cambian la taxonomía, los umbrales, el catálogo de su fuente o la versión del embudo. Sin duplicar conteos ni chocar con el índice de repetidos. A mano: `--fuente`, `--lote`, `--forzar`.
+- **Radar de telemetría separado de las arañas de documentación** ([estándar de telemetría](docs/ESTANDAR_TELEMETRIA.md)):
+  - **Estándar `g7b.hardware/1`** (`fuentes/hardware.yml` y `g7b_telemetria/hardware.py`): cualquier nombre de GPU o CPU se traduce a fabricante, clase y VRAM, y recibe un nivel N0–N4 con las reglas de Geoda, su confianza y sus motivos.
+  - **Blender Open Data completo:** se recorre por tandas, de lo nuevo hacia atrás, con el estado guardado en el lago. Antes se tomaban siempre los primeros 1.000 registros: marzo de 2022 y Blender 3.0.1.
+  - **Cubo:** la vista nueva `v_render_por_nivel`.
+  - **Reportes de error de Blender:** el sensor `gitea_issues` extrae sistema, GPU, OpenGL y versiones de la plantilla, sin el texto. Queda inactivo hasta probarlo en vivo.
+  - **Catálogo:** Zyte solo para documentación; la telemetría la trae el radar (`extractor: telemetria`). Hay un comando nuevo, `geodar telemetria`, y `geodar salud` ahora revisa también al radar.
 - **Investigación del nicho (sin código):**
   - [Fuentes y APIs por pregunta del plan](docs/investigacion/2026-11-17_nicho_fuentes_y_metodologia.md).
   - [Reporte de arañas para conocimiento de nicho](docs/investigacion/2026-11-17_aranas_nicho/README.md), con 12 decisiones priorizadas y las notas de investigación.

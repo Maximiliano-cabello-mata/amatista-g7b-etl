@@ -215,6 +215,7 @@ def colector_blender_open_data(fuente, lago, salida, limite, entrada=None, simul
 
     from g7b_telemetria import capturar as cap
 
+    Path(salida).mkdir(parents=True, exist_ok=True)
     archivo = Path(entrada) if entrada else Path(salida) / "opendata.zip"
     if not entrada:
         cap.descargar(archivo)

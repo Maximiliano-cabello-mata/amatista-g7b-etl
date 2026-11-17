@@ -179,37 +179,60 @@ def test_plantilla_de_reporte_a_campos_estructurados():
 
 FUENTE = {"id": "blender-reportes", "sensor": {"tipo": "gitea_issues", "base": "https://projects.blender.org",
                                                "repo": "blender/blender", "etiquetas": ["Type/Report"],
-                                               "paginas": 3, "por_pagina": 2}}
+                                               "por_pagina": 2, "peticiones": 6, "ventana_horas": 24,
+                                               "dias_iniciales": 2}}
+AHORA = datetime(2026, 11, 17, 12, tzinfo=timezone.utc)
 
 
 def reporte(n, actualizado, cuerpo=PLANTILLA, pr=False):
     return {"number": n, "title": f"Falla {n}", "html_url": f"https://projects.blender.org/blender/blender/issues/{n}",
             "created_at": "2026-11-01T00:00:00Z", "updated_at": actualizado, "state": "open",
             "labels": [{"name": "Type/Report"}, {"name": "Module/Viewport & EEVEE"}], "comments": 2,
-            "body": cuerpo, **({"pull_request": {}} if pr else {})}
+            "body": cuerpo, "pull_request": {} if pr else None}
 
 
-def servidor(paginas, vistas):
+def servidor(por_ventana, vistas, lleno=False):
+    """Responde según la ventana pedida (since); con lleno=True, toda página viene completa."""
+    from urllib.parse import parse_qs, urlparse
+
     def obtener(url, _cabeceras):
-        vistas.append(url)
-        pagina = int(url.split("page=")[1].split("&")[0])
-        return Respuesta(200, {}, json.dumps(paginas.get(pagina, [])).encode())
+        q = {k: v[0] for k, v in parse_qs(urlparse(url).query).items()}
+        vistas.append(q)
+        if lleno:
+            base = int(q["page"]) * 10
+            return Respuesta(200, {}, json.dumps([reporte(base, q["since"]), reporte(base + 1, q["since"])]).encode())
+        lote = por_ventana.get(q["since"], []) if q["page"] == "1" else []
+        return Respuesta(200, {}, json.dumps(lote).encode())
     return obtener
 
 
-def test_sensor_de_reportes_pide_poco_y_solo_lo_cambiado():
+def test_sensor_de_reportes_avanza_por_ventanas_de_tiempo():
     vistas = []
-    paginas = {1: [reporte(1, "2026-11-10T00:00:00Z"), reporte(2, "2026-11-11T00:00:00Z", pr=True)],
-               2: [reporte(3, "2026-11-12T00:00:00Z", cuerpo="sin plantilla")]}
-    salida, estado = sensor_gitea_issues(FUENTE, {}, servidor(paginas, vistas))
-    assert [r["id"] for r in salida["registros"]] == ["1", "3"]       # sin pull requests
-    assert len(vistas) == 2 and "labels=Type%2FReport" in vistas[0]  # la página 2 vino incompleta: se detiene
-    assert salida["registros"][0]["datos"]["hardware"]["nivel"] == "N2"
-    assert "1 con GPU" in salida["nota"] and estado["desde"] == "2026-11-12T00:00:00Z"
-    # La siguiente vez: pide desde la última actualización y no repite lo que no cambió.
+    por_ventana = {"2026-11-15T12:00:00Z": [reporte(1, "2026-11-15T13:00:00Z")],
+                   "2026-11-16T12:00:00Z": [reporte(2, "2026-11-16T13:00:00Z", pr=True),
+                                            reporte(3, "2026-11-16T14:00:00Z", cuerpo="sin plantilla")]}
+    salida, estado = sensor_gitea_issues(FUENTE, {}, servidor(por_ventana, vistas), ahora=AHORA)
+    assert [r["id"] for r in salida["registros"]] == ["1", "3"]           # sin pull requests
+    # La segunda ventana trajo una página llena (2 de 2): pide la página 2 antes de darla por terminada.
+    assert [(v["since"], v["before"], v["page"]) for v in vistas] == [
+        ("2026-11-15T12:00:00Z", "2026-11-16T12:00:00Z", "1"),
+        ("2026-11-16T12:00:00Z", "2026-11-17T12:00:00Z", "1"), ("2026-11-16T12:00:00Z", "2026-11-17T12:00:00Z", "2")]
+    assert vistas[0]["labels"] == "Type/Report" and "2 ventanas completas" in salida["nota"]
+    assert salida["registros"][0]["datos"]["hardware"]["nivel"] == "N2" and "1 con GPU" in salida["nota"]
+    assert estado["desde"].startswith("2026-11-17T12:00")
+    # Una hora después: solo esa hora, y lo que no cambió no se repite.
     vistas.clear()
-    salida, _ = sensor_gitea_issues(FUENTE, estado, servidor({1: [reporte(1, "2026-11-10T00:00:00Z")]}, vistas))
-    assert "since=2026-11-12" in vistas[0] and salida["registros"] == []
+    por_ventana = {"2026-11-17T12:00:00Z": [reporte(1, "2026-11-15T13:00:00Z")]}
+    salida, _ = sensor_gitea_issues(FUENTE, estado, servidor(por_ventana, vistas), ahora=AHORA + timedelta(hours=1))
+    assert len(vistas) == 1 and salida["registros"] == []
+
+
+def test_si_una_ventana_se_llena_no_avanza_y_la_parte_a_la_mitad():
+    vistas = []
+    salida, estado = sensor_gitea_issues(FUENTE, {}, servidor({}, vistas, lleno=True), ahora=AHORA)
+    assert len(vistas) == 6                                                 # nunca más que el tope
+    assert estado["desde"].startswith("2026-11-15T12:00") and estado["ventana_horas"] == 12
+    assert len(salida["registros"]) == 12
 
 
 # --- Separación de responsabilidades -------------------------------------------------------------
@@ -264,3 +287,20 @@ def test_mapa_dice_quien_hace_que():
     texto = g.mapa_markdown(cat.cargar(), hoy="2026-11-17")
     assert "## Quién hace qué" in texto and "radar de telemetría" in texto
     assert "araña de documentación (Zyte)" in texto
+
+
+def test_colector_de_open_data_crea_su_carpeta_y_lee_el_zip(tmp_path, monkeypatch):
+    import zipfile
+
+    import geodar.__main__ as g
+    from g7b_telemetria import capturar as cap
+
+    def descargar(destino):  # como la descarga real, escribe dentro de la carpeta de salida
+        with zipfile.ZipFile(destino, "w") as z:
+            z.writestr("LICENSE.txt", "CC0 1.0 Universal")
+            z.writestr("data.jsonl", "\n".join(json.dumps(r) for r in archivo(4)) + "\n")
+
+    monkeypatch.setattr(cap, "descargar", descargar)
+    salida = tmp_path / "no" / "existe"
+    informe = g.colector_blender_open_data({}, None, str(salida), 3, simulacro=True)
+    assert informe["conteos"]["registros_validos"] == 3 and informe["simulacro"] is True

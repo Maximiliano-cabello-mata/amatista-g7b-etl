@@ -5,6 +5,15 @@ Fecha: 2026-11-02. **Geodar Radar** es la herramienta de G7B para **vigilar y ex
 - **El mapa de sensores**, generado del catálogo: [GEODAR_RADAR_MAPA.md](GEODAR_RADAR_MAPA.md).
 - **Qué hace cada etapa del embudo de texto:** [INGESTA.md](INGESTA.md).
 
+## 0. Dos herramientas con responsabilidades separadas (17 de noviembre de 2026)
+
+| Herramienta | Responsabilidad | Cómo se corre |
+|---|---|---|
+| **Radar de telemetría** | Cifras de equipos y rendimiento, todas con el estándar `g7b.hardware/1`: nivel N0–N4, clase de GPU, VRAM. Lo alimentan Blender Open Data (el archivo completo, por tandas), los reportes de error de Blender (qué falla en qué GPU) y caniuse | `python -m geodar telemetria` y sensores directos con `destino: telemetria` |
+| **Arañas de documentación (Zyte)** | Manuales y notas de versión: el manual de Blender guiado por `objects.inv`, y después las notas para desarrolladores | `geodar vigilar` las lanza; `zyte_a_lago` trae lo que extraen |
+
+El catálogo no deja mezclarlas: una araña de Zyte solo puede ir a `destino: documentos`, y la telemetría nunca se rastrea con una araña. Detalle en [ESTANDAR_TELEMETRIA.md](ESTANDAR_TELEMETRIA.md).
+
 ## 1. Qué hace, en una imagen
 
 ```text
@@ -12,9 +21,10 @@ Fecha: 2026-11-02. **Geodar Radar** es la herramienta de G7B para **vigilar y ex
           │
           ▼
   SENSORES ─ cada uno revisa su fuente con el menor costo y solo avisa de lo nuevo
-  │  atom/rss · pagina · sitemap · stackexchange · discourse · github_releases · json_api
+  │  atom/rss · pagina · sitemap · sphinx · stackexchange · discourse · github_releases · json_api · gitea_issues
   ▼
-  EXTRACTORES ─ directo (el sensor ya trae el dato) · zyte (arañas) · descarga (PDF) · externo
+  EXTRACTORES ─ directo (el sensor ya trae el dato) · zyte (arañas de documentación) · descarga (PDF)
+  │             · telemetria (radar: colectores con el estándar g7b.hardware/1) · externo
   │
   ▼
   AZURE, bronce/<fuente>/<fecha>/   ← TODO entra aquí primero, crudo y con su procedencia
@@ -22,7 +32,7 @@ Fecha: 2026-11-02. **Geodar Radar** es la herramienta de G7B para **vigilar y ex
   ├─ destino documentos ─► embudo de calidad ─► plata ─► MongoDB conocimiento_3d.documentos
   ├─ destino catalogo ───► MongoDB g7b_catalogo.<coleccion>   (texturas, hdri, modelos, herramientas…)
   ├─ destino senales ────► Azure oro/senales/semanal.json  (+ g7b_panel.senales para Atlas Charts)
-  └─ destino telemetria ─► se queda en bronce para el cubo DuckDB del warehouse (Azure)
+  └─ destino telemetria ─► bronce y plata/telemetria → cubo DuckDB (v_render_por_nivel) → Geoda
 ```
 
 **La división que se acordó:**

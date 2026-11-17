@@ -426,57 +426,77 @@ def sistema_de_reporte(cuerpo):
     return salida
 
 
-def sensor_gitea_issues(fuente, estado, obtener):
+def sensor_gitea_issues(fuente, estado, obtener, ahora=None):
     """Reportes de error de un Gitea (projects.blender.org): qué falla, en qué GPU, sistema y versión.
 
     Es telemetría de fallas para P2 («qué versión conviene en cada equipo»). Pide por la API, poco y
-    despacio (la infraestructura de Blender ya tuvo incidentes por carga de arañas): solo los
-    reportes actualizados desde la última vez, con un tope de páginas.
+    despacio (la infraestructura de Blender ya tuvo incidentes por carga de arañas).
+
+    No depende del orden en que la API devuelve los reportes: avanza por **ventanas de tiempo**
+    («actualizados entre desde y desde + ventana», parámetros since y before). Una ventana solo se da
+    por terminada cuando su última página viene incompleta; si se llena, la siguiente vez la ventana
+    se parte a la mitad. La primera vez empieza `dias_iniciales` atrás.
     """
     import json
     from urllib.parse import urlencode
 
     cfg = fuente["sensor"]
+    ahora = (ahora or datetime.now(timezone.utc)).astimezone(timezone.utc)
     base = cfg["base"].rstrip("/")
-    consulta = {"state": "all", "type": "issues", "limit": int(cfg.get("por_pagina", 50))}
+    limite = int(cfg.get("por_pagina", 50))
+    presupuesto = int(cfg.get("peticiones", 6))
+    consulta = {"state": "all", "type": "issues", "limit": limite}
     if cfg.get("etiquetas"):
         consulta["labels"] = ",".join(cfg["etiquetas"])
-    if estado.get("desde"):
-        consulta["since"] = estado["desde"]
+    inicio = ahora - timedelta(days=int(cfg.get("dias_iniciales", 14)))
+    desde = datetime.fromisoformat(estado["desde"]) if estado.get("desde") else inicio
+    ventana = timedelta(hours=float(estado.get("ventana_horas") or cfg.get("ventana_horas", 24)))
     vistas = dict(estado.get("huellas", {}))
-    registros, revisados, mas_reciente = [], 0, estado.get("desde")
-    for pagina in range(1, int(cfg.get("paginas", 3)) + 1):
-        url = f"{base}/api/v1/repos/{cfg['repo']}/issues?" + urlencode({**consulta, "page": pagina})
-        lote = _json(obtener(url, {"Accept": "application/json"}))
-        if not isinstance(lote, list) or not lote:
+    registros, revisados, peticiones, ventanas = [], 0, 0, 0
+
+    def iso(t):
+        return t.isoformat(timespec="seconds").replace("+00:00", "Z")
+
+    while peticiones < presupuesto and desde < ahora:
+        hasta = min(desde + ventana, ahora)
+        completa = False
+        for pagina in range(1, presupuesto - peticiones + 1):
+            url = f"{base}/api/v1/repos/{cfg['repo']}/issues?" + urlencode(
+                {**consulta, "since": iso(desde), "before": iso(hasta), "page": pagina})
+            lote = _json(obtener(url, {"Accept": "application/json"}))
+            peticiones += 1
+            lote = lote if isinstance(lote, list) else []
+            revisados += len(lote)
+            for r in lote:
+                if r.get("pull_request") is not None:  # Gitea marca los pull requests con este campo
+                    continue
+                clave = str(r.get("number") or r.get("id"))
+                actualizado = r.get("updated_at") or r.get("created_at")
+                if not clave or vistas.get(clave) == actualizado:
+                    continue
+                vistas[clave] = actualizado
+                registros.append({
+                    "id": clave, "url": r.get("html_url") or f"{base}/{cfg['repo']}/issues/{clave}",
+                    "titulo": (r.get("title") or "").strip()[:200], "fecha": r.get("created_at"),
+                    "etiquetas": [e.get("name") for e in r.get("labels") or [] if e.get("name")],
+                    "datos": {"estado": r.get("state"), "actualizado": actualizado, "cerrado": r.get("closed_at"),
+                              "comentarios": r.get("comments", 0), **sistema_de_reporte(r.get("body"))},
+                })
+            if len(lote) < limite:
+                completa = True
+                break
+        if not completa:  # se acabó el presupuesto dentro de la ventana: la próxima vez, más chica
+            ventana = max(ventana / 2, timedelta(hours=1))
             break
-        revisados += len(lote)
-        for r in lote:
-            if r.get("pull_request") is not None:  # Gitea marca los pull requests con este campo
-                continue
-            clave = str(r.get("number") or r.get("id"))
-            actualizado = r.get("updated_at") or r.get("created_at")
-            if not clave or vistas.get(clave) == actualizado:
-                continue
-            vistas[clave] = actualizado
-            if actualizado and (mas_reciente is None or actualizado > mas_reciente):
-                mas_reciente = actualizado
-            registros.append({
-                "id": clave, "url": r.get("html_url") or f"{base}/{cfg['repo']}/issues/{clave}",
-                "titulo": (r.get("title") or "").strip()[:200], "fecha": r.get("created_at"),
-                "etiquetas": [e.get("name") for e in r.get("labels") or [] if e.get("name")],
-                "datos": {"estado": r.get("state"), "actualizado": actualizado, "cerrado": r.get("closed_at"),
-                          "comentarios": r.get("comments", 0), **sistema_de_reporte(r.get("body"))},
-            })
-        if len(lote) < consulta["limit"]:
-            break
+        ventanas += 1
+        desde = hasta
     nuevo = dict(estado)
-    nuevo["huellas"] = dict(list(vistas.items())[-VISTOS_MAX:])
-    if mas_reciente:
-        nuevo["desde"] = mas_reciente
+    nuevo.update(desde=desde.isoformat(), ventana_horas=ventana.total_seconds() / 3600,
+                 huellas=dict(list(vistas.items())[-VISTOS_MAX:]))
     con_gpu = sum(1 for r in registros if r["datos"].get("gpu_texto"))
     return {"urls": [], "registros": registros,
-            "nota": f"{len(registros)} reportes nuevos o cambiados de {revisados} ({con_gpu} con GPU)"}, nuevo
+            "nota": (f"{len(registros)} reportes nuevos o cambiados de {revisados} ({con_gpu} con GPU); "
+                     f"{ventanas} ventanas completas, al día hasta {iso(desde)}")}, nuevo
 
 
 SENSORES = {"sphinx": sensor_sphinx, "gitea_issues": sensor_gitea_issues, "atom": sensor_feed, "rss": sensor_feed, "pagina": sensor_pagina,

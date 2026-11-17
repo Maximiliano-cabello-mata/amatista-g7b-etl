@@ -618,8 +618,10 @@ fuentes:
       base: "https://projects.blender.org"
       repo: blender/blender
       etiquetas: ["Type/Report"]
-      paginas: 3
       por_pagina: 50
+      peticiones: 6            # tope de peticiones por revisión (cada 24 h): pide poco
+      ventana_horas: 24        # avanza por ventanas de tiempo; se parte a la mitad si se llena
+      dias_iniciales: 14       # la primera vez empieza dos semanas atrás
     extractor: directo         # el sensor ya trae los campos: no hace falta araña
     frecuencia_horas: 24
     dominios: [projects.blender.org]
