@@ -68,6 +68,11 @@ Antes se tomaban los primeros 1.000 registros del archivo, que son los más viej
 3. El estado vive en el lago (`control/telemetria/blender-open-data.json`): el tramo `desde`–`hasta` ya capturado, los id del borde y si ya se llegó al principio (`completo_hacia_atras`). Se guarda **al final**: si algo falla antes, la tanda se repite.
 4. `geodar salud` revisa también al radar: si falla, aparece como `error`, y si pasan más de dos semanas sin captura, como `atrasada`.
 
+**Prueba en vivo del 17 de noviembre** (simulacro en GitHub Actions, sin escribir en el lago, [corrida 44037096411](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44037096411)):
+- El archivo completo tiene **437.638 registros**. 87.848 usan esquemas viejos que no se convierten y **349.790** son del esquema actual.
+- La tanda de 2.000 registros dio 6.000 mediciones (3 escenas cada una), todas con su bloque `hardware`.
+- Con tandas de 20.000 por semana, el archivo actual se completa en unas 18 semanas. Si hace falta antes, se puede subir el límite hasta 50.000.
+
 ## 5. Telemetría de fallas: los reportes de error de Blender
 
 El sensor `gitea_issues` (fuente `blender-reportes`) lee los reportes de projects.blender.org por su API y saca de la plantilla:
@@ -79,7 +84,11 @@ El sensor `gitea_issues` (fuente `blender-reportes`) lee los reportes de project
 
 **El texto del reporte no se guarda**, porque es de su autor: solo esos campos, el título, el enlace y las fechas. Responde la pregunta P2 del plan: qué versión conviene en cada equipo.
 
-Pide poco: solo los reportes actualizados desde la última vez y como mucho 3 páginas de 50 al día. La infraestructura de Blender ya tuvo incidentes por carga de arañas. Está **inactiva** hasta probarla en vivo (`python -m geodar probar --fuente blender-reportes`, o el flujo «Geodar Radar (probar y revisar)») y confirmar las condiciones de uso del sitio.
+Pide poco: solo los reportes actualizados desde la última vez y como mucho 3 páginas de 50 al día. La infraestructura de Blender ya tuvo incidentes por carga de arañas. Está **inactiva** hasta confirmar las condiciones de uso del sitio. Para probarla: `python -m geodar probar --fuente blender-reportes`, o el flujo «Geodar Radar (probar y revisar)».
+
+**Pruebas en vivo del 17 de noviembre:**
+- **Sin ventanas** ([corrida 44036674216](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44036674216)): la API respondió con 150 reportes, y **131 traían la tarjeta gráfica (87 %)**. Pero eran de mediados de 2024: la API no los devuelve del más reciente al más viejo. Por eso el sensor ahora avanza por ventanas de tiempo («actualizados entre `desde` y `desde` + ventana») y no depende del orden.
+- **Con ventanas** ([corrida 44037092158](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44037092158)): recorrió 6 ventanas de 24 h, del 3 al 9 de noviembre, y encontró solo 5 reportes, 3 con GPU. Son pocos para el tráfico de Blender, y algunos son reportes antiguos que alguien actualizó. **Pendiente antes de activarla:** revisar si la etiqueta `Type/Report` es la que llevan los reportes nuevos y si `since`/`before` filtran por actualización, como dice la documentación de Gitea.
 
 ## 6. Agregar una fuente de telemetría
 
