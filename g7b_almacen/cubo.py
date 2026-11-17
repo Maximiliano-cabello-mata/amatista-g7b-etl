@@ -1,4 +1,4 @@
-"""Cubo v1 sobre g7b.telemetria/1; no produce perfiles ni recomendaciones."""
+"""Cubo v2 sobre g7b.telemetria/1; no produce perfiles ni recomendaciones."""
 import argparse
 from collections import Counter
 from datetime import datetime, timezone
@@ -7,14 +7,25 @@ import json
 import math
 from pathlib import Path
 import re
-from uuid import uuid4
+from uuid import UUID, uuid4, uuid5
+from statistics import median
 
 import duckdb
 
-CONTRATO = 'g7b.cubo/1'
+CONTRATO = 'g7b.cubo/2'
+CONTRATOS_LECTURA = ('g7b.cubo/1', CONTRATO)
+NAMESPACE = UUID('1bcd6614-d978-4d3b-b5e3-d370d96ad805')
+METRICAS = {
+    **{m: ('s', 'menor') for m in (
+        'tiempo_edicion', 'tiempo_primera_evaluacion', 'tiempo_render_cycles_cpu',
+        'tiempo_render_cycles_gpu', 'tiempo_render_eevee', 'tiempo_render_workbench')},
+    'cuadros_por_segundo_animacion': ('fps', 'mayor'),
+    'cuadros_por_segundo_vista3d': ('fps', 'mayor'),
+    'samples_per_minute': ('samples/min', 'mayor'),
+}
 ACTUAL = 'control/cubo_actual.json'
 MAX_FILAS = 1_000_000
-DIMENSIONES = ('dispositivo', 'version', 'escena', 'perfil', 'tiempo', 'origen')
+DIMENSIONES = ('dispositivo', 'version', 'escena', 'perfil', 'tiempo', 'origen', 'metrica')
 
 
 def serializar(dato):
@@ -48,6 +59,8 @@ def validar(f):
         raise ValueError('valor inválido')
     for campo in ('version', 'escena', 'metrica', 'licencia'):
         texto(f.get(campo))
+    if f['metrica'] not in METRICAS or METRICAS[f['metrica']][0] != f.get('unidad'):
+        raise ValueError('metrica desconocida o unidad incompatible')
     instante = datetime.fromisoformat(texto(f.get('fecha')).replace('Z', '+00:00'))
     if instante.tzinfo is None: raise ValueError('fecha sin zona horaria')
     if not isinstance(f.get('motivos'), list): raise ValueError('faltan motivos de calidad')
@@ -55,7 +68,7 @@ def validar(f):
         if (f.get('unidad') != 'samples/min' or f['metrica'] != 'samples_per_minute'
                 or f['estado'] != 'revision' or f['licencia'] != 'CC0-1.0'):
             raise ValueError('benchmark público no compatible con esta versión')
-        if not f.get('dispositivos'): raise ValueError('sin dispositivos')
+        if not isinstance(f.get('dispositivos'), list) or not f['dispositivos']: raise ValueError('sin dispositivos')
         for d in f['dispositivos']: texto(d)
         texto(f.get('backend'))
         texto(f.get('so'))
@@ -64,8 +77,27 @@ def validar(f):
             raise ValueError('sonda sin equipo o unidad válida')
         texto(f['equipo'].get('cpu'))
         texto(f.get('prueba'))
-        if f['estado'] == 'aceptado' and (f['motivos'] or f.get('variacion', 1) > .10 or len(f.get('valores', [])) < 3):
-            raise ValueError('aceptación contradictoria con calidad')
+        valores = f.get('valores')
+        if not isinstance(valores, list) or not valores:
+            raise ValueError('faltan repeticiones')
+        if any(type(v) not in (int, float) or not math.isfinite(v) or v <= 0 for v in valores):
+            raise ValueError('repeticion invalida')
+        mediana = median(valores)
+        variacion = (max(valores) - min(valores)) / mediana
+        if not math.isclose(valor, mediana, rel_tol=0, abs_tol=.00011):
+            raise ValueError('mediana contradictoria con repeticiones')
+        v = f.get('variacion')
+        if type(v) not in (int, float) or not math.isfinite(v) or v < 0:
+            raise ValueError('variacion invalida')
+        if not math.isclose(v, variacion, rel_tol=0, abs_tol=.00011):
+            raise ValueError('variacion contradictoria con repeticiones')
+        if f['estado'] == 'aceptado' and (f['motivos'] or variacion > .10 or len(valores) < 3):
+            raise ValueError('aceptacion contradictoria con calidad')
+        ram = f['equipo'].get('ram_gb')
+        if ram is not None and (type(ram) not in (int, float) or not math.isfinite(ram) or ram <= 0):
+            raise ValueError('RAM invalida')
+    if any(not isinstance(m, str) or not m.strip() for m in f['motivos']):
+        raise ValueError('motivo de calidad invalido')
     return instante.astimezone(timezone.utc)
 
 
@@ -94,16 +126,20 @@ def modelo(con, filas, procedencia):
         dispositivo = {'fuente': f['fuente'], 'equipo': equipo} if f['fuente'] == 'sonda' else {
             'fuente': f['fuente'], 'dispositivos': sorted(f['dispositivos']), 'backend': f['backend'], 'so': f['so']}
         datos = {
-            'dispositivo': (serializar(dispositivo).decode(),),
+            'dispositivo': (serializar(dispositivo).decode(),
+                equipo.get('cpu'), equipo.get('ram_gb'), equipo.get('so', f.get('so')),
+                equipo.get('arquitectura'), f.get('backend'),
+                equipo.get('cpu') or ' + '.join(sorted(f.get('dispositivos', [])))),
             'version': ('blender', f['version']),
             'escena': (f['fuente'], f['escena']),
             'perfil': (f['fuente'], f.get('perfil') or 'no_aplica', f.get('sonda') or 'no_aplica'),
             'tiempo': (fecha.date().isoformat(), fecha.year, fecha.month, fecha.day),
             'origen': (f['fuente'], f.get('entorno', 'no_declarado'), f['licencia']),
+            'metrica': (f['metrica'], f['unidad'], METRICAS[f['metrica']][1], 'no_aditiva'),
         }
         claves = []
         for dimension, atributos in datos.items():
-            k = clave([dimension, atributos])
+            k = str(uuid5(NAMESPACE, serializar([dimension, atributos]).decode()))
             dimensiones[dimension][k] = atributos
             claves.append(k)
         hechos.append([f['id'], *claves, fecha.isoformat(), f['fuente'],
@@ -111,7 +147,8 @@ def modelo(con, filas, procedencia):
                        f['estado'], serializar(f['motivos']).decode(), f.get('variacion'),
                        len(f.get('valores', [])) or None, f.get('sin_ventana'), f['huella_origen']])
     esquemas = {
-        'dispositivo': 'atributos_json VARCHAR',
+        'dispositivo': 'atributos_json VARCHAR, cpu VARCHAR, ram_gb DOUBLE, so VARCHAR, arquitectura VARCHAR, backend VARCHAR, etiqueta VARCHAR',
+        'metrica': 'metrica VARCHAR, unidad VARCHAR, mejor VARCHAR, agregacion VARCHAR',
         'version': 'programa VARCHAR, version VARCHAR',
         'escena': 'fuente VARCHAR, escena VARCHAR',
         'perfil': 'fuente VARCHAR, perfil VARCHAR, version_sonda VARCHAR',
@@ -131,15 +168,34 @@ def modelo(con, filas, procedencia):
     con.executemany(f'INSERT INTO mediciones VALUES ({",".join("?" for _ in hechos[0])})', hechos)
     con.execute('CREATE TABLE procedencia (id VARCHAR, archivo VARCHAR, PRIMARY KEY(id, archivo))')
     con.executemany('INSERT INTO procedencia VALUES (?, ?)', procedencia)
-    con.execute("CREATE TABLE hechos_medicion AS SELECT * FROM mediciones WHERE fuente='sonda'")
-    con.execute("CREATE TABLE hechos_render AS SELECT * FROM mediciones WHERE fuente='blender-open-data'")
+    con.execute("CREATE VIEW hechos_medicion AS SELECT * FROM mediciones WHERE fuente='sonda'")
+    con.execute("CREATE VIEW hechos_render AS SELECT * FROM mediciones WHERE fuente='blender-open-data'")
+    con.execute('CREATE TABLE repeticiones (id VARCHAR REFERENCES mediciones(id), ordinal INTEGER, valor DOUBLE, PRIMARY KEY(id, ordinal))')
+    repeticiones = [(f['id'], i, v) for f in filas for i, v in enumerate(f.get('valores', []), 1)]
+    if repeticiones:
+        con.executemany('INSERT INTO repeticiones VALUES (?, ?, ?)', repeticiones)
+    con.execute('CREATE TABLE linaje (id VARCHAR PRIMARY KEY REFERENCES mediciones(id), id_fuente VARCHAR, identidad VARCHAR)')
+    con.executemany('INSERT INTO linaje VALUES (?, ?, ?)', [
+        (f['id'], f.get('id_fuente'), 'id_telemetria_v1') for f in filas])
     con.execute('''CREATE VIEW v_exploracion AS
         SELECT m.*, v.programa, v.version, e.escena, p.perfil, p.version_sonda,
-               d.atributos_json AS dispositivo, o.entorno, o.licencia
+               d.atributos_json AS dispositivo, d.etiqueta AS equipo_etiqueta,
+               d.cpu, d.ram_gb, d.so, d.arquitectura, d.backend,
+               json_extract_string(d.atributos_json, '$.equipo.gpu_vista.modelo') AS gpu_vista_modelo,
+               o.entorno, o.licencia,
+               c.mejor, c.agregacion, l.id_fuente, l.identidad
         FROM mediciones m JOIN dim_version v USING(clave_version)
         JOIN dim_escena e USING(clave_escena) JOIN dim_perfil p USING(clave_perfil)
-        JOIN dim_dispositivo d USING(clave_dispositivo) JOIN dim_origen o USING(clave_origen)''')
+        JOIN dim_dispositivo d USING(clave_dispositivo) JOIN dim_origen o USING(clave_origen)
+        JOIN dim_metrica c USING(clave_metrica) JOIN linaje l USING(id)''')
     con.execute("CREATE VIEW v_mediciones_aceptadas AS SELECT * FROM v_exploracion WHERE estado='aceptado'")
+    # Vista de consumo: las claves tecnicas quedan en las tablas de trazabilidad.
+    con.execute('''CREATE VIEW v_geoda_mediciones AS
+        SELECT id, fecha, fuente, entorno, equipo_etiqueta, cpu, ram_gb, so,
+               arquitectura, backend, gpu_vista_modelo, version, escena, perfil, version_sonda,
+               prueba, metrica, unidad, valor, mejor, agregacion, estado,
+               motivos_json, variacion, repeticiones, sin_ventana
+        FROM v_exploracion''')
     con.execute('''CREATE VIEW v_resumen AS
         SELECT fuente, entorno, dispositivo, version, escena, perfil, version_sonda,
                prueba, metrica, unidad, estado, sin_ventana, count(*) AS mediciones,
@@ -160,7 +216,7 @@ def construir(entradas, destino):
     try:
         con.execute("SET TimeZone='UTC'")
         modelo(con, filas, procedencia)
-        tablas = ['mediciones', 'hechos_medicion', 'hechos_render', 'procedencia'] + ['dim_' + d for d in DIMENSIONES]
+        tablas = ['mediciones', 'procedencia', 'repeticiones', 'linaje'] + ['dim_' + d for d in DIMENSIONES]
         for tabla in tablas:
             nombre = 'plata/mediciones.parquet' if tabla == 'mediciones' else f'oro/parquet/{tabla}.parquet'
             con.execute(f'COPY (SELECT * FROM {tabla} ORDER BY 1) TO ? (FORMAT PARQUET, COMPRESSION ZSTD)', [str(destino / nombre)])
@@ -171,7 +227,10 @@ def construir(entradas, destino):
                    'hechos_medicion': con.execute('SELECT count(*) FROM hechos_medicion').fetchone()[0],
                    'hechos_render': con.execute('SELECT count(*) FROM hechos_render').fetchone()[0],
                    'huella_datos': clave(filas), 'duckdb': duckdb.__version__,
-                   'recomendaciones_habilitadas': False}
+                   'recomendaciones_habilitadas': False,
+                   'grano': 'una observacion agregada por id de telemetria',
+                   'identidad': 'id_telemetria_v1; no identifica equipos fisicos',
+                   'repeticiones': con.execute('SELECT count(*) FROM repeticiones').fetchone()[0]}
         if con.execute('SELECT count(*) FROM v_exploracion').fetchone()[0] != len(filas):
             raise ValueError('los joins alteran la cardinalidad')
         con.execute('CHECKPOINT')
@@ -181,11 +240,13 @@ def construir(entradas, destino):
     with duckdb.connect(str(db), read_only=True) as verificar:
         if verificar.execute('SELECT count(*) FROM mediciones').fetchone()[0] != len(filas):
             raise ValueError('cubo cerrado inconsistente')
-        diferencia = verificar.execute('''SELECT count(*) FROM (
-            (SELECT * FROM mediciones EXCEPT ALL SELECT * FROM read_parquet(?))
-            UNION ALL (SELECT * FROM read_parquet(?) EXCEPT ALL SELECT * FROM mediciones))''',
-            [str(destino / 'plata/mediciones.parquet')] * 2).fetchone()[0]
-        if diferencia: raise ValueError('Parquet y DuckDB difieren')
+        for tabla in tablas:
+            nombre = 'plata/mediciones.parquet' if tabla == 'mediciones' else f'oro/parquet/{tabla}.parquet'
+            diferencia = verificar.execute(f'''SELECT count(*) FROM (
+                (SELECT * FROM {tabla} EXCEPT ALL SELECT * FROM read_parquet(?))
+                UNION ALL (SELECT * FROM read_parquet(?) EXCEPT ALL SELECT * FROM {tabla}))''',
+                [str(destino / nombre)] * 2).fetchone()[0]
+            if diferencia: raise ValueError(f'Parquet y DuckDB difieren: {tabla}')
     (destino / 'oro/resumen.json').write_bytes(serializar(resumen))
     archivos = {f.relative_to(destino).as_posix(): {'sha256': sha(f.read_bytes()), 'bytes': f.stat().st_size}
                 for f in sorted(destino.rglob('*')) if f.is_file()}
@@ -259,3 +320,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
