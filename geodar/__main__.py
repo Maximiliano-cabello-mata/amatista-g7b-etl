@@ -8,9 +8,17 @@
     python -m geodar licencias                    lo que falta confirmar antes de activar una fuente
     python -m geodar vigilar [--fuente ID] [--forzar] [--simulacro]    la vigilancia real (a bronce)
     python -m geodar procesar | publicar | catalogar | senales [--simulacro]
+    python -m geodar telemetria [--colector blender_open_data] [--limite 20000] [--simulacro]
+                                                  el radar de telemetría (cifras de equipos, a bronce y plata)
     python -m geodar salud                        ¿algún sensor falla o se atrasó? (sale con 1 si sí)
 
-El ciclo completo, sin intervención: vigilar → (Zyte al lago) → procesar → publicar → catalogar → senales.
+Quién hace qué (docs/GEODAR_RADAR.md, sección 1):
+    radar de telemetría       cifras de equipos y rendimiento, con el estándar g7b.hardware/1 → cubo
+    arañas de Zyte            documentación (manuales, notas de versión) → embudo → MongoDB
+    sensores directos         feeds, APIs y foros → bronce
+
+El ciclo completo, sin intervención: vigilar → (Zyte al lago) → procesar → publicar → catalogar → senales;
+y una vez por semana, telemetria → cubo → Geoda.
 """
 import argparse
 import json
@@ -35,7 +43,23 @@ def estado_de(fuente):
         return "inactiva"
     if fuente["extractor"] == "externo":
         return "externa"
+    if fuente["extractor"] == "telemetria" and fuente.get("colector") == "pendiente":
+        return "inactiva"
     return "activa"
+
+
+def herramienta(fuente):
+    """Qué parte de Geodar se encarga de la fuente: la separación de responsabilidades."""
+    if fuente["extractor"] == "telemetria" or (cat.destino(fuente) == "telemetria"
+                                                and fuente["extractor"] == "directo"):
+        return "radar de telemetría"
+    if fuente["extractor"] == "zyte":
+        return "araña de documentación (Zyte)"
+    if fuente["extractor"] == "externo":
+        return "gestor externo"
+    if fuente["extractor"] == "descarga":
+        return "descarga directa"
+    return "sensor directo"
 
 
 def donde(fuente):
@@ -48,6 +72,8 @@ def donde(fuente):
         return s.get("base", "").replace("https://", "")
     if fuente["extractor"] == "externo":
         return fuente.get("gestor", "")
+    if fuente["extractor"] == "telemetria":
+        return f"colector {fuente.get('colector')}: " + ", ".join(fuente.get("dominios") or [])
     return ", ".join(fuente.get("dominios") or []) or s.get("url", "")
 
 
@@ -60,6 +86,7 @@ def mapa(catalogo, estados=None):
         filas.append({
             "familia": cat.familia(f), "id": f["id"], "nombre": f["nombre"], "donde": donde(f),
             "sensor": f["sensor"]["tipo"], "extractor": f["extractor"], "destino": cat.destino(f),
+            "herramienta": herramienta(f),
             "licencia": f["licencia"], "modo": f["modo"], "estado": estado_de(f),
             "cada_horas": f["frecuencia_horas"],
             "ultima_revision": e.get("ultima_revision"), "ultimo_error": e.get("ultimo_error"),
@@ -79,6 +106,22 @@ def mapa_markdown(catalogo, estados=None, hoy=None):
         "",
         f"**{len(filas)} fuentes:** " + ", ".join(f"{n} {ICONO_ESTADO[k]}" for k, n in cuenta.most_common()) + ".",
         "",
+        "## Quién hace qué",
+        "",
+        "| Herramienta | Responsabilidad | Fuentes |",
+        "|---|---|---|",
+    ]
+    por_herramienta = Counter(f["herramienta"] for f in filas)
+    responsabilidad = {
+        "radar de telemetría": "Cifras de equipos y rendimiento, con el estándar `g7b.hardware/1` → cubo (`geodar telemetria`)",
+        "araña de documentación (Zyte)": "Documentación: manuales y notas de versión → embudo → MongoDB",
+        "sensor directo": "Feeds, APIs y foros: el sensor ya trae el dato → bronce (`geodar vigilar`)",
+        "descarga directa": "Archivos (PDF) → bronce",
+        "gestor externo": "Lo trae otra tarea (la sonda, Amatista)",
+    }
+    lineas += [f"| {h} | {responsabilidad[h]} | {por_herramienta.get(h, 0)} |" for h in responsabilidad]
+    lineas += [
+        "",
         "## A dónde va cada cosa",
         "",
         "Todo entra primero crudo a Azure (`bronce/<fuente>/<fecha>/`), así nada se pierde. Después:",
@@ -93,12 +136,12 @@ def mapa_markdown(catalogo, estados=None, hoy=None):
         if not de_familia:
             continue
         lineas += ["", f"## {clave} · {nombre}", ""]
-        cabecera = "| Fuente | Dónde está el sensor | Sensor | Extractor | Destino | Licencia | Estado | Cada |"
+        cabecera = "| Fuente | Dónde está el sensor | Herramienta | Sensor | Destino | Licencia | Estado | Cada |"
         if con_estado:
             cabecera += " Última revisión | Último error |"
         lineas += [cabecera, "|" + "---|" * (cabecera.count("|") - 1)]
         for f in de_familia:
-            fila = (f"| **{f['id']}**<br>{f['nombre']} | {f['donde']} | `{f['sensor']}` | `{f['extractor']}` | "
+            fila = (f"| **{f['id']}**<br>{f['nombre']} | {f['donde']} | {f['herramienta']} | `{f['sensor']}` | "
                     f"`{f['destino']}` | {f['licencia']} ({f['modo']}) | {ICONO_ESTADO[f['estado']]} | {f['cada_horas']} h |")
             if con_estado:
                 fila += f" {f['ultima_revision'] or '—'} | {(f['ultimo_error'] or '—')[:80]} |"
@@ -131,12 +174,21 @@ def probar(catalogo, ids=None, obtener=red.obtener, muestras=3, salida=print):
 
 # ---------------------------------------------------------------- salud
 
-def salud(catalogo, estados, ahora=None):
-    """Por cada fuente vigilable: ok, nunca revisada, atrasada (más del doble de su frecuencia) o con error."""
+def salud(catalogo, estados, ahora=None, telemetria=None):
+    """Por cada fuente vigilable: ok, nunca revisada, atrasada (más del doble de su frecuencia) o con error.
+
+    telemetria = {id: estado del radar} para las fuentes del radar de telemetría (su «ultima_captura»).
+    """
     ahora = ahora or datetime.now(timezone.utc)
     informe = []
-    for f in cat.vigilables(catalogo):
-        e = estados.get(f["id"], {})
+    telemetria = telemetria or {}
+    fuentes = cat.vigilables(catalogo) + cat.de_telemetria(catalogo)
+    for f in fuentes:
+        if f["extractor"] == "telemetria":
+            t = telemetria.get(f["id"], {})
+            e = {"ultima_revision": t.get("ultima_captura"), "ultimo_error": t.get("ultimo_error")}
+        else:
+            e = estados.get(f["id"], {})
         ultima = e.get("ultima_revision")
         if e.get("ultimo_error"):
             veredicto = "error"
@@ -149,6 +201,59 @@ def salud(catalogo, estados, ahora=None):
         informe.append({"fuente": f["id"], "veredicto": veredicto, "ultima_revision": ultima,
                         "ultimo_error": e.get("ultimo_error")})
     return informe
+
+
+# ---------------------------------------------------------------- radar de telemetría
+
+def estado_telemetria(lago, id_fuente):
+    return lago.leer_json(f"control/telemetria/{id_fuente}.json", por_omision={}) or {}
+
+
+def colector_blender_open_data(fuente, lago, salida, limite, entrada=None, simulacro=False):
+    """El archivo completo de Blender Open Data, por tandas (g7b_telemetria/capturar.py)."""
+    from pathlib import Path
+
+    from g7b_telemetria import capturar as cap
+
+    Path(salida).mkdir(parents=True, exist_ok=True)
+    archivo = Path(entrada) if entrada else Path(salida) / "opendata.zip"
+    if not entrada:
+        cap.descargar(archivo)
+    registros = cap.registros_zip(archivo)
+    if simulacro:
+        seleccion, nuevo, conteos = cap.seleccionar_opendata(registros, {}, limite)
+        informe = cap.capturar(seleccion, "blender-open-data", Path(salida), len(seleccion)) if seleccion else {}
+        return {**informe, "seleccion": dict(conteos), "simulacro": True}
+    return cap.capturar_incremental(registros, lago, salida, limite)
+
+
+COLECTORES = {"blender_open_data": colector_blender_open_data}
+
+
+def telemetria(catalogo, lago, salida="captura/telemetria", limite=20000, solo=None, entrada=None,
+               simulacro=False, imprimir=print):
+    """Corre el radar de telemetría. Una fuente rota no detiene a las demás; su error queda en el lago."""
+    import os
+
+    resultados = []
+    for f in cat.de_telemetria(catalogo):
+        if solo and f["colector"] != solo and f["id"] != solo:
+            continue
+        r = {"fuente": f["id"], "colector": f["colector"]}
+        try:
+            r["informe"] = COLECTORES[f["colector"]](f, lago, os.path.join(salida, f["id"]), limite,
+                                                    entrada=entrada, simulacro=simulacro)
+            r["ok"] = True
+        except Exception as error:  # una fuente rota no detiene a las demás
+            r.update(ok=False, error=f"{type(error).__name__}: {str(error)[:200]}")
+            if lago is not None and not simulacro:
+                estado = estado_telemetria(lago, f["id"])
+                estado.update(ultimo_error=r["error"],
+                              ultimo_error_en=datetime.now(timezone.utc).isoformat(timespec="seconds"))
+                lago.escribir_json(f"control/telemetria/{f['id']}.json", estado)
+        resultados.append(r)
+        imprimir(json.dumps(r, ensure_ascii=False))
+    return resultados
 
 
 # ---------------------------------------------------------------- orden
@@ -184,6 +289,12 @@ def main(argv=None):
     grupo.add_argument("--todas", action="store_true")
     pr.add_argument("--muestras", type=int, default=3)
     sub.add_parser("licencias", help="lo pendiente de confirmar antes de activar")
+    t = sub.add_parser("telemetria", help="radar de telemetría: cifras de equipos y rendimiento")
+    t.add_argument("--colector", help="solo este colector o fuente (p. ej. blender_open_data)")
+    t.add_argument("--limite", type=int, default=20000, help="registros por fuente en esta tanda")
+    t.add_argument("--salida", default="captura/telemetria")
+    t.add_argument("--entrada", help="archivo ya descargado (ZIP de Open Data), para pruebas")
+    t.add_argument("--simulacro", action="store_true", help="sin leer ni escribir el lago")
     s = sub.add_parser("salud", help="sensores con error o atrasados")
     s.add_argument("--guardar", action="store_true", help=f"escribir el informe en {SALUD}")
     o = p.parse_args(argv)
@@ -216,9 +327,17 @@ def main(argv=None):
                     if f.get(campo):
                         print(f"    {campo}: {' '.join(str(f[campo]).split())}")
         return 0
+    if o.orden == "telemetria":
+        lago = None if o.simulacro else _lago()
+        resultados = telemetria(catalogo, lago, o.salida, o.limite, o.colector, o.entrada, o.simulacro)
+        malos = [r["fuente"] for r in resultados if not r["ok"]]
+        print(f"\n{len(resultados) - len(malos)} de {len(resultados)} fuentes de telemetría capturadas."
+              + (f" Con error: {', '.join(malos)}" if malos else ""))
+        return 1 if malos or not resultados else 0
     if o.orden == "salud":
         lago = _lago()
-        informe = salud(catalogo, lago.leer_json(ESTADO, por_omision={}) or {})
+        de_radar = {f["id"]: estado_telemetria(lago, f["id"]) for f in cat.de_telemetria(catalogo)}
+        informe = salud(catalogo, lago.leer_json(ESTADO, por_omision={}) or {}, telemetria=de_radar)
         for fila in informe:
             print(json.dumps(fila, ensure_ascii=False))
         malos = [f for f in informe if f["veredicto"] in ("error", "atrasada")]

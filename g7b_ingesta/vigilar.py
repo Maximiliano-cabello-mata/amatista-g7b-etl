@@ -120,7 +120,7 @@ def vigilar(catalogo, lago, obtener=red.obtener, zyte=None, proyecto_id=None, so
         registro = {"fuente": fuente["id"], "cuando": ahora.isoformat(timespec="seconds")}
         try:
             tipo = fuente["sensor"]["tipo"]
-            extra = {"ahora": ahora} if tipo == "sphinx" else {}  # el refresco se cuenta con el reloj de la vuelta
+            extra = {"ahora": ahora} if tipo in ("sphinx", "gitea_issues") else {}  # el refresco se cuenta con el reloj de la vuelta
             resultado, estado_nuevo = SENSORES[tipo](fuente, estado, obtener, **extra)
             registro.update({"nota": resultado["nota"], "urls": len(resultado["urls"]),
                              "registros": len(resultado["registros"])})

@@ -93,6 +93,8 @@ def modelo(con, filas, procedencia):
         equipo = f.get('equipo', {})
         dispositivo = {'fuente': f['fuente'], 'equipo': equipo} if f['fuente'] == 'sonda' else {
             'fuente': f['fuente'], 'dispositivos': sorted(f['dispositivos']), 'backend': f['backend'], 'so': f['so']}
+        if f.get('hardware'):  # estándar g7b.hardware/1 (g7b_telemetria/hardware.py): clase y nivel del equipo
+            dispositivo['hardware'] = f['hardware']
         datos = {
             'dispositivo': (serializar(dispositivo).decode(),),
             'version': ('blender', f['version']),
@@ -146,6 +148,16 @@ def modelo(con, filas, procedencia):
                median(valor) AS mediana, min(valor) AS minimo, max(valor) AS maximo
         FROM v_exploracion GROUP BY ALL''')
     con.execute('CREATE VIEW v_calidad AS SELECT fuente, estado, count(*) AS mediciones FROM mediciones GROUP BY ALL')
+    # Render público por nivel de equipo (estándar g7b.hardware/1). Las filas viejas, sin bloque
+    # «hardware», quedan con nivel NULL: se ven, pero no se mezclan con las clasificadas.
+    con.execute('''CREATE VIEW v_render_por_nivel AS
+        SELECT json_extract_string(dispositivo, '$.hardware.nivel') AS nivel,
+               json_extract_string(dispositivo, '$.hardware.mide') AS mide,
+               json_extract_string(dispositivo, '$.hardware.gpus[0].clase') AS clase_gpu,
+               json_extract_string(dispositivo, '$.backend') AS backend,
+               version, escena, count(*) AS mediciones, median(valor) AS mediana_samples_min,
+               quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75
+        FROM v_exploracion WHERE fuente = 'blender-open-data' GROUP BY ALL''')
 
 
 def construir(entradas, destino):

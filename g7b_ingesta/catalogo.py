@@ -10,9 +10,12 @@ RUTA_TAXONOMIA = os.path.join(RAIZ, "fuentes", "taxonomia.yml")
 OBLIGATORIOS = ("id", "nombre", "tipo", "licencia", "licencia_verificada", "modo", "preguntas",
                 "sensor", "extractor", "frecuencia_horas", "dominios", "activa")
 MODOS = {"texto_completo", "solo_metadatos", "agregados"}
-SENSORES = {"sphinx", "atom", "rss", "pagina", "sitemap", "stackexchange", "discourse", "github_releases", "json_api",
+SENSORES = {"sphinx", "gitea_issues", "atom", "rss", "pagina", "sitemap", "stackexchange", "discourse", "github_releases", "json_api",
             "externo"}
-EXTRACTORES = {"directo", "zyte", "descarga", "externo"}
+EXTRACTORES = {"directo", "zyte", "descarga", "externo", "telemetria"}
+# Colectores del radar de telemetría (geodar telemetria). «pendiente»: la fuente existe pero aún no
+# tiene colector (falta confirmar su licencia); no puede estar activa.
+COLECTORES = {"blender_open_data", "pendiente"}
 PREGUNTAS = {"P1", "P2", "P3", "P4", "P5", "P6", "P7"}
 
 # Las siete familias de datos del plan maestro (docs/PLAN_MAESTRO.md, sección 2).
@@ -81,10 +84,24 @@ def validar(catalogo):
             errores.append(f"{nombre}: telemetría y señales guardan cifras y metadatos, no texto_completo")
         if f["sensor"].get("tipo") == "sphinx" and not f["sensor"].get("versiones"):
             errores.append(f"{nombre}: el sensor sphinx necesita versiones")
-        necesita = {"discourse": "base", "github_releases": "repos", "json_api": "url", "sphinx": "base",
+        if f["sensor"].get("tipo") == "gitea_issues" and not f["sensor"].get("repo"):
+            errores.append(f"{nombre}: el sensor gitea_issues necesita repo (dueño/nombre)")
+        necesita = {"gitea_issues": "base", "discourse": "base", "github_releases": "repos", "json_api": "url", "sphinx": "base",
                     "atom": "url", "rss": "url"}.get(f["sensor"].get("tipo"))
         if necesita and necesita not in f["sensor"]:
             errores.append(f"{nombre}: el sensor {f['sensor']['tipo']} necesita {necesita}")
+        # Separación de responsabilidades: las arañas de Zyte son para documentación; las cifras de
+        # equipos y rendimiento las trae el radar de telemetría (o un sensor directo o un gestor externo).
+        if f["extractor"] == "zyte" and destino(f) != "documentos":
+            errores.append(f"{nombre}: las arañas de Zyte son solo para documentación (destino documentos)")
+        if destino(f) == "telemetria" and f["extractor"] not in ("directo", "externo", "telemetria"):
+            errores.append(f"{nombre}: la telemetría la trae el radar (extractor telemetria), un sensor directo "
+                           "o un gestor externo")
+        if f["extractor"] == "telemetria":
+            if f.get("colector") not in COLECTORES:
+                errores.append(f"{nombre}: el extractor telemetria necesita colector ({', '.join(sorted(COLECTORES))})")
+            elif f.get("colector") == "pendiente" and f["activa"]:
+                errores.append(f"{nombre}: no puede estar activa sin colector")
         if f["extractor"] == "externo" and not f.get("gestor"):
             errores.append(f"{nombre}: un extractor externo necesita gestor (quién lo trae)")
     return errores
@@ -100,9 +117,18 @@ def cargar(ruta=RUTA_CATALOGO):
 
 
 def vigilables(catalogo):
-    """Lo que revisa «vigilar»: activa, con licencia confirmada y sin un gestor externo que la traiga."""
+    """Lo que revisa «vigilar»: activa, con licencia confirmada y sin un gestor externo que la traiga.
+
+    Las fuentes del radar de telemetría (extractor telemetria) tampoco: las trae «geodar telemetria».
+    """
     return [f for f in catalogo["fuentes"]
-            if f["activa"] and f["licencia_verificada"] and f["extractor"] != "externo"]
+            if f["activa"] and f["licencia_verificada"] and f["extractor"] not in ("externo", "telemetria")]
+
+
+def de_telemetria(catalogo):
+    """Lo que trae el radar de telemetría: activa, con licencia confirmada y con colector."""
+    return [f for f in catalogo["fuentes"] if f["activa"] and f["licencia_verificada"]
+            and f["extractor"] == "telemetria" and f.get("colector") != "pendiente"]
 
 
 def por_destino(catalogo, nombre):
