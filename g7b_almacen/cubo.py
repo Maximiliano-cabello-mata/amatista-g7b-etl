@@ -151,7 +151,8 @@ def _equipo(f):
 
     if f['fuente'] == 'sonda':
         e = f.get('equipo', {})
-        gpu_texto = e.get('gpu_vista') if isinstance(e.get('gpu_vista'), str) else None
+        vista = e.get('gpu_vista')
+        gpu_texto = vista.get('modelo') if isinstance(vista, dict) else (vista if isinstance(vista, str) else None)
         g = hardware.gpu(gpu_texto) if gpu_texto else {}
         c = hardware.cpu(e.get('cpu'))
         original = {'fuente': 'sonda', 'equipo': e}
@@ -159,11 +160,13 @@ def _equipo(f):
                  c['nombre'], c['familia'], e.get('so'), None, e.get('nivel'),
                  'estimado' if e.get('nivel_estimado') else ('declarado' if e.get('nivel') else None),
                  serializar(original).decode()))
-    h = f.get('hardware') or {}
+    # El estándar se aplica AL CONSTRUIR, con la tabla vigente (fuentes/hardware.yml): si la tabla
+    # mejora, el cubo mejora sin volver a capturar. Lo que vino al capturar queda en equipo_json.
+    h = hardware.de_benchmark(f['dispositivos'], f['backend'], f['so'])
     g = (h.get('gpus') or [{}])[0]
     c = (h.get('cpus') or [{}])[0]
     original = {'fuente': f['fuente'], 'dispositivos': sorted(f['dispositivos']), 'backend': f['backend'],
-                'so': f['so'], **({'hardware': h} if h else {})}
+                'so': f['so'], **({'hardware_capturado': f['hardware']} if f.get('hardware') else {})}
     return ((h.get('mide') or 'sin_clasificar', g.get('nombre'), g.get('fabricante'), g.get('clase'),
              g.get('vram_gb'), c.get('nombre'), c.get('familia'), f['so'], f['backend'], h.get('nivel'),
              h.get('confianza'), serializar(original).decode()))

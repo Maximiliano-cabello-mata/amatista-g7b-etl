@@ -5,6 +5,11 @@
     python -m geoda decidir --huella equipo.json [--blender 4.5] [--perfiles perfiles.json] [--cubo cubo.duckdb]
     python -m geoda operaciones                           # catálogo de operaciones del kernel
 
+    El núcleo público (geoda.nucleo/1), que solo lee el paquete de conocimiento:
+    python -m geoda paquete [--cubo cubo.duckdb] [--verificar-manual] --salida paquete.json
+    python -m geoda plan --paquete paquete.json --huella equipo.json [--blender 4.5] [--idioma es]
+    python -m geoda conformidad [--paquete paquete.json]  # los casos que toda implementación debe pasar
+
 «equipo.json» puede ser un g7b.huella/1 o el bloque «equipo» de una medición de la sonda.
 Sin --cubo, los perfiles salen de las reglas base (estado «base»).
 """
@@ -51,6 +56,19 @@ def main(argv=None):
     d.add_argument("--perfiles", help="perfiles.json publicado")
     d.add_argument("--cubo", help="cubo.duckdb para estimar costos")
     sub.add_parser("operaciones", help="catálogo de operaciones del kernel")
+    pq = sub.add_parser("paquete", help="construir el paquete de conocimiento (g7b.geoda.paquete/1)")
+    pq.add_argument("--cubo", help="oro/cubo.duckdb (g7b.cubo/2); sin él, solo reglas base")
+    pq.add_argument("--manifiesto", help="manifiesto.json del cubo, para citar su versión")
+    pq.add_argument("--verificar-manual", action="store_true",
+                    help="descargar los objects.inv del manual y comprobar cada cita")
+    pq.add_argument("--salida", required=True)
+    pl = sub.add_parser("plan", help="el plan del núcleo público, con evidencia y citas")
+    pl.add_argument("--paquete", required=True)
+    pl.add_argument("--huella", required=True)
+    pl.add_argument("--blender")
+    pl.add_argument("--idioma", default="es")
+    co = sub.add_parser("conformidad", help="correr geoda/conformidad.json contra el núcleo")
+    co.add_argument("--paquete", help="sin él, un paquete de solo reglas base")
     o = p.parse_args(argv)
 
     from . import costos, niveles, perfiles, planificador
@@ -75,6 +93,32 @@ def main(argv=None):
         _imprimir(planificador.decidir(_leer(o.huella), tarea, documento, tabla))
     elif o.orden == "operaciones":
         _imprimir(costos.catalogo())
+    elif o.orden == "paquete":
+        from . import paquete
+
+        con = _cubo(o.cubo) if o.cubo else None
+        cubo = None
+        if o.manifiesto:
+            with open(o.manifiesto, encoding="utf-8") as archivo:
+                m = json.load(archivo)
+            cubo = {k: m.get(k) for k in ("contrato", "generado", "mediciones", "directas", "relativas")}
+        inventarios = paquete.inventarios_manual() if o.verificar_manual else None
+        documento = paquete.construir(con, cubo, inventarios)
+        with open(o.salida, "w", encoding="utf-8") as archivo:
+            json.dump(documento, archivo, ensure_ascii=False, indent=1)
+            archivo.write("\n")
+        print(json.dumps({"paquete": documento["version"], **documento["evidencia"]}, ensure_ascii=False))
+    elif o.orden == "plan":
+        from .nucleo import Nucleo
+
+        tarea = {"tipo": "practica", **({"blender": o.blender} if o.blender else {})}
+        _imprimir(Nucleo.desde_archivo(o.paquete).decidir(_leer(o.huella), tarea, o.idioma))
+    elif o.orden == "conformidad":
+        from . import conformidad
+
+        resultado = conformidad.correr(o.paquete)
+        _imprimir(resultado)
+        return 0 if not resultado["fallas"] else 1
     return 0
 
 

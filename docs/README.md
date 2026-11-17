@@ -22,6 +22,7 @@ Ordenados por para qué sirven. Si dos documentos dicen cosas distintas, manda e
 | [CUBO.md](CUBO.md) | El cubo Parquet + DuckDB: modelo, publicación y consultas |
 | [Fuentes oficiales y revisión del cubo](investigacion/2026-11-17_cubo_documentacion_oficial.md) | Manuales, diagnóstico de identidad y redundancia, prioridades y pruebas propuestas; no implementadas |
 | [GEODA.md](GEODA.md) | El kernel: estructura, contratos y lo que ya existe |
+| [GEODA_NUCLEO.md](GEODA_NUCLEO.md) | El núcleo público: paquete de conocimiento, API, conformidad, publicación y la API HTTP para Oracle |
 | [OFERTAS_Y_GITHUB.md](OFERTAS_Y_GITHUB.md) | Qué hace cada oferta del Developer Pack y cada función de GitHub |
 | [../sonda/LEEME.md](../sonda/LEEME.md) | Cómo correr la sonda en una computadora |
 | [../infra/LEEME.md](../infra/LEEME.md) · [../infra/azure/LEEME.md](../infra/azure/LEEME.md) | Nubes y cómo configurar Azure |

@@ -5,6 +5,13 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 ## Sin publicar · 16 de noviembre de 2026
 
+- **Núcleo público de Geoda** ([núcleo](docs/GEODA_NUCLEO.md); [revisión del flujo hasta el kernel](docs/reportes/2026-11-17_flujo_hasta_el_kernel.md)):
+  - **Paquete de conocimiento** `g7b.geoda.paquete/1` (`geoda/paquete.py`): perfiles de directas (con un mínimo de 5 equipos), factores relativos de Open Data entre niveles, citas del manual verificadas contra `objects.inv` (`fuentes/citas_manual.yml`), el estándar de hardware, los niveles y las operaciones. Cada sección lleva su huella, y el paquete se valida para que no lleve datos de equipos.
+  - **API** `geoda.nucleo/1` (`geoda/nucleo.py`): de la huella y la tarea al plan, sin red, con escalera de evidencia (`medido`, `provisional`, `regla_base`), estimación relativa marcada como tal y citas por versión e idioma.
+  - **Conformidad** (`geoda/conformidad.json`): 12 casos para cualquier implementación futura. Hay comandos nuevos: `python -m geoda paquete | plan | conformidad`.
+  - **`geoda_kernel.yml`** lee el cubo vigente del lago, en lugar del artefacto que caducaba, y publica el paquete en `oro/geoda/` y en `publicacion/geoda_paquete.json` solo si cambió.
+  - **Primer paquete real:** 18 factores y 84 de 84 citas verificadas; todavía 0 perfiles medidos.
+- **Hardware** (T14–T16): las clases `apple` y `servidor` se separan para comparar niveles, y hay VRAM de las RTX 50, RX 9000 y GTX 16. El cubo recalcula el hardware de Open Data al construirse, así que las correcciones de la tabla llegan sin volver a capturar. Además, el cubo lee el modelo de GPU de la vista que reporta la sonda.
 - **Ciclo 24/7** (`.github/workflows/ciclo.yml`): un solo reloj que lanza en orden extracción, análisis, la parte semanal (telemetría, cubo y kernel de Geoda) y la entrega, espera cada tarea y abre un issue `g7b-alerta` si algo falla o hay fuentes atrasadas. Las demás tareas dejan de tener horario propio y encadenamientos. Se puede disparar desde un programador externo ([operación 24/7](docs/OPERACION_24_7.md)).
 - **Reprocesamiento** (`g7b_ingesta/procesar.py`): cada archivo de bronce guarda su huella de reglas y se reevalúa solo cuando cambian la taxonomía, los umbrales, el catálogo de su fuente o la versión del embudo. Sin duplicar conteos ni chocar con el índice de repetidos. A mano: `--fuente`, `--lote`, `--forzar`.
 - **Cubo `g7b.cubo/2`: mediciones directas y relativas separadas** ([CUBO.md](docs/CUBO.md)):

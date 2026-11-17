@@ -11,18 +11,30 @@
 #   - vram_gb solo cuando el modelo tiene una sola cantidad de memoria. Si hay variantes (RTX 3060 de
 #     escritorio con 8 o 12 GB, RX 580 con 4 u 8), se deja vacío: Geoda asume con prudencia y lo dice.
 #   - Lo que no coincide con nada queda como «desconocida»: no se adivina.
+#   - Clases: integrada (Intel y AMD en el procesador), dedicada, apple (Apple Silicon: memoria
+#     unificada y rendimiento muy distinto de una integrada de laptop), servidor (GPU de centro de
+#     datos: no es el equipo de un estudiante) y desconocida. Para el nivel N0–N4, apple cuenta como
+#     integrada y servidor como dedicada; para comparar niveles, las dos se separan.
 version: 1
 
 gpus:
   # --- Integradas -------------------------------------------------------------------------------
-  - {patron: 'apple m\d', fabricante: apple, clase: integrada, nota: memoria unificada}
+  - {patron: 'apple (m|a)\d', fabricante: apple, clase: apple, nota: Apple Silicon, memoria unificada}
   - {patron: 'intel.*(uhd|hd graphics|iris)', fabricante: intel, clase: integrada}
   - {patron: 'intel.*arc.*\b[ab]\d{3}m?\b', fabricante: intel, clase: dedicada}
   - {patron: 'intel.*arc', fabricante: intel, clase: integrada, nota: gráficos Arc de los Core Ultra}
+  - {patron: '^intel(\(r\))? graphics', fabricante: intel, clase: integrada, nota: Core Ultra recientes}
   - {patron: 'radeon.*\b(6[0-9]0|7[0-9]0|8[0-9]0)m\b', fabricante: amd, clase: integrada}
-  - {patron: 'radeon.*vega \d+ graphics|radeon\(tm\) graphics|radeon graphics', fabricante: amd, clase: integrada}
+  - {patron: 'radeon.*vega \d+ graphics|radeon\(tm\) graphics|radeon graphics|radeon \d{3,4}s graphics', fabricante: amd, clase: integrada}
+
+  # --- Centro de datos (no son equipos de estudiantes) ---------------------------------------------
+  - {patron: 'tesla|nvidia [ahlbv]\d{2,3}\b|instinct', fabricante: nvidia, clase: servidor}
 
   # --- NVIDIA, portátiles (antes que escritorio: el nombre lleva «Laptop») ---------------------------
+  - {patron: 'rtx 5090 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 24}
+  - {patron: 'rtx 5080 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 16}
+  - {patron: 'rtx 5070 ti laptop', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 50[5-7]0 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 8}
   - {patron: 'rtx 4090 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 16}
   - {patron: 'rtx 4080 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 12}
   - {patron: 'rtx 40[67]0 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 8}
@@ -34,6 +46,11 @@ gpus:
   - {patron: 'geforce mx\s?\d+', fabricante: nvidia, clase: dedicada, vram_gb: 2}
 
   # --- NVIDIA, escritorio -------------------------------------------------------------------------
+  - {patron: 'rtx 5090', fabricante: nvidia, clase: dedicada, vram_gb: 32}
+  - {patron: 'rtx (5080|5070 ti)', fabricante: nvidia, clase: dedicada, vram_gb: 16}
+  - {patron: 'rtx 5070', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 5060 ti', fabricante: nvidia, clase: dedicada}
+  - {patron: 'rtx 50[56]0', fabricante: nvidia, clase: dedicada, vram_gb: 8}
   - {patron: 'rtx (4090|3090)', fabricante: nvidia, clase: dedicada, vram_gb: 24}
   - {patron: 'rtx 4080', fabricante: nvidia, clase: dedicada, vram_gb: 16}
   - {patron: 'rtx 4070', fabricante: nvidia, clase: dedicada, vram_gb: 12}
@@ -54,6 +71,9 @@ gpus:
   - {patron: 'nvidia|geforce|quadro|rtx a\d', fabricante: nvidia, clase: dedicada}
 
   # --- AMD dedicadas ------------------------------------------------------------------------------
+  - {patron: 'radeon ai pro r9700', fabricante: amd, clase: dedicada, vram_gb: 32}
+  - {patron: 'rx 9070', fabricante: amd, clase: dedicada, vram_gb: 16}
+  - {patron: 'rx 9060 xt', fabricante: amd, clase: dedicada}
   - {patron: 'rx 7900 xtx', fabricante: amd, clase: dedicada, vram_gb: 24}
   - {patron: 'rx 7900 xt', fabricante: amd, clase: dedicada, vram_gb: 20}
   - {patron: 'rx (7800 xt|6800|6900|6950)', fabricante: amd, clase: dedicada, vram_gb: 16}

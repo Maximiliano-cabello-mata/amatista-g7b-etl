@@ -22,7 +22,16 @@ from g7b_telemetria.capturar import capturar_incremental, opendata, seleccionar_
     ("Intel(R) Arc(TM) A770 Graphics", "dedicada", None, "intel"),
     ("AMD Radeon 780M", "integrada", None, "amd"),
     ("AMD Radeon(TM) Graphics", "integrada", None, "amd"),
-    ("Apple M1", "integrada", None, "apple"),
+    ("Apple M1", "apple", None, "apple"),              # Apple Silicon: clase propia, no infla el N2
+    ("Apple M5 Max (GPU - 40 cores)", "apple", None, "apple"),
+    ("Intel Graphics", "integrada", None, "intel"),
+    ("AMD Radeon 8060S Graphics", "integrada", None, "amd"),
+    ("Tesla V100-SXM2-16GB", "servidor", None, "nvidia"),
+    ("NVIDIA GeForce RTX 5090", "dedicada", 32, "nvidia"),
+    ("NVIDIA GeForce RTX 5070 Ti", "dedicada", 16, "nvidia"),
+    ("NVIDIA GeForce RTX 5080 Laptop GPU", "dedicada", 16, "nvidia"),
+    ("NVIDIA GeForce RTX 5060 Ti", "dedicada", None, "nvidia"),   # 8 o 16 GB
+    ("AMD Radeon RX 9070 XT", "dedicada", 16, "amd"),
     ("NVIDIA GeForce RTX 3060 Laptop GPU", "dedicada", 6, "nvidia"),
     ("NVIDIA GeForce RTX 3060", "dedicada", None, "nvidia"),   # 8 o 12 GB: no se adivina
     ("NVIDIA GeForce RTX 4090", "dedicada", 24, "nvidia"),

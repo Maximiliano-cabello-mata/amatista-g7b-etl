@@ -2,7 +2,7 @@
 
 El paquete de contratos, clasificación N0–N4, perfiles, costos y planificación se integra selectivamente desde el PR #10 (e923670). El puente del PR #16 conserva su contrato y su activación independiente. Geodar Radar es otra herramienta y no es el kernel.
 
-Tras cada ejecución exitosa de Cubo G7B en main, Geoda descarga el artefacto de esa misma ejecución, valida el hash del DuckDB y contrasta los conteos con el manifiesto. En una activación manual o al integrar el código, usa la última ejecución exitosa de main. Si el artefacto caducó, se necesita una nueva construcción del cubo. La tarea termina al producir el informe; no hay servidor permanente ni secretos Azure/Mongo en este trabajo.
+**Desde el 17 de noviembre de 2026**, `geoda_kernel.yml` ya no descarga el artefacto del cubo (caducaba a los 14 días). Ahora lee el cubo vigente del lago, construye el paquete de conocimiento del núcleo público, corre los casos de conformidad y publica el paquete en el lago y en `publicacion/geoda_paquete.json`. Todo eso se explica en [GEODA_NUCLEO.md](GEODA_NUCLEO.md). El informe de laboratorio (`python -m geoda.ejecutar`) sigue disponible a mano.
 
 Solo las pruebas de vista 3D aceptadas, con ventana y unidad fps, pueden alimentar los perfiles de fluidez. Los demás resultados siguen siendo útiles para cobertura y costos. La captura antigua no conserva el nivel: no se inventan observaciones de vista o costos ausentes. Las reglas base son hipótesis. Las huellas representan configuraciones de hardware, no usuarios ni un censo de máquinas.
 

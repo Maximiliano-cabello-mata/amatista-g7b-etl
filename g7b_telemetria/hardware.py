@@ -16,7 +16,7 @@ import yaml
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUTA = os.path.join(RAIZ, "fuentes", "hardware.yml")
 ESTANDAR = "g7b.hardware/1"
-CLASES = {"integrada", "dedicada", "desconocida"}
+CLASES = {"integrada", "dedicada", "apple", "servidor", "desconocida"}
 # Backends de Blender Open Data que miden la GPU; CPU mide el procesador.
 BACKENDS_GPU = {"OPTIX", "CUDA", "HIP", "METAL", "ONEAPI", "OPENCL"}
 
@@ -68,11 +68,12 @@ def nivel(gpus, ram_gb=None, opengl=None):
     from geoda.contratos import Gpu, Huella
     from geoda.niveles import clasificar
 
-    tipos = {"integrada": "integrada", "dedicada": "dedicada"}
+    # Para el nivel: Apple Silicon cuenta como integrada y una GPU de servidor como dedicada.
+    tipos = {"integrada": "integrada", "dedicada": "dedicada", "apple": "integrada", "servidor": "dedicada"}
     lista = [Gpu(nombre=g["nombre"], tipo=tipos.get(g["clase"], "desconocida"), vram_gb=g.get("vram_gb"))
              for g in gpus]
     # Una integrada que corre Cycles en GPU (Open Data) o Blender actual tiene OpenGL 4.3: se declara.
-    if opengl is None and any(g["clase"] == "integrada" for g in gpus):
+    if opengl is None and any(g["clase"] in ("integrada", "apple") for g in gpus):
         opengl = 4.3
     c = clasificar(Huella(gpus=lista, ram_gb=ram_gb, opengl=opengl))
     return {"nivel": c.nivel, "confianza": c.confianza, "motivos": c.motivos}

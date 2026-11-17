@@ -1,0 +1,36 @@
+# Citas del manual de Blender para cada ajuste que cambia el kernel de Geoda.
+#
+# Cada acción de un plan (geoda/planificador.py) dice qué propiedad de Blender cambia; aquí está la
+# página del manual que la explica, como ruta dentro de la versión. El paquete del kernel
+# (geoda/paquete.py) la convierte en enlace para cada versión y comprueba que la página exista en
+# el inventario de esa versión (objects.inv), o en lo que la araña de documentación ya aceptó.
+# Solo enlaces y títulos: el texto del manual (CC BY-SA 4.0) no se copia.
+#
+# Comprobadas el 17 de noviembre de 2026 contra los inventarios de 5.2, 4.5 y 3.6.
+version: 1
+base: "https://docs.blender.org/manual/{idioma}/{version}/"
+idiomas: [es, en]
+citas:
+  scene.render.engine:
+    - {ruta: render/eevee/index.html, titulo: EEVEE, cuando: eevee}
+    - {ruta: render/cycles/index.html, titulo: Cycles, cuando: cycles}
+    - {ruta: render/workbench/index.html, titulo: Workbench, cuando: workbench}
+  scene.render.use_simplify:
+    - {ruta: render/cycles/render_settings/simplify.html, titulo: Simplify}
+  scene.render.simplify_subdivision:
+    - {ruta: render/cycles/render_settings/simplify.html, titulo: Simplify}
+  scene.render.resolution_percentage:
+    - {ruta: render/output/properties/format.html, titulo: Format}
+  scene.cycles.samples:
+    - {ruta: render/cycles/render_settings/sampling.html, titulo: Sampling (Cycles)}
+    - {ruta: render/cycles/optimizations/reducing_noise.html, titulo: Reducing Noise}
+  scene.cycles.device:
+    - {ruta: render/cycles/gpu_rendering.html, titulo: GPU Rendering}
+    - {ruta: editors/preferences/system.html, titulo: System (preferencias)}
+  scene.eevee.taa_render_samples:
+    - {ruta: render/eevee/render_settings/sampling.html, titulo: Sampling (EEVEE)}
+# Para equipos de nivel bajo, además del plan: dónde está la ayuda por tarjeta gráfica.
+generales:
+  N1: [{ruta: troubleshooting/gpu/index.html, titulo: Troubleshooting GPU}]
+  N2: [{ruta: troubleshooting/gpu/index.html, titulo: Troubleshooting GPU},
+       {ruta: editors/preferences/viewport.html, titulo: Viewport (preferencias)}]
