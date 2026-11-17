@@ -1,0 +1,159 @@
+INSTRUCCIONES PARA INSTALAR Y CORRER EL VIGÍA DE G7B (sonda continua)
+=======================================================================
+
+Para: el agente de IA que va a instalar la sonda en esta computadora.
+De: el equipo de G7B (repositorio Maximiliano-cabello-mata/amatista-g7b-etl).
+
+QUÉ ES
+------
+El vigía (sonda/g7b_vigia.py) acompaña el render de una animación pesada en Blender. Mientras Blender
+trabaja en segundo plano, el vigía:
+  - lee de la salida de Blender cuánto tarda cada cuadro;
+  - cada 5 segundos mira el equipo: uso de procesador y memoria, la memoria de Blender, la frecuencia y
+    la temperatura del procesador, y el uso, la temperatura y la memoria de la GPU (solo NVIDIA, con
+    nvidia-smi);
+  - cada 5 minutos cierra una «ventana» (archivo JSON, contrato g7b.ventana/1) con lo que pasó, y la
+    compara con la primera ventana y con la anterior: estable, variación (10 % o más), caída
+    importante (25 % o más) o mejora;
+  - guarda cada ventana en disco y, si tiene permiso, la sube al lago de G7B en Azure.
+
+Solo necesita Python 3.9 o más nuevo. No modifica Blender, ni el archivo .blend, ni nada del sistema.
+
+
+REGLAS PARA EL AGENTE (obligatorias)
+------------------------------------
+1. Pide confirmación a la persona antes de instalar cualquier cosa (incluido psutil) y antes de
+   empezar el render.
+2. La firma del lago (G7B_VIGIA_SAS) es un SECRETO:
+     - no la escribas en ningún archivo, script, historial ni registro;
+     - no la muestres en pantalla ni la repitas en el chat;
+     - pídele a la persona que la ponga ella misma como variable de entorno de la terminal
+       (paso 5). Si no la tiene, corre sin subir: todo queda en disco.
+3. No subas nada al lago por tu cuenta, ni nada que no sea lo que sube el vigía.
+4. No borres ni muevas archivos de la persona. Los resultados quedan en una carpeta nueva.
+5. Si algo falla, detente y reporta el error tal cual; no improvises arreglos al código del vigía.
+
+
+PASO 1. CONSEGUIR EL VIGÍA
+--------------------------
+Opción A, con git:
+    git clone https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl.git
+    cd amatista-g7b-etl
+    git checkout claude/determined-wright-x8ba42     (mientras no se fusione a main; después, main)
+
+Opción B, sin git: basta con un solo archivo. Descárgalo a una carpeta nueva, por ejemplo g7b-vigia:
+    https://raw.githubusercontent.com/Maximiliano-cabello-mata/amatista-g7b-etl/claude/determined-wright-x8ba42/sonda/g7b_vigia.py
+  (cuando se fusione, cambia «claude/determined-wright-x8ba42» por «main»)
+
+Comprueba que corre:
+    python sonda/g7b_vigia.py --help        (Windows: py sonda\g7b_vigia.py --help)
+
+
+PASO 2. PYTHON Y PSUTIL (opcional, recomendado)
+-----------------------------------------------
+- Verifica que haya Python 3.9 o más nuevo:  python --version   (Windows: py --version)
+- Con psutil el vigía mide procesador, memoria y temperaturas. Sin psutil solo mide los tiempos por
+  cuadro y la GPU NVIDIA. Con permiso de la persona:
+      python -m pip install --user psutil
+
+
+PASO 3. ENCONTRAR BLENDER
+-------------------------
+Rutas habituales:
+  Windows: C:\Program Files\Blender Foundation\Blender 4.5\blender.exe  (o 5.2, 3.6, etc.)
+  macOS:   /Applications/Blender.app/Contents/MacOS/Blender
+  Linux:   blender (en el PATH), o la carpeta donde se descomprimió
+Comprueba la versión:  "<ruta de blender>" --version
+Anota la versión: es parte del resultado.
+
+
+PASO 4. PRUEBA CORTA (2 minutos, sin subir)
+-------------------------------------------
+Pídele a la persona el .blend de su animación pesada. Antes del render largo, haz una prueba con
+pocos cuadros y ventanas de 30 segundos:
+
+  Windows (PowerShell):
+    py sonda\g7b_vigia.py --blender "C:\Program Files\Blender Foundation\Blender 4.5\blender.exe" `
+       --archivo "C:\ruta\animacion.blend" --inicio 1 --fin 5 --ventana 30 --salida vigia_prueba --sin-subir
+
+  macOS o Linux:
+    python3 sonda/g7b_vigia.py --blender /ruta/a/blender --archivo /ruta/animacion.blend \
+       --inicio 1 --fin 5 --ventana 30 --salida vigia_prueba --sin-subir
+
+Debe imprimir una línea por cuadro («cuadro 3: 41.20 s») y una por ventana, por ejemplo:
+    Ventana 0 (renderizando): mediana 41.20 s/cuadro, 1 cuadros, +0% frente a la primera → estable
+Los JSON quedan en vigia_prueba/pendientes/. Si no aparece ningún «cuadro», detente y reporta las
+últimas 30 líneas de la salida.
+
+Nota: Blender guarda las imágenes donde diga el .blend (Propiedades de salida). Si esa carpeta no
+existe o no es de la persona, avísale antes de seguir.
+
+
+PASO 5. PERMISO PARA SUBIR AL LAGO (lo hace la persona, no el agente)
+---------------------------------------------------------------------
+Para que las ventanas lleguen al lago, la persona genera en el portal de Azure una firma SAS del
+contenedor «lago» de la cuenta g7blago09b52a0e con:
+    - permiso: SOLO «Crear» (c). Sin leer, escribir, borrar ni listar;
+    - vencimiento: corto (por ejemplo, el día del render más 1 día);
+    - solo HTTPS.
+Con permiso «c» el vigía puede crear ventanas nuevas, pero no puede leer, sobrescribir ni borrar nada.
+
+La persona la pega ella misma en la terminal donde va a correr el vigía (solo dura esa sesión):
+  Windows (PowerShell):   $env:G7B_VIGIA_SAS = "https://g7blago09b52a0e.blob.core.windows.net/lago?sp=c&..."
+  macOS o Linux:          export G7B_VIGIA_SAS="https://g7blago09b52a0e.blob.core.windows.net/lago?sp=c&..."
+
+Si no hay firma, el vigía funciona igual y deja todo en disco (sin --sin-subir dirá «solo en disco»).
+Las ventanas pendientes se pueden subir después: el vigía reintenta en cada ventana nueva.
+
+
+PASO 6. EL RENDER LARGO EN SEGUNDO PLANO
+----------------------------------------
+Con ventanas de 5 minutos (las de por omisión). Elige el entorno:
+  --entorno equipo_docente        la computadora del profesor (es lo normal para esta prueba)
+  --entorno laboratorio_escolar   una computadora del laboratorio de la escuela
+  --entorno equipo_estudiante     la computadora de un estudiante (SOLO con consentimiento firmado)
+  --consentimiento                agrégalo solo si la persona dueña del equipo lo autorizó por escrito
+
+  Windows (PowerShell), en segundo plano y con registro:
+    Start-Process -WindowStyle Minimized py -ArgumentList 'sonda\g7b_vigia.py','--blender','"C:\Program Files\Blender Foundation\Blender 4.5\blender.exe"','--archivo','"C:\ruta\animacion.blend"','--salida','vigia','--entorno','equipo_docente' -RedirectStandardOutput vigia_registro.txt -RedirectStandardError vigia_errores.txt
+
+  macOS o Linux:
+    nohup python3 sonda/g7b_vigia.py --blender /ruta/a/blender --archivo /ruta/animacion.blend \
+       --salida vigia --entorno equipo_docente > vigia_registro.txt 2>&1 &
+
+Seguir el avance:
+  Windows:      Get-Content vigia_registro.txt -Wait -Tail 20
+  macOS/Linux:  tail -f vigia_registro.txt
+
+Detenerlo antes de tiempo: cierra el proceso de Blender (el vigía cierra la última ventana y
+termina solo). En Windows, desde el Administrador de tareas; en macOS o Linux, «kill <pid de blender>».
+
+Recomendaciones para que la medición sirva:
+  - Conecta la laptop a la corriente y usa el modo de energía «alto rendimiento».
+  - No uses la computadora para otras cosas pesadas mientras renderiza (o anótalo: cambia el resultado).
+  - Deja correr al menos 30 minutos (6 ventanas): ahí se ve si el equipo se calienta y baja.
+
+
+PASO 7. QUÉ REPORTAR AL TERMINAR
+--------------------------------
+Entrega a la persona (y al equipo de G7B) un resumen con:
+  1. Sistema operativo, procesador, RAM, GPU y versión de Blender (están en cualquier JSON, en
+     «equipo» y «blender»).
+  2. Cuántas ventanas hubo, cuántos cuadros en total y la mediana de segundos por cuadro de cada ventana.
+  3. El estado de cada ventana (estable, variación, caída importante, mejora) y en cuál empezó a cambiar.
+  4. Si la frecuencia del procesador (sistema.cpu_mhz) bajó o la temperatura (cpu_temp_c, gpu_temp_c)
+     subió en las ventanas lentas: es la señal de que el equipo se calentó y se frenó.
+  5. Cuántas ventanas quedaron en vigia/subidas (ya en el lago) y cuántas en vigia/pendientes.
+Un ejemplo para resumirlo (Python, lee la carpeta vigia):
+    python -c "import json,glob; [print(r['ventana'], r['estado'], (r['cuadros']['resumen'] or {}).get('mediana'), r['variacion']['estado'], (r['sistema'].get('cpu_mhz') or {}).get('mediana'), (r['sistema'].get('cpu_temp_c') or {}).get('maximo')) for r in sorted((json.load(open(f, encoding='utf-8')) for f in glob.glob('vigia/*/*.json')), key=lambda r: r['ventana'])]"
+
+No envíes por chat los JSON completos si la persona no lo pide; el resumen basta.
+
+
+QUÉ GUARDA Y QUÉ NO
+-------------------
+Guarda: modelo de procesador, RAM, nombres de GPU, sistema operativo, versión de Blender, tiempos por
+cuadro, uso y temperatura del equipo, y una huella (hash) del contenido del .blend para comparar
+ventanas del mismo trabajo.
+No guarda: usuario, nombre del equipo, rutas, nombre del archivo, imágenes renderizadas ni nada del
+contenido de la escena.

@@ -5,6 +5,12 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 ## Sin publicar · 16 de noviembre de 2026
 
+- **Vigía, la sonda continua** (`sonda/g7b_vigia.py`, [instrucciones](sonda/INSTALAR_VIGIA.txt)):
+  - Lanza Blender renderizando una animación y lee el tiempo de cada cuadro.
+  - Cada 5 s mira el equipo: procesador, memoria, frecuencia, temperaturas y GPU NVIDIA.
+  - Cada 5 min cierra una ventana `g7b.ventana/1`, comparada con la primera y con la anterior: estable, variación desde 10 %, caída importante desde 25 %.
+  - Sube cada ventana a `bronce/telemetria/vigia/` con una SAS de solo creación (`G7B_VIGIA_SAS`), sin sobrescribir; lo que no sube se reintenta.
+  - Funciona solo con Python; `psutil` es opcional. Falta llevar las ventanas al cubo (T20).
 - **Integradas básicas y modernas** (correcciones del análisis de un i3 de 10.ª con UHD):
   - `fuentes/hardware.yml` (versión 2) da gama a cada integrada: `basica` (sin Cycles en GPU) o `moderna`. Las Intel Arc Pro B son dedicadas (antes inflaban el N2), y se agregó la VRAM de Arc B580, B570, A750, A380 y Pro B50/B60.
   - El cubo guarda `gpu_gama` y `cpu_grupo` (`geoda/cpu.py`).
