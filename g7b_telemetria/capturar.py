@@ -1,5 +1,12 @@
-"""Captura limitada, auditable y repetible de sondas y Blender Open Data."""
+"""Captura limitada, auditable y repetible de sondas y Blender Open Data.
+
+Blender Open Data se recorre completo y por tandas, de lo más reciente hacia atrás
+(seleccionar_opendata): cada corrida trae lo nuevo desde la última vez y sigue hacia el pasado
+donde se quedó. Antes se tomaban los primeros 1.000 registros del archivo, que son los más
+viejos (marzo de 2022, Blender 3.0.1), y cada semana volvían a ser los mismos.
+"""
 import argparse
+import heapq
 from collections import Counter
 from datetime import datetime, timezone
 import hashlib
@@ -11,11 +18,15 @@ import urllib.request
 from uuid import UUID
 import zipfile
 
+from . import hardware
+
 URL = 'https://opendata.blender.org/snapshots/opendata-latest.zip'
 LICENCIA = 'https://opendata.blender.org/download/'
 MAX_ARCHIVO = 256 * 1024 * 1024
 MAX_EXPANDIDO = 2 * 1024 * 1024 * 1024
 MAX_LINEA = 2 * 1024 * 1024
+MAX_LIMITE = 50000
+ESTADO_OPENDATA = 'control/telemetria/blender-open-data.json'
 
 
 def canon(dato):
@@ -97,6 +108,10 @@ def opendata(dato):
                       'so': texto(escena['system_info']['system']),
                       'metrica': 'samples_per_minute', 'unidad': 'samples/min',
                       'valor': positivo(escena['stats']['samples_per_minute']),
+                      # Estándar g7b.hardware/1: fabricante, clase y nivel N0–N4 del equipo medido.
+                      'hardware': hardware.de_benchmark([d['name'] for d in dispositivos],
+                                                        escena['device_info']['device_type'],
+                                                        escena['system_info']['system']),
                       'licencia': 'CC0-1.0', 'licencia_url': LICENCIA, 'preguntas': ['P1'],
                       'estado': 'revision', 'motivos': ['benchmark_publico_no_reproducido_por_g7b']})
     if not filas: raise ValueError('benchmark vacío')
@@ -138,8 +153,79 @@ def registros_zip(archivo):
                 if linea.strip(): yield json.loads(linea)
 
 
+def _instante(dato):
+    return datetime.fromisoformat(fecha(dato['created_at']))
+
+
+def seleccionar_opendata(registros, estado=None, limite=20000):
+    """De todo el archivo, la tanda que toca: (registros, estado_nuevo, conteos).
+
+    estado = {"hasta", "desde", "borde_hasta", "borde_desde"}: el tramo [desde, hasta] ya está
+    capturado (los bordes guardan los id con esa misma fecha). Primero entra lo más nuevo que «hasta»,
+    del más viejo al más nuevo para no dejar huecos. Lo que sobre del límite se llena con lo
+    anterior a «desde», del más nuevo hacia atrás. Lee el archivo una sola vez y guarda en memoria
+    como mucho «limite» registros.
+    """
+    if not 1 <= limite <= MAX_LIMITE:
+        raise ValueError('límite inválido')
+    estado = estado or {}
+    hasta = datetime.fromisoformat(estado['hasta']) if estado.get('hasta') else None
+    desde = datetime.fromisoformat(estado['desde']) if estado.get('desde') else None
+    desde = desde or hasta
+    borde_h, borde_d = set(estado.get('borde_hasta', [])), set(estado.get('borde_desde', []))
+    conteos = Counter()
+    nuevos, anteriores, orden = [], [], 0
+    for dato in registros:
+        conteos['leidos'] += 1
+        if not isinstance(dato, dict) or dato.get('schema_version') != 'v4':
+            conteos['esquema_no_soportado'] += 1
+            continue
+        try:
+            t, ident = _instante(dato), str(UUID(dato['id']))
+        except (KeyError, TypeError, ValueError):
+            conteos['rechazados'] += 1
+            continue
+        orden += 1
+        if hasta is not None and (t > hasta or (t == hasta and ident not in borde_h)):
+            nuevos.append((t, ident, dato))
+        elif hasta is None or t < desde or (t == desde and ident not in borde_d):
+            conteos['candidatos_anteriores'] += 1
+            entrada = (t, ident, orden, dato)
+            if len(anteriores) < limite:
+                heapq.heappush(anteriores, entrada)
+            elif entrada[:3] > anteriores[0][:3]:
+                heapq.heapreplace(anteriores, entrada)
+        else:
+            conteos['ya_capturados'] += 1
+    nuevos.sort(key=lambda x: (x[0], x[1]))
+    tomados_nuevos = nuevos[:limite]
+    conteos['pendientes_nuevos'] = len(nuevos) - len(tomados_nuevos)
+    resto = limite - len(tomados_nuevos)
+    tomados_anteriores = sorted(anteriores, key=lambda x: (x[0], x[1]), reverse=True)[:resto]
+    conteos['seleccionados'] = len(tomados_nuevos) + len(tomados_anteriores)
+
+    nuevo = dict(estado)
+    if hasta is None:  # primera vez: todo es «anterior»
+        if tomados_anteriores:
+            nuevo['hasta'] = tomados_anteriores[0][0].isoformat()
+            nuevo['borde_hasta'] = sorted(i for t, i, *_ in tomados_anteriores if t == tomados_anteriores[0][0])
+    elif tomados_nuevos:
+        tope = tomados_nuevos[-1][0]
+        ids = {i for t, i, _ in tomados_nuevos if t == tope}
+        nuevo['hasta'] = tope.isoformat()
+        nuevo['borde_hasta'] = sorted(ids | (borde_h if tope == hasta else set()))
+    if tomados_anteriores:
+        piso = tomados_anteriores[-1][0]
+        ids = {i for t, i, *_ in tomados_anteriores if t == piso}
+        nuevo['desde'] = piso.isoformat()
+        nuevo['borde_desde'] = sorted(ids | (borde_d if desde is not None and piso == desde else set()))
+    nuevo['completo_hacia_atras'] = conteos['candidatos_anteriores'] <= resto
+    seleccion = [d for *_, d in tomados_nuevos] + [e[3] for e in tomados_anteriores]
+    return seleccion, nuevo, conteos
+
+
 def capturar(registros, fuente, salida, limite=1000, lago=None):
-    if fuente not in ('sonda', 'blender-open-data') or not 1 <= limite <= 10000:
+    if fuente not in ('sonda', 'blender-open-data') or not 1 <= limite <= MAX_LIMITE:
         raise ValueError('fuente o límite inválido')
     salida.mkdir(parents=True, exist_ok=True)
     resumen = Counter()
@@ -150,7 +236,6 @@ def capturar(registros, fuente, salida, limite=1000, lago=None):
         resumen['leidos'] += 1
         if fuente == 'blender-open-data' and isinstance(dato, dict) and dato.get('schema_version') != 'v4':
             resumen['esquema_no_soportado'] += 1
-            if resumen['leidos'] >= 100000: break
             continue
         try:
             nuevas = convertir(dato)
@@ -167,7 +252,7 @@ def capturar(registros, fuente, salida, limite=1000, lago=None):
             resumen['registros_validos'] += 1
         except (KeyError, TypeError, ValueError, OverflowError):
             resumen['rechazados'] += 1
-        if resumen['registros_validos'] >= limite or resumen['leidos'] >= 100000:
+        if resumen['registros_validos'] >= limite or (fuente == 'sonda' and resumen['leidos'] >= 100000):
             break
     if not filas: raise ValueError('ninguna medición válida; no se publica')
     resumen.update(f['estado'] for f in filas)
@@ -195,15 +280,40 @@ def capturar(registros, fuente, salida, limite=1000, lago=None):
     return informe
 
 
+def capturar_incremental(registros, lago, salida, limite=20000):
+    """La siguiente tanda de Open Data, con su estado en el lago. El estado se guarda al final."""
+    estado = lago.leer_json(ESTADO_OPENDATA, por_omision={}) or {}
+    seleccion, nuevo, conteos = seleccionar_opendata(registros, estado, limite)
+    if not seleccion:
+        informe = {'fuente': 'blender-open-data', 'nada_nuevo': True, 'seleccion': dict(conteos),
+                   'completo_hacia_atras': nuevo.get('completo_hacia_atras')}
+        Path(salida).mkdir(parents=True, exist_ok=True)
+        (Path(salida) / 'informe.json').write_bytes(canon(informe))
+        return informe
+    informe = capturar(seleccion, 'blender-open-data', Path(salida), len(seleccion), lago)
+    informe['seleccion'] = dict(conteos)
+    informe['tramo'] = {'desde': nuevo.get('desde'), 'hasta': nuevo.get('hasta'),
+                        'completo_hacia_atras': nuevo.get('completo_hacia_atras')}
+    nuevo['ultima_captura'] = informe['extraido_en']
+    nuevo['capturados'] = estado.get('capturados', 0) + informe['conteos'].get('registros_validos', 0)
+    lago.escribir_json(ESTADO_OPENDATA, nuevo)  # al final: si algo falla antes, la tanda se repite
+    (Path(salida) / 'informe.json').write_bytes(canon(informe))
+    return informe
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('fuente', choices=['sonda', 'blender-open-data'])
     p.add_argument('--entrada', type=Path, help='carpeta JSON de sonda o ZIP oficial descargado')
     p.add_argument('--salida', type=Path, required=True)
     p.add_argument('--limite', type=int, default=1000)
+    p.add_argument('--incremental', action='store_true',
+                   help='Open Data: la siguiente tanda (lo nuevo y lo anterior a lo ya capturado); necesita --azure')
     p.add_argument('--azure', action='store_true', help='escribir con las credenciales del entorno')
     a = p.parse_args()
-    if not 1 <= a.limite <= 10000: p.error('límite permitido: 1..10000')
+    if not 1 <= a.limite <= MAX_LIMITE: p.error(f'límite permitido: 1..{MAX_LIMITE}')
+    if a.incremental and (a.fuente != 'blender-open-data' or not a.azure):
+        p.error('--incremental es para blender-open-data y necesita --azure (el estado vive en el lago)')
     a.salida.mkdir(parents=True, exist_ok=True)
     lago = None
     if a.azure:
@@ -217,6 +327,9 @@ def main():
         archivo = a.entrada or a.salida / 'opendata.zip'
         if not a.entrada: descargar(archivo)
         registros = registros_zip(archivo)
+        if a.incremental:
+            print(json.dumps(capturar_incremental(registros, lago, a.salida, a.limite), ensure_ascii=False))
+            return
     print(json.dumps(capturar(registros, a.fuente, a.salida, a.limite, lago), ensure_ascii=False))
 
 

@@ -6,6 +6,7 @@ on:
     paths:
       - '.github/workflows/telemetria.yml'
       - 'g7b_telemetria/**'
+      - 'fuentes/hardware.yml'
   workflow_dispatch:
     inputs:
       publicar_azure:
@@ -25,7 +26,7 @@ jobs:
   capturar:
     runs-on: ubuntu-24.04
     environment: amatista1
-    timeout-minutes: 20
+    timeout-minutes: 60   # el archivo completo de Open Data se recorre por tandas
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -50,10 +51,14 @@ jobs:
             echo "Ejecutando captura local sin persistir en el lago remoto..."
             python -m g7b_telemetria.capturar sonda --entrada resultados-sonda --salida captura/sonda
           }
-          python -m g7b_telemetria.capturar blender-open-data --salida captura/opendata --limite 1000 "${args[@]}" || {
-            echo "Aviso: la subida a Azure no pudo completarse. Ejecutando captura local..."
-            python -m g7b_telemetria.capturar blender-open-data --salida captura/opendata --limite 1000
-          }
+          # Radar de telemetría: la siguiente tanda del archivo completo de Open Data (lo nuevo y, con lo
+          # que sobre del límite, hacia atrás desde donde se quedó), con el estándar g7b.hardware/1.
+          if [ ${#args[@]} -gt 0 ]; then
+            python -m geodar telemetria --limite 20000 --salida captura/telemetria
+          else
+            echo "Sin Azure: simulacro del radar (no lee ni escribe el lago)."
+            python -m geodar telemetria --limite 2000 --salida captura/telemetria --simulacro
+          fi
       - name: Conservar informes y mediciones (sin snapshot completo)
         if: always()
         uses: actions/upload-artifact@v4

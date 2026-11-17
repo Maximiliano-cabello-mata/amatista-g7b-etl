@@ -1,0 +1,72 @@
+# Estándar de hardware de G7B (g7b.hardware/1): cómo se lee el nombre de un dispositivo.
+#
+# Lo usa g7b_telemetria/hardware.py para que todas las fuentes de telemetría (Blender Open Data, la
+# sonda, los reportes de error de Blender...) describan el equipo igual y Geoda pueda darle un nivel
+# (N0–N4, geoda/niveles.py). Es una tabla propia: patrones y memoria de video de modelos conocidos.
+# No copia bases de datos de terceros (TechPowerUp prohíbe la extracción).
+#
+# Reglas:
+#   - Se revisa en orden y gana la PRIMERA regla cuyo patrón coincida (expresión regular, sin
+#     distinguir mayúsculas). Lo más específico va primero.
+#   - vram_gb solo cuando el modelo tiene una sola cantidad de memoria. Si hay variantes (RTX 3060 de
+#     escritorio con 8 o 12 GB, RX 580 con 4 u 8), se deja vacío: Geoda asume con prudencia y lo dice.
+#   - Lo que no coincide con nada queda como «desconocida»: no se adivina.
+version: 1
+
+gpus:
+  # --- Integradas -------------------------------------------------------------------------------
+  - {patron: 'apple m\d', fabricante: apple, clase: integrada, nota: memoria unificada}
+  - {patron: 'intel.*(uhd|hd graphics|iris)', fabricante: intel, clase: integrada}
+  - {patron: 'intel.*arc.*\b[ab]\d{3}m?\b', fabricante: intel, clase: dedicada}
+  - {patron: 'intel.*arc', fabricante: intel, clase: integrada, nota: gráficos Arc de los Core Ultra}
+  - {patron: 'radeon.*\b(6[0-9]0|7[0-9]0|8[0-9]0)m\b', fabricante: amd, clase: integrada}
+  - {patron: 'radeon.*vega \d+ graphics|radeon\(tm\) graphics|radeon graphics', fabricante: amd, clase: integrada}
+
+  # --- NVIDIA, portátiles (antes que escritorio: el nombre lleva «Laptop») ---------------------------
+  - {patron: 'rtx 4090 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 16}
+  - {patron: 'rtx 4080 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 40[67]0 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 8}
+  - {patron: 'rtx 4050 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 6}
+  - {patron: 'rtx 3070 (ti )?laptop', fabricante: nvidia, clase: dedicada, vram_gb: 8}
+  - {patron: 'rtx 3060 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 6}
+  - {patron: 'rtx 3050 (ti )?laptop', fabricante: nvidia, clase: dedicada, vram_gb: 4}
+  - {patron: 'nvidia.*laptop', fabricante: nvidia, clase: dedicada}
+  - {patron: 'geforce mx\s?\d+', fabricante: nvidia, clase: dedicada, vram_gb: 2}
+
+  # --- NVIDIA, escritorio -------------------------------------------------------------------------
+  - {patron: 'rtx (4090|3090)', fabricante: nvidia, clase: dedicada, vram_gb: 24}
+  - {patron: 'rtx 4080', fabricante: nvidia, clase: dedicada, vram_gb: 16}
+  - {patron: 'rtx 4070', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 4060 ti', fabricante: nvidia, clase: dedicada}
+  - {patron: 'rtx 4060', fabricante: nvidia, clase: dedicada, vram_gb: 8}
+  - {patron: 'rtx 3080 ti', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 3080', fabricante: nvidia, clase: dedicada}
+  - {patron: 'rtx 3070|rtx 3060 ti', fabricante: nvidia, clase: dedicada, vram_gb: 8}
+  - {patron: 'rtx 3060', fabricante: nvidia, clase: dedicada}
+  - {patron: 'rtx 3050', fabricante: nvidia, clase: dedicada}
+  - {patron: 'rtx 2080 ti', fabricante: nvidia, clase: dedicada, vram_gb: 11}
+  - {patron: 'rtx 20[78]0', fabricante: nvidia, clase: dedicada, vram_gb: 8}
+  - {patron: 'rtx 2060', fabricante: nvidia, clase: dedicada}
+  - {patron: 'gtx 1650', fabricante: nvidia, clase: dedicada, vram_gb: 4}
+  - {patron: 'gtx 1660', fabricante: nvidia, clase: dedicada, vram_gb: 6}
+  - {patron: 'gtx 1050 ti', fabricante: nvidia, clase: dedicada, vram_gb: 4}
+  - {patron: 'gtx 10[5-8]0', fabricante: nvidia, clase: dedicada}
+  - {patron: 'nvidia|geforce|quadro|rtx a\d', fabricante: nvidia, clase: dedicada}
+
+  # --- AMD dedicadas ------------------------------------------------------------------------------
+  - {patron: 'rx 7900 xtx', fabricante: amd, clase: dedicada, vram_gb: 24}
+  - {patron: 'rx 7900 xt', fabricante: amd, clase: dedicada, vram_gb: 20}
+  - {patron: 'rx (7800 xt|6800|6900|6950)', fabricante: amd, clase: dedicada, vram_gb: 16}
+  - {patron: 'rx (7700 xt|6700 xt)', fabricante: amd, clase: dedicada, vram_gb: 12}
+  - {patron: 'rx (7600|6600|6650)', fabricante: amd, clase: dedicada, vram_gb: 8}
+  - {patron: 'radeon pro|radeon rx|radeon vii', fabricante: amd, clase: dedicada}
+
+cpus:
+  - {patron: 'apple m\d', fabricante: apple, familia: Apple M}
+  - {patron: 'core\(tm\) ultra|core ultra', fabricante: intel, familia: Core Ultra}
+  - {patron: 'core\(tm\) i[3579]|core i[3579]|\bi[3579]-\d', fabricante: intel, familia: Core i}
+  - {patron: 'xeon', fabricante: intel, familia: Xeon}
+  - {patron: 'celeron|pentium|atom', fabricante: intel, familia: Celeron/Pentium}
+  - {patron: 'ryzen', fabricante: amd, familia: Ryzen}
+  - {patron: 'epyc|threadripper', fabricante: amd, familia: EPYC/Threadripper}
+  - {patron: 'athlon', fabricante: amd, familia: Athlon}

@@ -7,6 +7,7 @@ Firma común:  sensor(fuente, estado, obtener) -> (salida, estado_nuevo)
     estado     lo que el sensor recuerda entre corridas (ETag, huellas, ids vistos...)
 """
 import hashlib
+import re
 import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -383,7 +384,102 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
             "argumentos": {"versiones": tocan}}, nuevo
 
 
-SENSORES = {"sphinx": sensor_sphinx, "atom": sensor_feed, "rss": sensor_feed, "pagina": sensor_pagina,
+# ---------------------------------------------------------------- reportes de error (telemetría de fallas)
+
+_CAMPO = {
+    "so": re.compile(r"operating system:\s*(.+)", re.I),
+    "gpu": re.compile(r"graphics card:\s*(.+)", re.I),
+    "rota": re.compile(r"broken:\s*(.+)", re.I),
+    "funcionaba": re.compile(r"worked:\s*(.+)", re.I),
+}
+_VERSION = re.compile(r"\b(\d+\.\d+(?:\.\d+)?)\b")
+_OPENGL = re.compile(r"\s(\d\.\d)(?:\.\d+)?\b")
+
+
+def sistema_de_reporte(cuerpo):
+    """Los campos de la plantilla de reportes de Blender («System Information», «Blender Version»).
+
+    Solo cifras y nombres de hardware, con el estándar g7b.hardware/1: el texto del reporte es de su
+    autor y no se guarda. Lo que la plantilla no trae queda en None.
+    """
+    from g7b_telemetria import hardware
+
+    cuerpo = cuerpo or ""
+    crudo = {k: (m.group(1).strip()[:300] if (m := r.search(cuerpo)) else None) for k, r in _CAMPO.items()}
+    salida = {"so": crudo["so"], "gpu_texto": crudo["gpu"], "opengl": None,
+              "version_rota": None, "version_funcionaba": None, "hardware": None}
+    for campo in ("rota", "funcionaba"):
+        texto = crudo[campo] or ""
+        v = re.search(r"version:\s*(\d+\.\d+(?:\.\d+)?)", texto, re.I) or _VERSION.search(texto)
+        salida["version_" + campo] = v.group(1) if v else None
+    if crudo["gpu"]:
+        gl = _OPENGL.search(crudo["gpu"])
+        salida["opengl"] = float(gl.group(1)) if gl else None
+        nombre = crudo["gpu"][:gl.start()] if gl else crudo["gpu"]
+        g = hardware.gpu(nombre)
+        bloque = {"estandar": hardware.ESTANDAR, "mide": "falla", "so": crudo["so"], "gpus": [g]}
+        if g["clase"] != "desconocida":
+            bloque.update(hardware.nivel([g], opengl=salida["opengl"]))
+        else:
+            bloque.update(nivel=None, confianza=None, motivos=["GPU no reconocida por fuentes/hardware.yml"])
+        salida["hardware"] = bloque
+    return salida
+
+
+def sensor_gitea_issues(fuente, estado, obtener):
+    """Reportes de error de un Gitea (projects.blender.org): qué falla, en qué GPU, sistema y versión.
+
+    Es telemetría de fallas para P2 («qué versión conviene en cada equipo»). Pide por la API, poco y
+    despacio (la infraestructura de Blender ya tuvo incidentes por carga de arañas): solo los
+    reportes actualizados desde la última vez, con un tope de páginas.
+    """
+    import json
+    from urllib.parse import urlencode
+
+    cfg = fuente["sensor"]
+    base = cfg["base"].rstrip("/")
+    consulta = {"state": "all", "type": "issues", "limit": int(cfg.get("por_pagina", 50))}
+    if cfg.get("etiquetas"):
+        consulta["labels"] = ",".join(cfg["etiquetas"])
+    if estado.get("desde"):
+        consulta["since"] = estado["desde"]
+    vistas = dict(estado.get("huellas", {}))
+    registros, revisados, mas_reciente = [], 0, estado.get("desde")
+    for pagina in range(1, int(cfg.get("paginas", 3)) + 1):
+        url = f"{base}/api/v1/repos/{cfg['repo']}/issues?" + urlencode({**consulta, "page": pagina})
+        lote = _json(obtener(url, {"Accept": "application/json"}))
+        if not isinstance(lote, list) or not lote:
+            break
+        revisados += len(lote)
+        for r in lote:
+            if r.get("pull_request") is not None:  # Gitea marca los pull requests con este campo
+                continue
+            clave = str(r.get("number") or r.get("id"))
+            actualizado = r.get("updated_at") or r.get("created_at")
+            if not clave or vistas.get(clave) == actualizado:
+                continue
+            vistas[clave] = actualizado
+            if actualizado and (mas_reciente is None or actualizado > mas_reciente):
+                mas_reciente = actualizado
+            registros.append({
+                "id": clave, "url": r.get("html_url") or f"{base}/{cfg['repo']}/issues/{clave}",
+                "titulo": (r.get("title") or "").strip()[:200], "fecha": r.get("created_at"),
+                "etiquetas": [e.get("name") for e in r.get("labels") or [] if e.get("name")],
+                "datos": {"estado": r.get("state"), "actualizado": actualizado, "cerrado": r.get("closed_at"),
+                          "comentarios": r.get("comments", 0), **sistema_de_reporte(r.get("body"))},
+            })
+        if len(lote) < consulta["limit"]:
+            break
+    nuevo = dict(estado)
+    nuevo["huellas"] = dict(list(vistas.items())[-VISTOS_MAX:])
+    if mas_reciente:
+        nuevo["desde"] = mas_reciente
+    con_gpu = sum(1 for r in registros if r["datos"].get("gpu_texto"))
+    return {"urls": [], "registros": registros,
+            "nota": f"{len(registros)} reportes nuevos o cambiados de {revisados} ({con_gpu} con GPU)"}, nuevo
+
+
+SENSORES = {"sphinx": sensor_sphinx, "gitea_issues": sensor_gitea_issues, "atom": sensor_feed, "rss": sensor_feed, "pagina": sensor_pagina,
             "sitemap": sensor_sitemap, "stackexchange": sensor_stackexchange,
             "discourse": sensor_discourse, "github_releases": sensor_github_releases,
             "json_api": sensor_json_api}

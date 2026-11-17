@@ -537,6 +537,9 @@ fuentes:
     activa: true
 
   # ================================================================ F1 · telemetría
+  # Responsabilidad del RADAR DE TELEMETRÍA (python -m geodar telemetria), no de las arañas de Zyte:
+  # cifras de equipos y rendimiento, normalizadas con el estándar g7b.hardware/1 (fuentes/hardware.yml).
+  # Las arañas de Zyte quedan para la documentación (destino documentos).
 
   - id: blender-open-data
     nombre: Blender Open Data (benchmark de render)
@@ -549,8 +552,8 @@ fuentes:
     modo: agregados
     preguntas: [P1, P3]
     sensor: {tipo: externo}
-    extractor: externo
-    gestor: "g7b_almacen opendata (tarea Warehouse, cada lunes)"
+    extractor: telemetria      # radar de telemetría: python -m geodar telemetria (tarea Telemetría, semanal)
+    colector: blender_open_data   # el archivo completo, por tandas y con el estándar g7b.hardware/1
     frecuencia_horas: 168
     dominios: [opendata.blender.org]
     activa: true
@@ -596,6 +599,32 @@ fuentes:
     dominios: [raw.githubusercontent.com]
     activa: true
 
+  - id: blender-reportes
+    nombre: Reportes de error de Blender (sistema, GPU, versión rota y versión que funcionaba)
+    tipo: mediciones
+    programa: blender
+    familia: F1
+    destino: telemetria
+    licencia: por_confirmar
+    licencia_verificada: false
+    revisar: >-
+      Condiciones de uso de projects.blender.org. Su infraestructura ya tuvo incidentes por carga de
+      arañas (infrastructure #29 y #32): solo la API, pocas páginas al día, nunca los archivos del repo.
+      Probar en vivo con «python -m geodar probar --fuente blender-reportes» antes de activar.
+    modo: agregados            # solo campos estructurados: GPU, sistema, versiones, etiquetas; nunca el texto
+    preguntas: [P2, P1]
+    sensor:
+      tipo: gitea_issues
+      base: "https://projects.blender.org"
+      repo: blender/blender
+      etiquetas: ["Type/Report"]
+      paginas: 3
+      por_pagina: 50
+    extractor: directo         # el sensor ya trae los campos: no hace falta araña
+    frecuencia_horas: 24
+    dominios: [projects.blender.org]
+    activa: false
+
   - id: steam-encuesta-hardware
     nombre: Encuesta de hardware de Steam
     tipo: mediciones
@@ -608,8 +637,8 @@ fuentes:
     modo: agregados
     preguntas: [P3]
     sensor: {tipo: pagina, url: "https://store.steampowered.com/hwsurvey"}
-    extractor: zyte
-    zyte: {seguir: false}
+    extractor: telemetria     # radar de telemetría (geodar telemetria), no una araña de Zyte
+    colector: pendiente       # se escribe cuando se confirme la licencia
     frecuencia_horas: 720
     dominios: [store.steampowered.com]
     activa: false
@@ -626,8 +655,8 @@ fuentes:
     modo: agregados
     preguntas: [P1, P3]
     sensor: {tipo: pagina, url: "https://openbenchmarking.org/test/pts/blender"}
-    extractor: zyte
-    zyte: {seguir: false}
+    extractor: telemetria     # radar de telemetría (geodar telemetria), no una araña de Zyte
+    colector: pendiente       # se escribe cuando se confirme la licencia
     frecuencia_horas: 720
     dominios: [openbenchmarking.org]
     activa: false
@@ -644,8 +673,8 @@ fuentes:
     modo: agregados
     preguntas: [P3]
     sensor: {tipo: pagina, url: "https://web3dsurvey.com/"}
-    extractor: zyte
-    zyte: {seguir: false}
+    extractor: telemetria     # radar de telemetría (geodar telemetria), no una araña de Zyte
+    colector: pendiente       # se escribe cuando se confirme la licencia
     frecuencia_horas: 720
     dominios: [web3dsurvey.com]
     activa: false
@@ -662,8 +691,8 @@ fuentes:
     modo: agregados
     preguntas: [P3]
     sensor: {tipo: pagina, url: "https://opengl.gpuinfo.org/"}
-    extractor: zyte
-    zyte: {seguir: false}
+    extractor: telemetria     # radar de telemetría (geodar telemetria), no una araña de Zyte
+    colector: pendiente       # se escribe cuando se confirme la licencia
     frecuencia_horas: 720
     dominios: [opengl.gpuinfo.org]
     activa: false
