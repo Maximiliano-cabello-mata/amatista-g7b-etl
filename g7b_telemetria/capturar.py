@@ -65,6 +65,9 @@ def sonda(dato):
             'equipo': {k: dato['equipo'].get(k) for k in ('cpu', 'ram_gb', 'so', 'arquitectura', 'huella',
                                                          'nivel', 'nivel_estimado', 'gpu_vista', 'gpu_cycles')},
             'sonda': texto(dato['sonda']), 'sin_ventana': dato['blender']['sin_ventana'],
+            # Clase de dato (g7b_almacen/cubo.py, clase_de): solo un equipo de estudiante o de laboratorio
+            # escolar, con consentimiento, da una medición directa. Lo no declarado queda relativo.
+            'entorno': dato.get('entorno') or 'no_declarado', 'consentimiento': dato.get('consentimiento') is True,
             'licencia': 'propia; publicación agregada', 'preguntas': ['P1', 'P2']}
     filas = []
     for r in dato['resultados']:
@@ -245,8 +248,13 @@ def capturar(registros, fuente, salida, limite=1000, lago=None):
                 continue
             vistos.add(identidad)
             for i, fila in enumerate(nuevas):
+                # Sonda: identidad por lo que se midió, no por la posición en la lista. Open Data
+                # conserva la fórmula anterior (sus escenas vienen en orden fijo del archivo oficial)
+                # para no duplicar lo ya capturado; el cubo deduplica además por identidad semántica.
+                clave_fila = ([fuente, identidad, fila['prueba'], fila['metrica'], fila.get('perfil')]
+                              if fuente == 'sonda' else [fuente, identidad, i])
                 fila.update(contrato='g7b.telemetria/1', sintetico=False,
-                            id=huella([fuente, identidad, i]), huella_origen=huella(dato))
+                            id=huella(clave_fila), huella_origen=huella(dato))
             filas.extend(nuevas)
             crudos.append(dato)
             resumen['registros_validos'] += 1

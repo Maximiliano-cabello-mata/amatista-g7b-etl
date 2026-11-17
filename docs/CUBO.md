@@ -1,4 +1,4 @@
-# Cubo G7B: Parquet + DuckDB en Azure
+# Cubo G7B: Parquet + DuckDB en Azure (contrato `g7b.cubo/2`)
 
 ## Qué se integra
 
@@ -11,68 +11,94 @@ workflows, estimaciones de perfiles ni otras modificaciones pendientes.
 El análisis documental de Deepnote del PR #13 es distinto: sus conteos de texto no
 se convierten en rendimiento. La documentación sigue en su recorrido actual.
 
-## Almacenamiento y consulta
+## 1. Dos clases de dato que nunca se mezclan (`g7b.cubo/2`, 17 de noviembre de 2026)
+
+| Clase | Qué es | Para qué sirve | Dónde vive |
+|---|---|---|---|
+| **Directa** | Medida por G7B o Amatista en el **equipo real de un estudiante** (`equipo_estudiante`) o de un **laboratorio escolar** (`laboratorio_escolar`), **con consentimiento registrado** | Es la única que alimenta a Geoda: perfiles, costos y recomendaciones | `hechos_directos`, `v_directas`, `v_mediciones_aceptadas` |
+| **Relativa** | Todo lo demás: benchmarks públicos (Blender Open Data), la sonda en servidores de GitHub (`ci`) o en la nube, y cualquier medición sin entorno o sin consentimiento declarado | Comparar niveles entre sí (cuánto más rinde un N3 que un N2 en la misma escena y versión). **Nunca** para fijar ajustes | `hechos_relativos`, `v_relativas`, `v_relativas_por_nivel` |
+
+**Reglas:**
+- **La clase la decide una sola función,** `clase_de` en `g7b_almacen/cubo.py`. Cada medición guarda el motivo en `motivo_clase`.
+- **La duda nunca sube de clase.** Lo que no declara entorno y consentimiento es relativo. Para que una medición sea directa, la sonda tiene que correr con `--entorno equipo_estudiante --consentimiento` o `--entorno laboratorio_escolar --consentimiento`.
+- **Ninguna tabla ni vista mezcla las dos clases,** salvo `v_calidad`, que solo cuenta filas.
+- **«Sintético» no es «relativo».** En el contrato, `sintetico: true` significa datos inventados para pruebas, que **nunca** entran al cubo. Una medición relativa es real, pero poco fiable para decidir por un estudiante.
+- **El estado de calidad sigue aparte.** `aceptado` o `revision` dice si la medición está bien tomada; la clase dice si representa a un estudiante. Geoda pide las dos cosas: directa **y** aceptada.
+
+**Cubo al 17 de noviembre** (construido en local con todo el lago): **63.019 mediciones, todas relativas.** Son 62.998 de Open Data y 21 de la sonda en servidores; **directas, 0**. Las directas llegarán con la sonda en equipos de estudiantes y con Amatista ([TAREAS_ARANAS.md](TAREAS_ARANAS.md), T8 y T9).
+
+## 2. Almacenamiento y consulta
 
 Azure guarda versiones de archivos; DuckDB ejecuta las consultas en Actions,
 Deepnote o una computadora. No se comparte un archivo abierto para múltiples
 escritores. Los datos portables están en Parquet y la copia DuckDB es reconstruible.
 
 - Entrada: `plata/telemetria/{aceptado,revision}/<fuente>/*.jsonl.gz`.
-- Plata portable: `plata/cubo/<version>/mediciones.parquet`.
-- Oro: `oro/cubos/<version>/cubo.duckdb`, `parquet/*.parquet`, `resumen.csv`,
-  `resumen.json` y `manifiesto.json`.
+- Plata portable: `plata/cubo/<version>/hechos_directos.parquet` y `hechos_relativos.parquet`.
+- Oro: `oro/cubos/<version>/cubo.duckdb`, `parquet/*.parquet` (dimensiones y procedencia),
+  `resumen_directas.csv`, `resumen_relativas.csv`, `resumen.json` y `manifiesto.json`.
 - Puntero vigente: `control/cubo_actual.json`.
 
 La versión publicada no se sobrescribe. Se verifica SHA-256 de todos los archivos
 descargándolos de Azure, luego el manifiesto, y solo entonces se cambia el puntero.
 Una falla previa conserva la versión vigente; puede dejar una versión parcial no
-referenciada. El workflow serializa publicaciones. No se ha definido todavía una
-política de eliminación de versiones; hay que vigilar su crecimiento.
+referenciada. El workflow serializa publicaciones. Falta una política de retención:
+hoy hay 7 versiones, que suman el 72 % del lago (tarea T13).
 
-## Modelo
+## 3. Modelo normalizado
 
-Una fila es una prueba/escena medida, no un equipo ni una corrida completa.
+El grano es una **observación**: una métrica de una prueba o escena, en una corrida (de la sonda) o en un registro (de Open Data), con una configuración declarada. No es un equipo físico.
 
 | Tabla | Contenido |
 |---|---|
-| `mediciones` | Tabla completa validada, clave única por medición |
-| `hechos_medicion` | Pruebas de la sonda |
-| `hechos_render` | Resultados públicos por escena de Cycles |
-| `dim_dispositivo` | Hardware declarado, backend y sistema; sin adivinar nivel |
-| `dim_version` | Programa y versión completa, sin juntar parches |
-| `dim_escena` | Nombre y fuente, para evitar colisiones |
-| `dim_perfil` | Perfil, fuente y versión de sonda; no_aplica cuando falta |
-| `dim_tiempo` | Día UTC, año y mes; instante original normalizado en hechos |
-| `dim_origen` | Fuente, entorno declarado y licencia |
-| `procedencia` | Archivos de entrada asociados a cada medición |
+| `hechos_directos` | Observaciones directas, con id, `id_fuente`, las seis claves de dimensión, fecha, valor, estado, motivos, `motivo_clase`, variación, repeticiones, `sin_ventana` y `huella_origen` |
+| `hechos_relativos` | Las mismas columnas, para las observaciones relativas |
+| `dim_fuente` | Fuente, licencia, entorno declarado y **clase de dato** |
+| `dim_equipo` | El equipo **en columnas tipadas** (estándar `g7b.hardware/1`): qué se mide, GPU, fabricante, clase de GPU, VRAM, CPU y familia, sistema, backend, nivel y su confianza. Conserva además el JSON original (`equipo_json`) |
+| `dim_version` | Programa, versión completa y serie (`5.2`) |
+| `dim_prueba` | El **diccionario de métricas**: fuente, prueba, escena, métrica, unidad y si es mejor «mayor» o «menor». Las unidades sin entrada se rechazan |
+| `dim_perfil` | Perfil de la sonda y su versión; `no_aplica` cuando falta |
+| `dim_tiempo` | Día UTC, año, mes y día |
+| `procedencia` | Archivos de entrada de cada observación |
 
-El contrato de captura actual no declara entorno de ejecución: se conserva
-`no_declarado`, sin inferir que toda sonda proviene de una PC personal. Esa mejora
-de procedencia queda pendiente en la captura. Los datos públicos no identifican
-computadoras individuales: un modelo de dispositivo no es un equipo único.
+**Identidad:**
+- **Sonda:** su id ya no depende de la posición en la lista. Se forma con el registro, la prueba, la métrica y el perfil.
+- **Open Data:** conserva su id para no duplicar lo ya capturado. Además, el cubo deduplica por **identidad semántica**: fuente, `id_fuente`, escena, prueba, métrica y perfil. Si la misma observación llega con otro id, se cuenta en `duplicados_semanticos`. Si llega con otro valor, la construcción falla.
 
-## Calidad y consultas
+**Carga:** las tablas se cargan en bloque, escribiendo JSONL que lee DuckDB. Las 63.019 mediciones del lago se construyen en unos 9 segundos; insertar fila por fila tardaba varios minutos.
 
-`v_exploracion` conserva aceptados y revisión; `v_mediciones_aceptadas` solo
-aceptados. `v_calidad` cuenta filas por fuente y estado. `v_resumen` agrupa por
-hardware, versión, escena, perfil, sonda, prueba, métrica, unidad, estado y modo
-sin ventana. No suma FPS con muestras/minuto ni compara escenas diferentes.
+## 4. Vistas
+
+| Vista | Qué tiene | Quién la usa |
+|---|---|---|
+| `v_directas` y `v_relativas` | Los hechos unidos a todas sus dimensiones, con columnas legibles | Análisis |
+| `v_mediciones_aceptadas` | **Solo directas y aceptadas** | Geoda (perfiles, costos y ejecución) |
+| `v_relativas_por_nivel` | Open Data por nivel, clase de GPU, backend, serie y escena, con mediana y cuartiles | Comparaciones entre niveles |
+| `v_resumen_directas` y `v_resumen_relativas` | Agregados con mediana, cuartiles, mínimo y máximo, nunca mezclando unidades | Cuadernos y CSV |
+| `v_calidad` | Conteos por clase, fuente y estado | Auditoría |
 
 ```sql
-SELECT * FROM v_calidad ORDER BY fuente, estado;
-SELECT fuente, version, escena, metrica, unidad, estado, mediciones, mediana
-FROM v_resumen ORDER BY mediciones DESC LIMIT 20;
-SELECT version, prueba, unidad, valor FROM v_mediciones_aceptadas;
+SELECT * FROM v_calidad ORDER BY clase_dato, fuente, estado;
+SELECT nivel, gpu_clase, serie, escena, mediciones, mediana
+FROM v_relativas_por_nivel WHERE nivel IS NOT NULL ORDER BY escena, nivel;
+SELECT version, prueba, unidad, valor FROM v_mediciones_aceptadas;   -- solo directas
 ```
 
-El constructor elimina duplicados exactos por `id` y conserva todas sus rutas de
-procedencia. Si un mismo ID cambia de contenido, falla: no elige una versión a
-ciegas. Rechaza sintéticos, valores inválidos, contratos desconocidos y aceptación
-contradictoria. Compara contenido de Parquet con DuckDB y reabre el archivo cerrado.
+El constructor conserva los controles anteriores:
+- elimina duplicados exactos por `id` y guarda todas sus rutas de procedencia;
+- falla si un mismo id cambia de contenido;
+- rechaza datos sintéticos, valores inválidos y contratos desconocidos;
+- compara cada tabla de hechos en Parquet contra DuckDB y reabre el archivo cerrado.
 
-Esta validación técnica **no certifica representatividad ni recomendaciones**.
-Los benchmarks públicos permanecen en revisión. No se publica `perfiles.json`.
-El cubo es exploratorio; Geoda y la relación semántica con documentos siguen pendientes.
+**Esta validación técnica no certifica representatividad ni recomendaciones**: `recomendaciones_habilitadas` sigue en `false`.
+
+## 5. Lectores y migración
+
+- **Contrato:** `g7b.cubo/2`. La descarga (`g7b_almacen/descargar.py`) y el estado de Geoda (`geoda_estado.py`) leen también `g7b.cubo/1` mientras siga vigente la versión publicada anterior.
+- **Estado de Geoda:** con el cubo 2, `publicacion/geoda.json` publica además las directas, las directas aceptadas y las relativas.
+- **Geoda (`ejecutar`):** exige `g7b.cubo/2` y comprueba los conteos de las dos clases contra el manifiesto.
+- **Manifiesto:** `mediciones`, `directas` y `relativas` (conteos por estado), `calidad` (la suma, por compatibilidad), `duplicados_exactos` y `duplicados_semanticos`.
+- **Cuadernos** (Deepnote y Camber): consultan `v_relativas` y `v_resumen_relativas`.
 
 ## Ejecutar
 
@@ -95,16 +121,15 @@ integración de credenciales de ese workspace.
 
 ## Operación
 
-`Cubo G7B` corre al integrar su código en main, manualmente y después de una
-ejecución exitosa de `Telemetría G7B` en main. Usa `amatista1`, 20 minutos de
+`Cubo G7B` corre al integrar su código en main, manualmente, y cada semana en el ciclo después de `Telemetría G7B`. Usa `amatista1`, 20 minutos de
 límite y guarda artefactos por 14 días. Después de publicar descarga nuevamente
 el cubo mediante el puntero vigente, verifica su hash y lo abre en solo lectura.
 
 Se reconstruye completo con un máximo de un millón de filas de entrada; no es
-incremental. El conjunto actual es pequeño. Se deberán revisar memoria, costos,
-retención y particionado al crecer, y ampliar la muestra pública de captura.
+incremental. Con la carga en bloque, 63.019 mediciones tardan unos 9 segundos. Al
+crecer hay que revisar memoria, retención (T13) y particionado.
 
-## Primera publicación verificada — 2026-11-03
+## Historia: primera publicación verificada (cubo 1, 3 de noviembre de 2026)
 
 El [PR #15](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/pull/15)
 se integró tras 62 pruebas aprobadas, incluida la publicación/descarga con Azurite.

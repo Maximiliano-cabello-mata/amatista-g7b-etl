@@ -36,7 +36,7 @@ jobs:
       - name: Instalar Blender de Ubuntu
         run: sudo apt-get update && sudo apt-get install -y blender
       - name: Medir CPU en el runner (no representa computadoras personales)
-        run: blender -b --factory-startup --python sonda/g7b_sonda.py -- --salida resultados-sonda --escena ligera --perfiles ligero --repeticiones 3 --sin-render
+        run: blender -b --factory-startup --python sonda/g7b_sonda.py -- --salida resultados-sonda --escena ligera --perfiles ligero --repeticiones 3 --sin-render --entorno ci
       - name: Capturar y verificar las dos fuentes
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}

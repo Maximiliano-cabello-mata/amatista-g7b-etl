@@ -150,8 +150,11 @@ def test_el_cubo_agrupa_el_render_por_nivel(tmp_path):
     entradas = [(ruta, f) for ruta, fs in lago.archivos.items() if ruta.startswith("plata/") for f in fs]
     construir(entradas, tmp_path / "cubo")
     with duckdb.connect(str(tmp_path / "cubo/oro/cubo.duckdb"), read_only=True) as con:
-        niveles = dict(con.execute("SELECT nivel, sum(mediciones) FROM v_render_por_nivel GROUP BY 1").fetchall())
-    assert niveles == {"N3": 3, "N2": 1}
+        niveles = dict(con.execute("SELECT nivel, sum(mediciones) FROM v_relativas_por_nivel GROUP BY 1").fetchall())
+        # Open Data es relativa: nunca llega a lo que lee Geoda.
+        assert con.execute("SELECT count(*) FROM v_mediciones_aceptadas").fetchone()[0] == 0
+        gpu = con.execute("SELECT DISTINCT gpu_clase FROM v_relativas WHERE nivel = 'N2'").fetchall()
+    assert niveles == {"N3": 3, "N2": 1} and gpu == [("integrada",)]
 
 
 # --- Reportes de error de Blender (telemetría de fallas) ----------------------------------------

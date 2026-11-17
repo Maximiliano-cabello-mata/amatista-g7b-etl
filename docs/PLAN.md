@@ -1,5 +1,7 @@
 # Plan de G7B: datos de calidad para un 3D libre que funcione en cualquier computadora
 
+> **Actualización del 17 de noviembre de 2026:** el cubo ahora es `g7b.cubo/2`. Separa las mediciones **directas** (estudiantes y laboratorios escolares, con consentimiento) de las **relativas** (Open Data, la sonda en servidores) en `hechos_directos` y `hechos_relativos`, con dimensiones normalizadas. Las tablas `hechos_medicion`, `hechos_render` y `dim_dispositivo` ya no existen. Ver [CUBO.md](CUBO.md).
+
 Fecha: 2026-11-01. Documento rector de este repositorio. Si otro documento contradice este, manda este. Reemplaza las fases A, B y C de [ARQUITECTURA_CLOUD.md](historia/ARQUITECTURA_CLOUD.md), que se conserva como historia del primer despliegue.
 
 

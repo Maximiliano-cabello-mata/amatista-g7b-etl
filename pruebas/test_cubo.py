@@ -27,11 +27,13 @@ def test_estrella_dedup_calidad_y_versiones(tmp_path):
     assert informe['duplicados_eliminados'] == 1
     assert informe['mediciones'] == 3
     with duckdb.connect(str(tmp_path / 'oro/cubo.duckdb'), read_only=True) as con:
-        assert con.execute('SELECT count(*) FROM v_mediciones_aceptadas').fetchone()[0] == 2
+        # Sin entorno ni consentimiento declarados, la sonda es RELATIVA: Geoda no la ve.
+        assert con.execute('SELECT count(*) FROM v_mediciones_aceptadas').fetchone()[0] == 0
+        assert con.execute('SELECT count(*) FROM hechos_relativos').fetchone()[0] == 3
+        assert con.execute('SELECT count(*) FROM hechos_directos').fetchone()[0] == 0
         assert con.execute('SELECT count(*) FROM dim_version').fetchone()[0] == 2
-        assert con.execute('SELECT count(*) FROM v_resumen').fetchone()[0] == 3
+        assert con.execute('SELECT count(*) FROM v_resumen_relativas').fetchone()[0] == 3
         assert con.execute('SELECT count(*) FROM procedencia').fetchone()[0] == 4
-        assert con.execute('SELECT count(*) FROM hechos_render').fetchone()[0] == 0
 
 
 @pytest.mark.parametrize('cambio', [{'sintetico': True}, {'valor': float('nan')}, {'valor': -2},
@@ -52,9 +54,12 @@ def test_unidades_y_escenas_separadas(tmp_path):
                    metrica='samples_per_minute', unidad='samples/min')
     construir([('sonda', fila()), ('publico', publico)], tmp_path)
     with duckdb.connect(str(tmp_path / 'oro/cubo.duckdb'), read_only=True) as con:
-        assert con.execute('SELECT count(*) FROM dim_escena').fetchone()[0] == 2
-        assert con.execute('SELECT count(*) FROM hechos_render').fetchone()[0] == 1
-        assert con.execute('SELECT count(*) FROM v_resumen').fetchone()[0] == 2
+        assert con.execute('SELECT count(*) FROM dim_prueba').fetchone()[0] == 2
+        assert con.execute("SELECT count(*) FROM v_relativas WHERE fuente='blender-open-data'").fetchone()[0] == 1
+        assert con.execute('SELECT count(*) FROM v_resumen_relativas').fetchone()[0] == 2
+        # El diccionario de métricas dice hacia dónde es mejor cada unidad.
+        assert dict(con.execute('SELECT unidad, mejor FROM dim_prueba').fetchall()) == {'s': 'menor',
+                                                                                       'samples/min': 'mayor'}
 
 
 class Lago:
@@ -100,3 +105,47 @@ def test_cubo_azure_integracion(tmp_path):
         assert descargar(lago, tmp_path / 'azure.duckdb')['mediciones'] == 1
     finally:
         contenedor.delete_container()
+
+
+def test_directas_y_relativas_nunca_se_mezclan(tmp_path):
+    from g7b_almacen.cubo import clase_de
+
+    directa = fila(10, entorno='equipo_estudiante', consentimiento=True)
+    sin_permiso = fila(11, entorno='equipo_estudiante', consentimiento=False, huella_origen='b' * 64)
+    en_ci = fila(12, entorno='ci', consentimiento=True, huella_origen='c' * 64)
+    publico = fila(13, fuente='blender-open-data', estado='revision', motivos=['no_reproducido'],
+                   dispositivos=['GPU'], backend='CUDA', so='Linux', licencia='CC0-1.0',
+                   metrica='samples_per_minute', unidad='samples/min', id_fuente='od-1', huella_origen='d' * 64)
+    assert clase_de(directa)[0] == 'directa'
+    assert [clase_de(f)[0] for f in (sin_permiso, en_ci, publico, fila())] == ['relativa'] * 4
+    informe = construir([('x', f) for f in (directa, sin_permiso, en_ci, publico)], tmp_path)
+    assert informe['directas'] == {'aceptado': 1} and informe['relativas'] == {'aceptado': 2, 'revision': 1}
+    with duckdb.connect(str(tmp_path / 'oro/cubo.duckdb'), read_only=True) as con:
+        assert con.execute('SELECT count(*) FROM v_mediciones_aceptadas').fetchone()[0] == 1
+        assert con.execute("SELECT DISTINCT clase_dato FROM v_directas").fetchall() == [('directa',)]
+        assert con.execute("SELECT DISTINCT clase_dato FROM v_relativas").fetchall() == [('relativa',)]
+        motivos = {m for (m,) in con.execute('SELECT motivo_clase FROM v_relativas').fetchall()}
+        assert any('consentimiento' in m for m in motivos) and any('«ci»' in m for m in motivos)
+    assert (tmp_path / 'plata/hechos_directos.parquet').exists() and (tmp_path / 'plata/hechos_relativos.parquet').exists()
+
+
+def test_misma_observacion_de_open_data_con_otro_id_no_se_cuenta_dos_veces(tmp_path):
+    base = dict(fuente='blender-open-data', estado='revision', motivos=['no_reproducido'], dispositivos=['GPU'],
+                backend='CUDA', so='Linux', licencia='CC0-1.0', metrica='samples_per_minute', unidad='samples/min',
+                id_fuente='od-7')
+    informe = construir([('viejo', fila(20, **base)), ('nuevo', fila(21, **base))], tmp_path)
+    assert informe['mediciones'] == 1 and informe['duplicados_semanticos'] == 1
+    with pytest.raises(ValueError, match='valores distintos'):
+        preparar([('a', fila(22, **base)), ('b', fila(23, **{**base, 'valor': 9}))])
+
+
+def test_carga_masiva_es_rapida(tmp_path):
+    import time
+
+    filas = [('x', fila(1000 + i, fuente='blender-open-data', estado='revision', motivos=['no_reproducido'],
+                        dispositivos=['GPU'], backend='CUDA', so='Linux', licencia='CC0-1.0',
+                        metrica='samples_per_minute', unidad='samples/min', id_fuente=f'od-{i}', valor=1 + i,
+                        huella_origen=f'{i:064x}')) for i in range(20000)]
+    inicio = time.perf_counter()
+    assert construir(filas, tmp_path)['mediciones'] == 20000
+    assert time.perf_counter() - inicio < 60   # antes, fila por fila, decenas de miles tardaban minutos

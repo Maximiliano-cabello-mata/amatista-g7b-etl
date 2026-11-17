@@ -7,6 +7,13 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 - **Ciclo 24/7** (`.github/workflows/ciclo.yml`): un solo reloj que lanza en orden extracción, análisis, la parte semanal (telemetría, cubo y kernel de Geoda) y la entrega, espera cada tarea y abre un issue `g7b-alerta` si algo falla o hay fuentes atrasadas. Las demás tareas dejan de tener horario propio y encadenamientos. Se puede disparar desde un programador externo ([operación 24/7](docs/OPERACION_24_7.md)).
 - **Reprocesamiento** (`g7b_ingesta/procesar.py`): cada archivo de bronce guarda su huella de reglas y se reevalúa solo cuando cambian la taxonomía, los umbrales, el catálogo de su fuente o la versión del embudo. Sin duplicar conteos ni chocar con el índice de repetidos. A mano: `--fuente`, `--lote`, `--forzar`.
+- **Cubo `g7b.cubo/2`: mediciones directas y relativas separadas** ([CUBO.md](docs/CUBO.md)):
+  - Las **directas** (estudiantes y laboratorios escolares, con consentimiento) y las **relativas** (Open Data, la sonda en servidores) viven en tablas separadas (`hechos_directos` y `hechos_relativos`) y ninguna vista las mezcla.
+  - Geoda solo lee directas y aceptadas.
+  - Las dimensiones son tipadas: el equipo con el estándar `g7b.hardware/1`, y un diccionario de métricas.
+  - Identidad semántica para Open Data, y en la sonda un id que ya no depende del orden de la lista.
+  - Carga en bloque: 63.019 mediciones en unos 9 segundos.
+  - La sonda declara `--entorno` y `--consentimiento`; en GitHub Actions corre con `--entorno ci`.
 - **Bitácora del 16 y 17 de noviembre** ([bitácora](docs/bitacoras/2026-11-17.md)): incluye la primera tanda real de Open Data (20.000 registros y 59.998 mediciones), la [lista de tareas de las arañas](docs/TAREAS_ARANAS.md), el [índice de fuentes consultadas](docs/investigacion/2026-11-17_fuentes_consultadas.md) y la [revisión de arañas de telemetría del navegador](docs/investigacion/2026-11-17_aranas_telemetria_navegador/REVISION.md). El documento original de esa revisión pasa de la raíz a `docs/investigacion/`.
 - **Radar de telemetría separado de las arañas de documentación** ([estándar de telemetría](docs/ESTANDAR_TELEMETRIA.md)):
   - **Estándar `g7b.hardware/1`** (`fuentes/hardware.yml` y `g7b_telemetria/hardware.py`): cualquier nombre de GPU o CPU se traduce a fabricante, clase y VRAM, y recibe un nivel N0–N4 con las reglas de Geoda, su confianza y sus motivos.

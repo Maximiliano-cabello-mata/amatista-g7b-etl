@@ -1,5 +1,7 @@
 # Fichas técnicas de G7B y Amatista
 
+> **Actualización del 17 de noviembre de 2026:** el cubo ahora es `g7b.cubo/2`. Separa las mediciones **directas** (estudiantes y laboratorios escolares, con consentimiento) de las **relativas** (Open Data, la sonda en servidores) en `hechos_directos` y `hechos_relativos`, con dimensiones normalizadas. Las tablas `hechos_medicion`, `hechos_render` y `dim_dispositivo` ya no existen. Ver [CUBO.md](CUBO.md).
+
 Fecha: 2026-11-01. Definición exacta de cada concepto interno, para que cada palabra signifique una sola cosa. Si un documento usa un término de otra forma, manda esta ficha. Los umbrales numéricos son **iniciales**: se ajustan con mediciones, y cada cambio se anota aquí con fecha.
 
 **Estado:** ✅ hecho y probado con datos reales · 🟡 hecho, sin datos o sin probar en real · ⬜ planteado.

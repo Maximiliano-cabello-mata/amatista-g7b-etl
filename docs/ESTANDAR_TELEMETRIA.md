@@ -56,8 +56,11 @@ Lo que entra a `plata/telemetria/<estado>/<fuente>/<lote>.jsonl.gz` y de ahí al
 | `metrica`, `unidad`, `valor` | Unidades canónicas: `s`, `fps`, `samples/min`. El valor es positivo y finito |
 | `hardware` | El bloque `g7b.hardware/1` |
 | `estado`, `motivos` | `aceptado` o `revision`, con los motivos. Un benchmark público que G7B no reprodujo queda en `revision` |
+| `entorno`, `consentimiento` | Dónde se midió (`ci`, `nube`, `equipo_estudiante`, `laboratorio_escolar` o `no_declarado`) y si la persona aceptó. Deciden la clase de dato en el cubo |
 
-En el cubo, la vista **`v_render_por_nivel`** agrupa el render público por nivel, clase de GPU, backend, versión y escena, con mediana y cuartiles. Las filas viejas sin `hardware` quedan con nivel NULL: se ven, pero no se mezclan con las clasificadas.
+En el cubo `g7b.cubo/2` ([CUBO.md](CUBO.md)), cada medición es **directa** (medida en el equipo de un estudiante o de un laboratorio escolar, con consentimiento) o **relativa** (todo lo demás). Las dos clases viven en tablas separadas y nunca se mezclan. Open Data es siempre relativa. La vista **`v_relativas_por_nivel`** agrupa su render por nivel, clase de GPU, backend, serie y escena, con mediana y cuartiles. Las filas viejas sin `hardware` quedan con nivel NULL: se ven, pero no se mezclan con las clasificadas.
+
+Para que una medición de la sonda sea directa hay que declarar dónde corrió y si hubo consentimiento: `--entorno equipo_estudiante --consentimiento` (o `laboratorio_escolar`). En GitHub Actions corre con `--entorno ci`, así que es relativa.
 
 ## 4. Blender Open Data, completo y por tandas
 

@@ -55,11 +55,13 @@ En cada tarea, «Hecho cuando» dice cómo se comprueba. De dónde sale cada una
 | T9 | **Censo de equipo en clase**: formulario de 2 minutos al inicio de cada grupo | Llega el primer grupo, cruzado con la ENDUTIH de INEGI |
 | T10 | **Decidir las licencias pendientes** de los colectores: Steam, OpenBenchmarking, Web3D Survey y GPUinfo | Cada una queda activada con su colector o descartada con su motivo |
 | T11 | **Ritmo de Open Data**: con 20.000 por semana, el archivo se completa en unas 18 semanas. Decidir si se sube a 50.000 | La decisión queda escrita en `telemetria.yml` |
+| T18 | **Primeras mediciones directas**: correr la sonda con `--entorno laboratorio_escolar --consentimiento` (o `equipo_estudiante`) en al menos 5 equipos reales, con el consentimiento firmado | `v_calidad` muestra filas `directa` y Geoda tiene evidencia para el primer perfil |
+| T19 | **Mediciones de Amatista**: contrato de llegada para la telemetría de Amatista (fuente `amatista`, siempre directa y con consentimiento), con agregados de 5 equipos o más | El cubo acepta la fuente `amatista` y la clasifica como directa |
 | T13 | **Conservar solo algunas versiones del cubo** en `oro/cubos/`: hoy hay 7 versiones con 61,4 MB, el 72 % del lago ([auditoría del 17 de noviembre](reportes/2026-11-17_auditoria_flujo_y_datos.md)) | Se conservan las últimas 3, y el puntero `control/cubo_actual.json` sigue funcionando |
 | T14 | **VRAM de las GPU nuevas** en `fuentes/hardware.yml`: RTX serie 50 (5090: 32 GB, 5080: 16 GB…), sus versiones para laptop y Radeon RX 9070. Hoy 18.282 mediciones quedan en N3 con confianza baja | Esas mediciones salen con su nivel y confianza media |
-| T15 | **Apple Silicon como clase propia** (`apple`), no como «integrada». Hoy los M Max y M Pro inflan el N2 | En `v_render_por_nivel`, el N2 contiene solo integradas Intel y AMD |
+| T15 | **Apple Silicon como clase propia** (`apple`), no como «integrada». Hoy los M Max y M Pro inflan el N2 | En `v_relativas_por_nivel`, el N2 contiene solo integradas Intel y AMD |
 | T16 | **Reglas que faltan**: «Intel Graphics» (Core Ultra), «Radeon 8060S», y las GPU de servidor (Tesla V100, P100, P4), que deben marcarse como servidor y quedar fuera del análisis de estudiantes | Las desconocidas bajan del 1,9 % |
-| T17 | **Carga del cubo con DuckDB**: leer los JSONL o los Parquet directamente en lugar de insertar fila por fila. Con 63.000 mediciones ya tarda minutos, y el límite es 1.000.000 | El cubo de la siguiente tanda se construye en menos de un minuto |
+| T17 | ✅ **Hecho el 17 de noviembre** (cubo 2): carga en bloque, 63.019 mediciones en unos 9 segundos. **Carga del cubo con DuckDB**: leer los JSONL o los Parquet directamente en lugar de insertar fila por fila. Con 63.000 mediciones ya tarda minutos, y el límite es 1.000.000 | El cubo de la siguiente tanda se construye en menos de un minuto |
 | T12 | **Contexto de población**: ENDUTIH de INEGI (hogares con computadora, laptop o escritorio) y la encuesta de Steam como cota superior | Las dos fuentes están en el cubo como dimensión de población |
 
 ## Común a las dos
