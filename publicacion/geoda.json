@@ -5,13 +5,13 @@
   },
   "contrato": "g7b.geoda.estado/1",
   "cubo": {
-    "aceptadas": 10,
-    "mediciones": 3012,
+    "aceptadas": 12,
+    "mediciones": 3015,
     "recomendaciones_habilitadas": false,
-    "revision": 3002,
-    "version": "20261117T015617Z-d7e9d4665f66"
+    "revision": 3003,
+    "version": "20261117T020147Z-8e1ab64f676e"
   },
   "nota": "El conocimiento extraído no equivale a mediciones; se usan perfiles locales base.",
   "perfiles": [],
-  "version": "20261117T015617Z-d7e9d4665f66"
+  "version": "20261117T020147Z-8e1ab64f676e"
 }
