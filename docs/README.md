@@ -42,7 +42,7 @@ Ordenados por para qué sirven. Si dos documentos dicen cosas distintas, manda e
 |---|---|
 | [bitacoras/](bitacoras/) | Cada día: lo hecho, los errores y el plan siguiente (1, 2 y 3 de noviembre; [16 y 17 de noviembre](bitacoras/2026-11-17.md)) |
 | [historia/ARQUITECTURA_CLOUD.md](historia/ARQUITECTURA_CLOUD.md) | El primer despliegue en Zyte y MongoDB (31 de octubre) |
-| [reportes/](reportes/) | Propuestas, horizonte, revisión de ofertas y observaciones de calidad | Última: [auditoría del flujo y de los datos del 17 de noviembre](reportes/2026-11-17_auditoria_flujo_y_datos.md).
+| [reportes/](reportes/) | Propuestas, horizonte, revisión de ofertas y observaciones de calidad. Última: [auditoría del flujo y de los datos del 17 de noviembre](reportes/2026-11-17_auditoria_flujo_y_datos.md) |
 | [auditorias/](auditorias/) | Auditoría de arañas y Azure (15 nov) y su revisión contra el código y el lago (16 nov) |
 | [TAREAS_ARANAS.md](TAREAS_ARANAS.md) | **Lista viva de pendientes** de la araña de documentación y del radar de telemetría (qué sigue, con «hecho cuando») |
 | [ESTANDAR_TELEMETRIA.md](ESTANDAR_TELEMETRIA.md) | Radar de telemetría frente a arañas de documentación, estándar `g7b.hardware/1`, Open Data por tandas y reportes de error de Blender |
