@@ -9,7 +9,7 @@ Todo lo que sabe el núcleo viene de **un solo archivo**: el paquete de conocimi
 - **Se puede reimplementar:** una versión portable (Rust o C++ compilados a WebAssembly) solo tiene que leer el mismo paquete y pasar los mismos casos de conformidad.
 
 ```
-arañas y radar ─▶ lago (bronce/plata) ─▶ cubo g7b.cubo/2 ─▶ paquete g7b.geoda.paquete/1 ─▶ núcleo geoda.nucleo/1 ─▶ plan g7b.plan/1
+arañas y radar ─▶ lago (bronce/plata) ─▶ cubo g7b.cubo/3 ─▶ paquete g7b.geoda.paquete/1 ─▶ núcleo geoda.nucleo/1 ─▶ plan g7b.plan/1
                                          directas │ relativas        (solo agregados)             (sin red)
 ```
 
@@ -30,7 +30,7 @@ Lo construye `geoda/paquete.py` a partir del cubo vigente:
 | Sección | Qué lleva | De dónde sale |
 |---|---|---|
 | `perfiles` | El perfil por nivel (N0–N4): versión de Blender, motor y ajustes | Solo de mediciones **directas** (estudiantes y laboratorios con consentimiento). Un perfil medido con menos de 5 equipos no se publica: en su lugar queda la regla base. |
-| `factores` | Cuánto rinde cada nivel frente al N2, por serie de Blender y escena | De mediciones **relativas** (Blender Open Data): GPU integradas y dedicadas con confianza alta o media, sin Apple Silicon ni GPU de servidor, y con al menos 30 mediciones por celda. Cada factor va marcado `clase_dato: relativa`. |
+| `factores` | Cuánto rinde cada nivel frente al N2, por serie de Blender y escena | De mediciones **relativas** de **velocidad** (Blender Open Data): GPU integradas y dedicadas con confianza alta o media, sin Apple Silicon ni GPU de servidor, y con al menos 30 mediciones por celda. Cada factor va marcado `clase_dato: relativa`. |
 | `citas` | La página del manual de cada ajuste, para cada versión (5.2, 4.5 y 3.6) e idioma (es, en) | `fuentes/citas_manual.yml`, comprobada contra el `objects.inv` de cada versión. Cada enlace dice `verificada: inventario`, `conocimiento_g7b` o `sin_verificar`. Solo se guardan enlaces y títulos: el texto del manual no se copia. |
 | `hardware` | El estándar `g7b.hardware/1` | `fuentes/hardware.yml` |
 | `niveles` | Las reglas N0–N4 | `geoda/niveles.py` |

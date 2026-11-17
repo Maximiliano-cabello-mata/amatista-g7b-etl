@@ -149,3 +149,48 @@ def test_carga_masiva_es_rapida(tmp_path):
     inicio = time.perf_counter()
     assert construir(filas, tmp_path)['mediciones'] == 20000
     assert time.perf_counter() - inicio < 60   # antes, fila por fila, decenas de miles tardaban minutos
+
+
+def _directa(i, **cambios):
+    return fila(i, **{'entorno': 'laboratorio_escolar', 'consentimiento': True, 'huella_origen': f'{i:064x}',
+                      **cambios})
+
+
+def test_velocidad_y_rendimiento_normalizados_por_separado(tmp_path):
+    """La naturaleza sale de la métrica; el índice orienta (más es mejor) y compara dentro del grupo."""
+    filas = [
+        # Rendimiento directo: tiempos de edición (menor es mejor) de 1, 2 y 4 s → índices 2, 1 y 0.5.
+        _directa(1, valor=1.0), _directa(2, valor=2.0), _directa(3, valor=4.0),
+        # Velocidad directa: render de EEVEE en el mismo equipo.
+        _directa(4, valor=10.0, prueba='render_eevee', metrica='tiempo_render_eevee'),
+        # Una métrica que nadie ha clasificado: entra, pero sin índice.
+        _directa(5, valor=3.0, prueba='nueva', metrica='metrica_nueva'),
+        # Relativa (sonda sin consentimiento) con el mismo valor: se normaliza en su propia clase.
+        fila(6, valor=8.0),
+    ]
+    informe = construir([('x', f) for f in filas], tmp_path)
+    assert informe['contrato'] == 'g7b.cubo/3'
+    assert informe['naturaleza'] == {'directas': {'rendimiento': 3, 'velocidad': 1, 'sin_clasificar': 1},
+                                     'relativas': {'rendimiento': 1}}
+    with duckdb.connect(str(tmp_path / 'oro/cubo.duckdb'), read_only=True) as con:
+        indices = dict(con.execute("SELECT valor, round(indice, 6) FROM v_directas "
+                                   "WHERE metrica = 'tiempo_edicion'").fetchall())
+        assert indices == {1.0: 2.0, 2.0: 1.0, 4.0: 0.5}
+        assert con.execute("SELECT indice FROM v_directas WHERE metrica = 'metrica_nueva'").fetchone()[0] is None
+        # En su propia clase, la relativa es la referencia de su grupo: índice 1, sin influir en las directas.
+        assert con.execute("SELECT indice FROM v_relativas").fetchone()[0] == pytest.approx(1.0)
+        # Velocidad y rendimiento, juntos por equipo.
+        equipos = con.execute("SELECT mediciones_velocidad, mediciones_rendimiento, indice_velocidad "
+                              "FROM v_equipos_directas").fetchall()
+        assert equipos == [(1, 3, pytest.approx(1.0))]
+        naturalezas = {n for (n,) in con.execute("SELECT DISTINCT naturaleza FROM v_naturaleza_por_nivel_directas"
+                                                 ).fetchall()}
+        assert naturalezas == {'velocidad', 'rendimiento'}
+
+
+def test_mediciones_en_revision_no_fijan_la_referencia(tmp_path):
+    filas = [_directa(1, valor=2.0), _directa(2, valor=100.0, estado='revision', motivos=['variacion'], variacion=.5)]
+    construir([('x', f) for f in filas], tmp_path)
+    with duckdb.connect(str(tmp_path / 'oro/cubo.duckdb'), read_only=True) as con:
+        indices = dict(con.execute("SELECT estado, indice FROM v_directas").fetchall())
+    assert indices['aceptado'] == pytest.approx(1.0) and indices['revision'] == pytest.approx(0.02)

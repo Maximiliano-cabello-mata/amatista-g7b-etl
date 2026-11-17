@@ -5,6 +5,11 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 ## Sin publicar · 16 de noviembre de 2026
 
+- **Cubo `g7b.cubo/3`: velocidad y rendimiento** ([CUBO.md](docs/CUBO.md), sección 1 bis):
+  - Cada métrica tiene su naturaleza: **velocidad** (render: Open Data y las pruebas de render de la sonda) o **rendimiento** (fluidez de la vista 3D y de la animación, respuesta al editar: la sonda).
+  - Cada medición lleva un **índice sin unidades** frente a la mediana geométrica de su grupo, calculado dentro de su clase y con referencia solo de mediciones fiables.
+  - Vistas nuevas: `v_equipos_*` (velocidad y rendimiento juntos por equipo, para calibrar) y `v_naturaleza_por_nivel_*`.
+  - El paquete de Geoda toma sus factores solo de la velocidad.
 - **Núcleo público de Geoda** ([núcleo](docs/GEODA_NUCLEO.md); [revisión del flujo hasta el kernel](docs/reportes/2026-11-17_flujo_hasta_el_kernel.md)):
   - **Paquete de conocimiento** `g7b.geoda.paquete/1` (`geoda/paquete.py`): perfiles de directas (con un mínimo de 5 equipos), factores relativos de Open Data entre niveles, citas del manual verificadas contra `objects.inv` (`fuentes/citas_manual.yml`), el estándar de hardware, los niveles y las operaciones. Cada sección lleva su huella, y el paquete se valida para que no lleve datos de equipos.
   - **API** `geoda.nucleo/1` (`geoda/nucleo.py`): de la huella y la tarea al plan, sin red, con escalera de evidencia (`medido`, `provisional`, `regla_base`), estimación relativa marcada como tal y citas por versión e idioma.

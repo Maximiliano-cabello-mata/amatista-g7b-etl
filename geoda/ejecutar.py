@@ -16,7 +16,7 @@ def ejecutar(entrada, salida):
     db = entrada / 'oro/cubo.duckdb'
     digest = hashlib.sha256(db.read_bytes()).hexdigest()
     contrato = meta.get('contrato')
-    if contrato not in ('g7b.cubo/1', 'g7b.cubo/2') or digest != meta['archivos']['oro/cubo.duckdb']['sha256']:
+    if contrato not in ('g7b.cubo/1', 'g7b.cubo/2', 'g7b.cubo/3') or digest != meta['archivos']['oro/cubo.duckdb']['sha256']:
         raise ValueError('No coincide el contrato o la huella del cubo')
     with duckdb.connect(str(db), read_only=True) as con:
         def conteos(tabla):

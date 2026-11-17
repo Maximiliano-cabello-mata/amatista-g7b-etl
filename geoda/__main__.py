@@ -57,7 +57,7 @@ def main(argv=None):
     d.add_argument("--cubo", help="cubo.duckdb para estimar costos")
     sub.add_parser("operaciones", help="catálogo de operaciones del kernel")
     pq = sub.add_parser("paquete", help="construir el paquete de conocimiento (g7b.geoda.paquete/1)")
-    pq.add_argument("--cubo", help="oro/cubo.duckdb (g7b.cubo/2); sin él, solo reglas base")
+    pq.add_argument("--cubo", help="oro/cubo.duckdb (g7b.cubo/2 o /3); sin él, solo reglas base")
     pq.add_argument("--manifiesto", help="manifiesto.json del cubo, para citar su versión")
     pq.add_argument("--verificar-manual", action="store_true",
                     help="descargar los objects.inv del manual y comprobar cada cita")

@@ -56,11 +56,16 @@ def factores_relativos(con, minimo=MIN_MEDICIONES_FACTOR):
     """
     if con is None or not _tiene(con, "v_relativas"):
         return []
-    filas = con.execute("""
+    # Desde g7b.cubo/3 cada métrica dice su naturaleza: los factores son de VELOCIDAD (render), no de
+    # rendimiento (fluidez de la vista 3D). En un cubo /2 todo lo de Open Data ya era velocidad.
+    columnas = {c[0] for c in con.execute("SELECT column_name FROM information_schema.columns "
+                                          "WHERE table_name = 'v_relativas'").fetchall()}
+    solo_velocidad = "AND naturaleza = 'velocidad'" if "naturaleza" in columnas else ""
+    filas = con.execute(f"""
         SELECT nivel, serie, escena, count(*) AS n, median(valor) AS mediana
         FROM v_relativas
         WHERE fuente = 'blender-open-data' AND mide = 'gpu' AND nivel IS NOT NULL
-          AND gpu_clase IN ('integrada', 'dedicada') AND nivel_confianza IN ('alta', 'media')
+          AND gpu_clase IN ('integrada', 'dedicada') AND nivel_confianza IN ('alta', 'media') {solo_velocidad}
         GROUP BY ALL""").fetchall()
     celdas = {(nivel, serie, escena): (n, mediana) for nivel, serie, escena, n, mediana in filas}
     salida = []
@@ -71,7 +76,7 @@ def factores_relativos(con, minimo=MIN_MEDICIONES_FACTOR):
         salida.append({"nivel": nivel, "serie": serie, "escena": escena, "mediciones": n,
                        "mediciones_referencia": referencia[0], "mediana_samples_min": round(mediana, 1),
                        "factor_frente_a_N2": round(mediana / referencia[1], 3),
-                       "clase_dato": "relativa", "fuente": "blender-open-data",
+                       "clase_dato": "relativa", "naturaleza": "velocidad", "fuente": "blender-open-data",
                        "nota": "render de Cycles en equipos públicos; no es la fluidez de la vista 3D"})
     return salida
 
@@ -153,7 +158,7 @@ def hardware_publico():
 
 
 def construir(con=None, cubo=None, inventarios=None, aceptadas=None, ahora=None):
-    """El paquete completo. con: conexión de solo lectura al cubo g7b.cubo/2 (o None: solo reglas)."""
+    """El paquete completo. con: conexión de solo lectura al cubo g7b.cubo/2 o /3 (o None: solo reglas)."""
     secciones = {
         "perfiles": perfiles_publicos(con),
         "factores": factores_relativos(con),
@@ -218,6 +223,8 @@ def validar(paquete):
         for f in paquete["factores"]:
             if f.get("clase_dato") != "relativa":
                 errores.append("un factor no está marcado como relativo")
+            if f.get("naturaleza", "velocidad") != "velocidad":
+                errores.append("un factor no es de velocidad: el rendimiento sale de las directas")
         texto = _canon(paquete).decode("utf-8")
         for prohibido in PROHIBIDO_EN_PUBLICO:
             if prohibido in texto:

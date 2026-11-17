@@ -126,7 +126,7 @@ class Nucleo:
                      f"{nivel} rinden {f['factor_frente_a_N2']:g} veces lo de un N2 con gráficos integrados. "
                      "Es una comparación con datos públicos (Blender Open Data), no una medición de tu equipo.")
         return {
-            "clase_dato": "relativa", "fuente": f["fuente"], "serie": f["serie"], "escena": f["escena"],
+            "clase_dato": "relativa", "naturaleza": f.get("naturaleza", "velocidad"), "fuente": f["fuente"], "serie": f["serie"], "escena": f["escena"],
             "factor_frente_a_N2": f["factor_frente_a_N2"], "mediciones": f["mediciones"],
             "texto": texto,
         }

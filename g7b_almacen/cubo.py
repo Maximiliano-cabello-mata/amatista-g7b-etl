@@ -1,4 +1,4 @@
-"""Cubo g7b.cubo/2: mediciones DIRECTAS y RELATIVAS, separadas y con dimensiones normalizadas.
+"""Cubo g7b.cubo/3: mediciones DIRECTAS y RELATIVAS, separadas, y VELOCIDAD y RENDIMIENTO, normalizados.
 
 Dos clases de dato que nunca se mezclan (docs/CUBO.md, sección 1):
 
@@ -9,6 +9,17 @@ Dos clases de dato que nunca se mezclan (docs/CUBO.md, sección 1):
               Sirve para comparar niveles entre sí, nunca para recomendar ajustes.
 
 Lo que no declara su entorno y su consentimiento es relativo: la duda nunca sube de clase.
+
+Y dos naturalezas de medida, según la métrica (no según la fuente):
+
+    velocidad    cuánto tarda o cuánto produce un trabajo por lotes: render de Cycles, EEVEE o
+                 Workbench (Open Data, y las pruebas de render de la sonda).
+    rendimiento  cómo se siente trabajar: cuadros por segundo de la vista 3D y de la animación,
+                 tiempo de respuesta al editar y al evaluar modificadores (la sonda).
+
+Para ponerlas en una misma escala, cada medición lleva un índice sin unidades: su valor orientado
+(más es mejor) dividido entre la mediana geométrica de su grupo de comparación, dentro de su clase.
+1.0 es lo típico del grupo; 2.0, el doble de bueno. Directas y relativas se normalizan por separado.
 «sintetico» sigue significando otra cosa: datos inventados para pruebas, que nunca entran.
 
 No produce perfiles ni recomendaciones (eso es Geoda, solo sobre las directas).
@@ -26,14 +37,32 @@ from uuid import uuid4
 
 import duckdb
 
-CONTRATO = 'g7b.cubo/2'
-CONTRATOS_LEGIBLES = ('g7b.cubo/1', 'g7b.cubo/2')   # los lectores aceptan el anterior mientras se migra
+CONTRATO = 'g7b.cubo/3'
+CONTRATOS_LEGIBLES = ('g7b.cubo/1', 'g7b.cubo/2', 'g7b.cubo/3')   # los lectores aceptan los anteriores mientras se migra
+CONTRATOS_POR_CLASE = ('g7b.cubo/2', 'g7b.cubo/3')                   # con hechos_directos y hechos_relativos
 ACTUAL = 'control/cubo_actual.json'
 MAX_FILAS = 1_000_000
 CLASES = ('directa', 'relativa')
 ENTORNOS_DIRECTOS = {'equipo_estudiante', 'laboratorio_escolar'}
 # Diccionario de métricas: hacia dónde es mejor cada unidad (no se suman ni se comparan entre sí).
 MEJOR = {'s': 'menor', 'fps': 'mayor', 'samples/min': 'mayor'}
+# Naturaleza de cada métrica. Una métrica nueva sin entrada queda «sin_clasificar» y sin índice: se ve
+# en el manifiesto, pero no entra en ninguna comparación hasta que alguien la clasifique aquí.
+NATURALEZAS = ('velocidad', 'rendimiento')
+NATURALEZA = {
+    'samples_per_minute': 'velocidad',
+    'tiempo_render_cycles_cpu': 'velocidad',
+    'tiempo_render_cycles_gpu': 'velocidad',
+    'tiempo_render_eevee': 'velocidad',
+    'tiempo_render_workbench': 'velocidad',
+    'cuadros_por_segundo_vista3d': 'rendimiento',
+    'cuadros_por_segundo_animacion': 'rendimiento',
+    'tiempo_edicion': 'rendimiento',
+    'tiempo_primera_evaluacion': 'rendimiento',
+}
+# Grupo de comparación del índice: solo se comparan mediciones de la misma prueba, escena, métrica,
+# serie de Blender y perfil, de la misma fuente y la misma clase.
+GRUPO_INDICE = ('naturaleza', 'fuente', 'prueba', 'escena', 'metrica', 'serie', 'perfil')
 DIMENSIONES = ('fuente', 'equipo', 'version', 'prueba', 'perfil', 'tiempo')
 
 
@@ -181,7 +210,7 @@ ESQUEMAS = {
                    'equipo_json': 'VARCHAR'},
     'dim_version': {'clave_version': 'VARCHAR', 'programa': 'VARCHAR', 'version': 'VARCHAR', 'serie': 'VARCHAR'},
     'dim_prueba': {'clave_prueba': 'VARCHAR', 'fuente': 'VARCHAR', 'prueba': 'VARCHAR', 'escena': 'VARCHAR',
-                   'metrica': 'VARCHAR', 'unidad': 'VARCHAR', 'mejor': 'VARCHAR'},
+                   'metrica': 'VARCHAR', 'unidad': 'VARCHAR', 'mejor': 'VARCHAR', 'naturaleza': 'VARCHAR'},
     'dim_perfil': {'clave_perfil': 'VARCHAR', 'perfil': 'VARCHAR', 'version_sonda': 'VARCHAR'},
     'dim_tiempo': {'clave_tiempo': 'VARCHAR', 'fecha': 'DATE', 'anio': 'INTEGER', 'mes': 'INTEGER', 'dia': 'INTEGER'},
 }
@@ -219,7 +248,7 @@ def modelo(con, filas, procedencia):
             'equipo': _equipo(f),
             'version': ('blender', f['version'], serie),
             'prueba': (f['fuente'], f.get('prueba', 'render_cycles'), f['escena'], f['metrica'], f['unidad'],
-                       MEJOR[f['unidad']]),
+                       MEJOR[f['unidad']], NATURALEZA.get(f['metrica'], 'sin_clasificar')),
             'perfil': (f.get('perfil') or 'no_aplica', f.get('sonda') or 'no_aplica'),
             'tiempo': (fecha.date().isoformat(), fecha.year, fecha.month, fecha.day),
         }
@@ -244,25 +273,52 @@ def modelo(con, filas, procedencia):
         con.execute(f'ALTER TABLE {tabla} ADD PRIMARY KEY (id)')
     for clase, tabla in TABLAS_HECHOS.items():
         vista = 'v_directas' if clase == 'directa' else 'v_relativas'
+        grupo = ', '.join(GRUPO_INDICE)
+        # valor_orientado: más es mejor (los tiempos se invierten: 1/s). indice: frente a la mediana
+        # geométrica de su grupo, calculada solo con las mediciones que sirven de referencia (las
+        # aceptadas; en Open Data, que nunca se acepta una por una, todas las de su grupo).
         con.execute(f'''CREATE VIEW {vista} AS
-            SELECT h.*, f.fuente, f.licencia, f.entorno, f.clase_dato, e.mide, e.gpu, e.gpu_fabricante, e.gpu_clase,
-                   e.gpu_vram_gb, e.cpu, e.cpu_familia, e.so, e.backend, e.nivel, e.nivel_confianza,
-                   e.equipo_json AS dispositivo, v.programa, v.version, v.serie, p.prueba, p.escena, p.metrica,
-                   p.unidad, p.mejor, pf.perfil, pf.version_sonda
-            FROM {tabla} h JOIN dim_fuente f USING(clave_fuente) JOIN dim_equipo e USING(clave_equipo)
-            JOIN dim_version v USING(clave_version) JOIN dim_prueba p USING(clave_prueba)
-            JOIN dim_perfil pf USING(clave_perfil) JOIN dim_tiempo t USING(clave_tiempo)''')
+            WITH base AS (
+              SELECT h.*, f.fuente, f.licencia, f.entorno, f.clase_dato, e.mide, e.gpu, e.gpu_fabricante, e.gpu_clase,
+                     e.gpu_vram_gb, e.cpu, e.cpu_familia, e.so, e.backend, e.nivel, e.nivel_confianza,
+                     e.equipo_json AS dispositivo, v.programa, v.version, v.serie, p.prueba, p.escena, p.metrica,
+                     p.unidad, p.mejor, p.naturaleza, pf.perfil, pf.version_sonda,
+                     CASE WHEN p.mejor = 'menor' THEN 1.0 / h.valor ELSE h.valor END AS valor_orientado,
+                     (h.estado = 'aceptado' OR f.fuente = 'blender-open-data') AND p.naturaleza <> 'sin_clasificar'
+                       AS referencia
+              FROM {tabla} h JOIN dim_fuente f USING(clave_fuente) JOIN dim_equipo e USING(clave_equipo)
+              JOIN dim_version v USING(clave_version) JOIN dim_prueba p USING(clave_prueba)
+              JOIN dim_perfil pf USING(clave_perfil) JOIN dim_tiempo t USING(clave_tiempo)),
+            grupos AS (
+              SELECT {grupo}, count(*) AS n_grupo, median(ln(valor_orientado)) AS ln_referencia
+              FROM base WHERE referencia GROUP BY ALL)
+            SELECT b.*, g.n_grupo, exp(ln(b.valor_orientado) - g.ln_referencia) AS indice
+            FROM base b LEFT JOIN grupos g USING({grupo})''')
+        # Velocidad y rendimiento juntos, por equipo: la base para calibrar una con la otra (docs/CUBO.md).
+        con.execute(f'''CREATE VIEW v_equipos_{vista[2:]} AS
+            SELECT clave_equipo, any_value(gpu) AS gpu, any_value(gpu_clase) AS gpu_clase,
+                   any_value(nivel) AS nivel, any_value(mide) AS mide,
+                   count(*) FILTER (WHERE naturaleza = 'velocidad') AS mediciones_velocidad,
+                   exp(avg(ln(indice)) FILTER (WHERE naturaleza = 'velocidad')) AS indice_velocidad,
+                   count(*) FILTER (WHERE naturaleza = 'rendimiento') AS mediciones_rendimiento,
+                   exp(avg(ln(indice)) FILTER (WHERE naturaleza = 'rendimiento')) AS indice_rendimiento
+            FROM {vista} WHERE referencia AND indice IS NOT NULL GROUP BY clave_equipo''')
         con.execute(f'''CREATE VIEW v_resumen_{vista[2:]} AS
             SELECT fuente, entorno, nivel, gpu_clase, backend, serie, version, escena, perfil, prueba, metrica,
-                   unidad, mejor, estado, sin_ventana, count(*) AS mediciones, median(valor) AS mediana,
+                   unidad, mejor, naturaleza, estado, sin_ventana, count(*) AS mediciones, median(valor) AS mediana,
                    quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75,
-                   min(valor) AS minimo, max(valor) AS maximo
+                   min(valor) AS minimo, max(valor) AS maximo, median(indice) AS indice_mediana
             FROM {vista} GROUP BY ALL''')
+        con.execute(f'''CREATE VIEW v_naturaleza_por_nivel_{vista[2:]} AS
+            SELECT naturaleza, nivel, gpu_clase, fuente, count(*) AS mediciones, count(DISTINCT clave_equipo) AS equipos,
+                   median(indice) AS indice_mediana, quantile_cont(indice, 0.25) AS indice_p25,
+                   quantile_cont(indice, 0.75) AS indice_p75
+            FROM {vista} WHERE referencia AND indice IS NOT NULL GROUP BY ALL''')
     # Lo único que lee Geoda: directas y aceptadas. Las relativas nunca entran aquí.
     con.execute("CREATE VIEW v_mediciones_aceptadas AS SELECT * FROM v_directas WHERE estado = 'aceptado'")
     # Comparación relativa entre niveles: solo con las relativas, por serie de versión y escena.
     con.execute('''CREATE VIEW v_relativas_por_nivel AS
-        SELECT nivel, mide, gpu_clase, backend, serie, escena, metrica, unidad, count(*) AS mediciones,
+        SELECT nivel, mide, gpu_clase, backend, serie, escena, metrica, unidad, naturaleza, count(*) AS mediciones,
                median(valor) AS mediana, quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75
         FROM v_relativas WHERE fuente = 'blender-open-data' GROUP BY ALL''')
     con.execute('''CREATE VIEW v_calidad AS
@@ -297,11 +353,14 @@ def construir(entradas, destino):
         def conteos(tabla):
             return dict(con.execute(f'SELECT estado, count(*) FROM {tabla} GROUP BY estado').fetchall())
         directas, relativas = conteos('hechos_directos'), conteos('hechos_relativos')
+        naturaleza = {clase: dict(con.execute(f'SELECT naturaleza, count(*) FROM v_{clase} GROUP BY 1').fetchall())
+                      for clase in ('directas', 'relativas')}
         calidad = Counter(directas) + Counter(relativas)
         resumen = {'contrato': CONTRATO, 'leidos': leidos, 'mediciones': len(filas),
                    'duplicados_eliminados': leidos - len(filas), **{k: duplicados.get(k, 0) for k in
                                                                      ('duplicados_exactos', 'duplicados_semanticos')},
                    'directas': directas, 'relativas': relativas, 'calidad': dict(calidad),
+                   'naturaleza': naturaleza,
                    'huella_datos': clave(filas), 'duckdb': duckdb.__version__,
                    'recomendaciones_habilitadas': False}
         vistas = sum(con.execute(f'SELECT count(*) FROM {v}').fetchone()[0] for v in ('v_directas', 'v_relativas'))

@@ -1,4 +1,4 @@
-# Cubo G7B: Parquet + DuckDB en Azure (contrato `g7b.cubo/2`)
+# Cubo G7B: Parquet + DuckDB en Azure (contrato `g7b.cubo/3`)
 
 ## Qué se integra
 
@@ -26,6 +26,60 @@ se convierten en rendimiento. La documentación sigue en su recorrido actual.
 - **El estado de calidad sigue aparte.** `aceptado` o `revision` dice si la medición está bien tomada; la clase dice si representa a un estudiante. Geoda pide las dos cosas: directa **y** aceptada.
 
 **Cubo al 17 de noviembre** (construido en local con todo el lago): **63.019 mediciones, todas relativas.** Son 62.998 de Open Data y 21 de la sonda en servidores; **directas, 0**. Las directas llegarán con la sonda en equipos de estudiantes y con Amatista ([TAREAS_ARANAS.md](TAREAS_ARANAS.md), T8 y T9).
+
+## 1 bis. Velocidad y rendimiento (`g7b.cubo/3`, 17 de noviembre de 2026)
+
+La clase de dato dice **quién** midió y si representa a un estudiante. La **naturaleza** dice **qué** se midió. Son dos ejes independientes:
+
+| Naturaleza | Qué mide | Métricas | De dónde llega hoy |
+|---|---|---|---|
+| **Velocidad** | Cuánto tarda o cuánto produce un trabajo por lotes | `samples_per_minute` y `tiempo_render_cycles_cpu`, `tiempo_render_cycles_gpu`, `tiempo_render_eevee`, `tiempo_render_workbench` | Blender Open Data (API de benchmarks) y las pruebas de render de la sonda |
+| **Rendimiento** | Cómo se siente trabajar: la fluidez y la respuesta mientras el estudiante usa Blender | `cuadros_por_segundo_vista3d`, `cuadros_por_segundo_animacion`, `tiempo_edicion`, `tiempo_primera_evaluacion` | La sonda: en equipos de estudiantes y laboratorios es la telemetría de rendimiento real |
+
+**La naturaleza depende de la métrica, no de la fuente.** La sonda mide las dos cosas, porque también renderiza, y Open Data solo mide velocidad. El diccionario vive en `NATURALEZA` (`g7b_almacen/cubo.py`), y cada métrica queda con su naturaleza en `dim_prueba.naturaleza`. Una métrica nueva sin entrada queda `sin_clasificar` y sin índice: aparece en el manifiesto, pero no entra en ninguna comparación hasta que se clasifique.
+
+**Normalización: el índice sin unidades.** Para comparar segundos, fps y muestras por minuto en una misma escala, cada medición lleva tres columnas:
+
+- `valor_orientado`: más es mejor. Los tiempos se invierten (`1/s`).
+- `indice`: el valor orientado entre la mediana geométrica de su grupo. **1.0** es lo típico del grupo y **2.0**, el doble de bueno.
+- `n_grupo`: cuántas mediciones forman la referencia de ese grupo.
+
+El grupo de comparación es la misma naturaleza, fuente, prueba, escena, métrica, serie de Blender y perfil.
+
+**Reglas de la normalización:**
+- **La referencia sale solo de mediciones fiables:** las aceptadas. En Open Data, que nunca se acepta una por una, sale de todas las de su grupo. Una medición en revisión recibe su índice, pero no mueve la referencia.
+- **Las clases se normalizan por separado.** El índice de una directa se calcula solo con directas, y el de una relativa, solo con relativas. La separación directa/relativa no se rompe.
+- **La escala logarítmica** (mediana de los logaritmos) es la que corresponde al rendimiento de las GPU, que es multiplicativo: «el doble de rápido» se mantiene parecido entre escenas.
+
+**Velocidad y rendimiento juntos.** `v_equipos_directas` y `v_equipos_relativas` dan una fila por equipo, con su índice de velocidad y su índice de rendimiento lado a lado (media geométrica de sus índices). Los equipos que tienen las dos son la base para **calibrar** cuánto predice la velocidad (Open Data) el rendimiento real (la sonda). Esa calibración la hará Geoda cuando haya mediciones directas.
+
+`v_naturaleza_por_nivel_directas` y `v_naturaleza_por_nivel_relativas` dan el índice por naturaleza, nivel y clase de GPU, con mediana, cuartiles y número de equipos.
+
+**Cubo 3 con los datos reales** (construido en local):
+
+| | Velocidad | Rendimiento |
+|---|---|---|
+| Directas | 0 | 0 |
+| Relativas | 62.998 (Open Data) | 21 (sonda en CI) |
+
+Índice de velocidad de Open Data por nivel (mediana entre equipos públicos):
+
+| Nivel y clase de GPU | Índice |
+|---|---|
+| N2 integrada | 0,51 |
+| N2 Apple | 3,52 |
+| N3 dedicada | 3,18 |
+| N4 dedicada | 8,07 |
+
+Por ahora no hay ningún equipo con las dos naturalezas: la calibración espera a la sonda en laboratorios.
+
+```sql
+SELECT naturaleza, nivel, gpu_clase, equipos, indice_mediana
+FROM v_naturaleza_por_nivel_relativas WHERE fuente = 'blender-open-data' ORDER BY naturaleza, nivel;
+SELECT * FROM v_equipos_directas WHERE mediciones_velocidad > 0 AND mediciones_rendimiento > 0;
+```
+
+**El kernel:** el paquete de Geoda toma sus factores relativos solo de la **velocidad**, y `geoda/paquete.py` rechaza un factor de otra naturaleza. El rendimiento que fija los perfiles sale únicamente de las directas.
 
 ## 2. Almacenamiento y consulta
 
@@ -56,7 +110,7 @@ El grano es una **observación**: una métrica de una prueba o escena, en una co
 | `dim_fuente` | Fuente, licencia, entorno declarado y **clase de dato** |
 | `dim_equipo` | El equipo **en columnas tipadas** (estándar `g7b.hardware/1`): qué se mide, GPU, fabricante, clase de GPU, VRAM, CPU y familia, sistema, backend, nivel y su confianza. Conserva además el JSON original (`equipo_json`) |
 | `dim_version` | Programa, versión completa y serie (`5.2`) |
-| `dim_prueba` | El **diccionario de métricas**: fuente, prueba, escena, métrica, unidad y si es mejor «mayor» o «menor». Las unidades sin entrada se rechazan |
+| `dim_prueba` | El **diccionario de métricas**: fuente, prueba, escena, métrica, unidad, si es mejor «mayor» o «menor» y su **naturaleza** (velocidad o rendimiento). Las unidades sin entrada se rechazan |
 | `dim_perfil` | Perfil de la sonda y su versión; `no_aplica` cuando falta |
 | `dim_tiempo` | Día UTC, año, mes y día |
 | `procedencia` | Archivos de entrada de cada observación |
@@ -71,7 +125,9 @@ El grano es una **observación**: una métrica de una prueba o escena, en una co
 
 | Vista | Qué tiene | Quién la usa |
 |---|---|---|
-| `v_directas` y `v_relativas` | Los hechos unidos a todas sus dimensiones, con columnas legibles | Análisis |
+| `v_directas` y `v_relativas` | Los hechos unidos a todas sus dimensiones, con columnas legibles, la naturaleza, `valor_orientado` e `indice` | Análisis |
+| `v_equipos_directas` y `v_equipos_relativas` | Velocidad y rendimiento juntos, por equipo | La calibración de Geoda |
+| `v_naturaleza_por_nivel_directas` y `v_naturaleza_por_nivel_relativas` | El índice por naturaleza, nivel y clase de GPU | Comparaciones |
 | `v_mediciones_aceptadas` | **Solo directas y aceptadas** | Geoda (perfiles, costos y ejecución) |
 | `v_relativas_por_nivel` | Open Data por nivel, clase de GPU, backend, serie y escena, con mediana y cuartiles | Comparaciones entre niveles |
 | `v_resumen_directas` y `v_resumen_relativas` | Agregados con mediana, cuartiles, mínimo y máximo, nunca mezclando unidades | Cuadernos y CSV |
@@ -94,10 +150,10 @@ El constructor conserva los controles anteriores:
 
 ## 5. Lectores y migración
 
-- **Contrato:** `g7b.cubo/2`. La descarga (`g7b_almacen/descargar.py`) y el estado de Geoda (`geoda_estado.py`) leen también `g7b.cubo/1` mientras siga vigente la versión publicada anterior.
+- **Contrato:** `g7b.cubo/3`, que agrega la naturaleza y el índice, sin cambiar las tablas de hechos. Los lectores aceptan `g7b.cubo/2` y `g7b.cubo/1`. La descarga (`g7b_almacen/descargar.py`) y el estado de Geoda (`geoda_estado.py`) leen también `g7b.cubo/1` mientras siga vigente la versión publicada anterior.
 - **Estado de Geoda:** con el cubo 2, `publicacion/geoda.json` publica además las directas, las directas aceptadas y las relativas.
-- **Geoda (`ejecutar`):** exige `g7b.cubo/2` y comprueba los conteos de las dos clases contra el manifiesto.
-- **Manifiesto:** `mediciones`, `directas` y `relativas` (conteos por estado), `calidad` (la suma, por compatibilidad), `duplicados_exactos` y `duplicados_semanticos`.
+- **Geoda (`ejecutar`):** exige `g7b.cubo/2` o `/3` y comprueba los conteos de las dos clases contra el manifiesto.
+- **Manifiesto:** `mediciones`, `directas` y `relativas` (conteos por estado), `naturaleza` (conteos por clase y naturaleza), `calidad` (la suma, por compatibilidad), `duplicados_exactos` y `duplicados_semanticos`.
 - **Cuadernos** (Deepnote y Camber): consultan `v_relativas` y `v_resumen_relativas`.
 
 ## Ejecutar
