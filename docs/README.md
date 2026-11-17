@@ -20,6 +20,7 @@ Ordenados por para qué sirven. Si dos documentos dicen cosas distintas, manda e
 | [INGESTA.md](INGESTA.md) | Sensores, disparadores y el embudo de calidad de documentos |
 | [TELEMETRIA.md](TELEMETRIA.md) | Captura de mediciones (sonda y Blender Open Data) y sus controles |
 | [CUBO.md](CUBO.md) | El cubo Parquet + DuckDB: modelo, publicación y consultas |
+| [Fuentes oficiales y revisión del cubo](investigacion/2026-11-17_cubo_documentacion_oficial.md) | Manuales, diagnóstico de identidad y redundancia, prioridades y pruebas propuestas; no implementadas |
 | [GEODA.md](GEODA.md) | El kernel: estructura, contratos y lo que ya existe |
 | [OFERTAS_Y_GITHUB.md](OFERTAS_Y_GITHUB.md) | Qué hace cada oferta del Developer Pack y cada función de GitHub |
 | [../sonda/LEEME.md](../sonda/LEEME.md) | Cómo correr la sonda en una computadora |

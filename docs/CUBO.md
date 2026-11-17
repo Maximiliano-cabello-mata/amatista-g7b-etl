@@ -125,3 +125,11 @@ Esta evidencia corresponde al cubo cloud. La prueba local anterior también tien
 3,003 filas pero usa la sonda local variable: sus tres mediciones están en revisión.
 Son conjuntos distintos y sus hashes no deben coincidir. El cuaderno de Deepnote
 se entrega sin credenciales ni salidas; todavía no fue ejecutado en ese workspace.
+
+## Documentación oficial y revisión del diseño
+
+La [investigación del 17 de noviembre de 2026](investigacion/2026-11-17_cubo_documentacion_oficial.md)
+reúne diez fuentes primarias de Microsoft, DuckDB, Apache Parquet, MongoDB e IETF.
+Distingue el comportamiento actual de las propuestas sobre identidad estable,
+redundancia y consumo analítico. Incluye prioridades y pruebas de aceptación para
+una futura versión; no cambia el contrato ni acredita una migración implementada.
