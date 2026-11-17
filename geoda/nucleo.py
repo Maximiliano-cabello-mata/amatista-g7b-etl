@@ -21,7 +21,7 @@ nunca se presenta como medición de tu equipo. Cada acción enlaza la página de
 import json
 import re
 
-from . import VERSION, paquete as paq
+from . import VERSION, cpu as cpus, paquete as paq
 from .contratos import Gpu, Huella
 from .niveles import clasificar
 from .planificador import decidir as _decidir
@@ -56,8 +56,16 @@ class Nucleo:
         for patron, regla in self._gpus:
             if patron.search(limpio):
                 return {"nombre": limpio, "fabricante": regla["fabricante"], "clase": regla["clase"],
-                        "vram_gb": regla.get("vram_gb")}
-        return {"nombre": limpio, "fabricante": "desconocido", "clase": "desconocida", "vram_gb": None}
+                        "gama": regla.get("gama"), "vram_gb": regla.get("vram_gb")}
+        return {"nombre": limpio, "fabricante": "desconocido", "clase": "desconocida", "gama": None, "vram_gb": None}
+
+    def graficos(self, huella):
+        """«basica» si el equipo solo tiene gráficos integrados básicos (sin Cycles en GPU), si no None."""
+        h = huella if isinstance(huella, Huella) else Huella.desde_dict(huella)
+        if not h.gpus or any(g.tipo == "dedicada" for g in h.gpus):
+            return None
+        gamas = {self.gpu(g.nombre)["gama"] for g in h.gpus}
+        return "basica" if gamas == {"basica"} else None
 
     def huella(self, gpu=None, ram_gb=None, so="", opengl=None, vulkan=None, movil=False, cpu=""):
         """Arma una huella g7b.huella/1 desde datos sueltos del cliente (sin datos personales)."""
@@ -76,7 +84,8 @@ class Nucleo:
 
     def decidir(self, huella, tarea=None, idioma="es"):
         """Huella (Huella o dict g7b.huella/1) + tarea → plan g7b.plan/1 con evidencia y citas."""
-        plan = _decidir(huella, tarea, perfiles=self.paquete["perfiles"])
+        h = huella if isinstance(huella, Huella) else Huella.desde_dict(huella)
+        plan = _decidir(h, tarea, perfiles=self.paquete["perfiles"])
         version = _version_manual(plan.get("version"))
         motor = plan.get("perfil", {}).get("motor") or ""
         for accion in plan["acciones"]:
@@ -89,8 +98,17 @@ class Nucleo:
             "texto": {"medido": "medido en varios equipos como el tuyo",
                       "provisional": "medido en pocos equipos como el tuyo: todavía provisional",
                       "regla_base": "regla base: todavía no hay mediciones de equipos como el tuyo"}[ESCALERA[estado]],
-            "estimacion_relativa": self._relativa(nivel, plan.get("version")),
+            "estimacion_relativa": None,
         }
+        basica = self.graficos(h) == "basica" and nivel not in (None, "N0")
+        if basica:
+            plan["evidencia"]["graficos"] = "integrada_basica"
+            plan["evidencia"]["estimacion_relativa"] = self._relativa_cpu(h.cpu)
+            plan["advertencias"].append(
+                "gráficos integrados básicos: Cycles no puede usar esta GPU (renderiza con el procesador) y la "
+                "vista 3D es la más modesta del nivel; si se siente lenta, usa el perfil mínimo")
+        else:
+            plan["evidencia"]["estimacion_relativa"] = self._relativa(nivel, plan.get("version"))
         plan["ayuda"] = self._citas(self.paquete["citas"]["generales"].get(nivel, []), version, idioma, motor)
         plan["kernel"] = {"api": API, "geoda": VERSION, "paquete": self.paquete["version"]}
         return plan
@@ -108,6 +126,29 @@ class Nucleo:
                                "idioma": elegido["idioma"], "verificada": elegido["verificada"]})
         return salida
 
+    def _relativa_cpu(self, cpu):
+        """Render en CPU del grupo del procesador frente al N2 moderno, o None si no hay datos públicos."""
+        grupo = cpus.grupo(cpu)
+        f = next((x for x in self.paquete.get("render_cpu", []) if x["cpu_grupo"] == grupo
+                  and x["escena"] == ESCENA_REFERENCIA), None)
+        if f is None:
+            return None
+        factor = f.get("factor_frente_a_N2")
+        if not factor:
+            veces = "sin referencia para compararlo con"
+        elif factor < 1:
+            veces = f"unas {1 / factor:.0f} veces más lento que"
+        else:
+            veces = f"{factor:g} veces lo de"
+        texto = (f"Con gráficos integrados básicos, Cycles renderiza con el procesador. En Blender Open Data, un "
+                 f"{cpus.legible(grupo)} hace unas {f['mediana_samples_min']:g} muestras por minuto en {f['escena']} "
+                 f"({f['mediciones']} mediciones): {veces} un N2 con gráficos integrados modernos. "
+                 "Es una comparación con datos públicos, no una medición de tu equipo.")
+        return {"clase_dato": "relativa", "naturaleza": "velocidad", "mide": "cpu", "fuente": f["fuente"],
+                "cpu_grupo": grupo, "series": f["series"], "escena": f["escena"],
+                "mediana_samples_min": f["mediana_samples_min"], "factor_frente_a_N2": f["factor_frente_a_N2"],
+                "mediciones": f["mediciones"], "texto": texto}
+
     def _relativa(self, nivel, version):
         """Factor público del nivel frente al N2 (render de Cycles), o None si no hay datos."""
         if nivel in (None, "N0"):
@@ -119,14 +160,15 @@ class Nucleo:
         f = next((x for x in factores if x["serie"] == serie), None) or max(factores, key=lambda x: _serie(x["serie"]))
         if nivel == paq.NIVEL_REFERENCIA:
             texto = (f"Tu nivel es la referencia de la comparación pública: en render de Cycles ({f['escena']}, "
-                     f"Blender {f['serie']}), un N2 con gráficos integrados hace unas {f['mediana_samples_min']:g} "
+                     f"Blender {f['serie']}), un N2 con gráficos integrados modernos hace unas {f['mediana_samples_min']:g} "
                      "muestras por minuto. Es un dato público (Blender Open Data), no una medición de tu equipo.")
         else:
             texto = (f"En render de Cycles ({f['escena']}, Blender {f['serie']}), los equipos públicos de nivel "
-                     f"{nivel} rinden {f['factor_frente_a_N2']:g} veces lo de un N2 con gráficos integrados. "
+                     f"{nivel} rinden {f['factor_frente_a_N2']:g} veces lo de un N2 con gráficos integrados modernos. "
                      "Es una comparación con datos públicos (Blender Open Data), no una medición de tu equipo.")
         return {
-            "clase_dato": "relativa", "naturaleza": f.get("naturaleza", "velocidad"), "fuente": f["fuente"], "serie": f["serie"], "escena": f["escena"],
+            "clase_dato": "relativa", "naturaleza": f.get("naturaleza", "velocidad"), "mide": "gpu",
+            "fuente": f["fuente"], "serie": f["serie"], "escena": f["escena"],
             "factor_frente_a_N2": f["factor_frente_a_N2"], "mediciones": f["mediciones"],
             "texto": texto,
         }

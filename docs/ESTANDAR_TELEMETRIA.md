@@ -35,7 +35,15 @@ Cada medición o evento lleva un bloque `hardware` hecho por `g7b_telemetria/har
 ```
 
 - **Nombre:** se limpian «(R)», «(TM)» y «/PCIe/SSE2», y se conserva el original.
-- **Clase:** `integrada`, `dedicada` o `desconocida`. Lo que la tabla no reconoce queda `desconocida` y **no recibe nivel**: no se adivina.
+- **Clase:** `integrada`, `dedicada`, `apple`, `servidor` o `desconocida`. Lo que la tabla no reconoce queda `desconocida` y **no recibe nivel**: no se adivina.
+- **Gama de las integradas** (desde el 17 de noviembre de 2026; la tabla pasa a la versión 2):
+  - `basica`: Intel UHD, HD, Iris Plus e Iris Xe, y Radeon Vega y 610M. No renderizan con Cycles en la GPU, así que Cycles usa el procesador, y su vista 3D es la más modesta.
+  - `moderna`: Arc de los Core Ultra, «Intel Graphics», Radeon 680M a 890M y 8060S. Sí corren Cycles en GPU.
+  - Vacía: el genérico «AMD Radeon Graphics», que va de Vega a RDNA 3.
+
+  Las dos gamas comparten nivel (N2), pero no comparación. En Open Data no aparece ninguna UHD, porque no pueden correr Cycles en GPU: compararlas con las integradas modernas haría creer que un i3 con UHD rinde como una Radeon 780M.
+- **Grupo del procesador** (`geoda/cpu.py`): marca, gama, generación y segmento. Por ejemplo, «Intel Core i3-10110U» queda como `intel-core-i3-g10-portatil`. Con este grupo se compara el render en CPU de los equipos con integradas básicas.
+- **Corrección:** las Intel Arc Pro B50, B60, B65 y B70 son tarjetas dedicadas; antes se leían como integradas e inflaban el N2.
 - **VRAM:** solo cuando el modelo tiene una sola cantidad. La RTX 3060 de escritorio viene con 8 o 12 GB, así que se deja vacía.
 - **Nivel N0–N4:** con las mismas reglas de Geoda (`geoda/niveles.py`), siempre con su **confianza** y sus **motivos**. Sin dato de RAM, decide la GPU y la confianza baja. Si la fuente trae la versión de OpenGL, como los reportes de error, se usa; una integrada con OpenGL 3.3 baja a N1.
 - **Benchmark de CPU:** `mide: cpu`, sin nivel, porque no dice qué GPU tiene el equipo.

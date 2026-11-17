@@ -5,6 +5,12 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 ## Sin publicar · 16 de noviembre de 2026
 
+- **Integradas básicas y modernas** (correcciones del análisis de un i3 de 10.ª con UHD):
+  - `fuentes/hardware.yml` (versión 2) da gama a cada integrada: `basica` (sin Cycles en GPU) o `moderna`. Las Intel Arc Pro B son dedicadas (antes inflaban el N2), y se agregó la VRAM de Arc B580, B570, A750, A380 y Pro B50/B60.
+  - El cubo guarda `gpu_gama` y `cpu_grupo` (`geoda/cpu.py`).
+  - El paquete compara el N2 solo con integradas modernas y agrega `render_cpu` (111 grupos de procesador). El núcleo ya no le dice a un i3 con UHD que «rinde 1 vez un N2»: le dice que su procesador renderiza unas 20 veces más lento (en portátil), y le advierte que Cycles no usará su GPU.
+  - Perfil ligero: `simplify` pasa a `true` y el plan lo toma de ahí. Antes el perfil decía «no» y el plan activaba Simplificar.
+  - Conformidad: 15 casos.
 - **Cubo `g7b.cubo/3`: velocidad y rendimiento** ([CUBO.md](docs/CUBO.md), sección 1 bis):
   - Cada métrica tiene su naturaleza: **velocidad** (render: Open Data y las pruebas de render de la sonda) o **rendimiento** (fluidez de la vista 3D y de la animación, respuesta al editar: la sonda).
   - Cada medición lleva un **índice sin unidades** frente a la mediana geométrica de su grupo, calculado dentro de su clase y con referencia solo de mediciones fiables.

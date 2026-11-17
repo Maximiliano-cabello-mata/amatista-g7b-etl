@@ -17,10 +17,13 @@ from . import VERSION
 from .contratos import NIVELES, PERFIL, Huella, validar_perfiles
 from .niveles import clasificar
 
-# Los ajustes de la sonda (sonda/g7b_sonda.py, PERFILES), del más ligero al más completo.
+# Los ajustes de cada perfil, del más ligero al más completo. Corresponden a los de la sonda
+# (sonda/g7b_sonda.py, PERFILES), con una diferencia de mecanismo: la sonda fija los niveles del
+# modificador Subdivisión de SU escena de prueba; en la escena del estudiante el plan no toca sus
+# modificadores y logra lo mismo con Simplificar (simplify = True) y una subdivisión máxima.
 AJUSTES = {
     "minimo": {"subdivision_vista": 0, "simplify": True, "muestras": 4, "resolucion_pct": 50},
-    "ligero": {"subdivision_vista": 1, "simplify": False, "muestras": 16, "resolucion_pct": 75},
+    "ligero": {"subdivision_vista": 1, "simplify": True, "muestras": 16, "resolucion_pct": 75},
     "completo": {"subdivision_vista": 2, "simplify": False, "muestras": 64, "resolucion_pct": 100},
 }
 ORDEN = ("minimo", "ligero", "completo")

@@ -46,6 +46,43 @@ def test_gpu_se_lee_igual_venga_de_donde_venga(nombre, clase, vram, fabricante):
     assert "(R)" not in g["nombre"] and "(TM)" not in g["nombre"]
 
 
+@pytest.mark.parametrize("nombre, clase, gama", [
+    ("Intel(R) UHD Graphics 620", "integrada", "basica"),      # sin Cycles en GPU
+    ("Intel(R) UHD Graphics", "integrada", "basica"),
+    ("Intel(R) Iris(R) Xe Graphics", "integrada", "basica"),
+    ("Intel(R) HD Graphics 520", "integrada", "basica"),
+    ("AMD Radeon(TM) Vega 8 Graphics", "integrada", "basica"),
+    ("AMD Radeon 610M", "integrada", "basica"),
+    ("Intel Arc 140V GPU (16GB)", "integrada", "moderna"),
+    ("Intel Graphics", "integrada", "moderna"),
+    ("AMD Radeon 780M Graphics", "integrada", "moderna"),
+    ("AMD Radeon 8060S Graphics", "integrada", "moderna"),
+    ("AMD Radeon Graphics", "integrada", None),                  # genérico: no se adivina
+    ("Intel Arc Pro B50 Graphics", "dedicada", None),            # antes se leía como integrada
+    ("Intel Arc Pro B70 Graphics", "dedicada", None),
+    ("Intel Arc A770 Graphics", "dedicada", None),
+])
+def test_gama_de_las_integradas(nombre, clase, gama):
+    g = hardware.gpu(nombre)
+    assert (g["clase"], g["gama"]) == (clase, gama)
+
+
+@pytest.mark.parametrize("nombre, grupo", [
+    ("Intel Core i3-10110U CPU @ 2.10GHz", "intel-core-i3-g10-portatil"),
+    ("Intel Core i3-1005G1 CPU @ 1.20GHz", "intel-core-i3-g10-portatil"),
+    ("11th Gen Intel(R) Core(TM) i3-1115G4", "intel-core-i3-g11-portatil"),
+    ("Intel Core i3-1215U", "intel-core-i3-g12-portatil"),
+    ("Intel Core i3-10100F CPU @ 3.60GHz", "intel-core-i3-g10-escritorio"),
+    ("Intel Core i7-4790K", "intel-core-i7-g4-escritorio"),
+    ("AMD Ryzen 5 5600U with Radeon Graphics", "amd-ryzen-5-g5-portatil"),
+    ("AMD Ryzen 7 7800X3D 8-Core Processor", "amd-ryzen-7-g7-escritorio"),
+    ("Apple M2", None),
+    ("Intel Xeon 6975P-C", None),
+])
+def test_grupo_de_procesador(nombre, grupo):
+    assert hardware.cpu(nombre)["grupo"] == grupo
+
+
 def test_nivel_con_las_reglas_de_geoda():
     assert hardware.de_benchmark(["Intel(R) UHD Graphics 620"], "ONEAPI")["nivel"] == "N2"
     assert hardware.de_benchmark(["NVIDIA GeForce RTX 4090"], "OPTIX")["nivel"] == "N4"

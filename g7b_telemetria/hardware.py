@@ -17,6 +17,7 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RUTA = os.path.join(RAIZ, "fuentes", "hardware.yml")
 ESTANDAR = "g7b.hardware/1"
 CLASES = {"integrada", "dedicada", "apple", "servidor", "desconocida"}
+GAMAS = {"basica", "moderna", None}   # solo integradas: básica no corre Cycles en GPU
 # Backends de Blender Open Data que miden la GPU; CPU mide el procesador.
 BACKENDS_GPU = {"OPTIX", "CUDA", "HIP", "METAL", "ONEAPI", "OPENCL"}
 
@@ -30,6 +31,8 @@ def tabla(ruta=RUTA):
             regla["_re"] = re.compile(regla["patron"], re.I)
             if tipo == "gpus" and regla.get("clase") not in CLASES:
                 raise ValueError(f"clase desconocida en {RUTA}: {regla}")
+            if tipo == "gpus" and regla.get("gama") not in GAMAS:
+                raise ValueError(f"gama desconocida en {RUTA}: {regla}")
     return datos
 
 
@@ -47,17 +50,21 @@ def gpu(nombre):
     for regla in tabla()["gpus"]:
         if regla["_re"].search(limpio):
             return {"nombre": limpio, "nombre_original": str(nombre), "fabricante": regla["fabricante"],
-                    "clase": regla["clase"], "vram_gb": regla.get("vram_gb"), "regla": regla["patron"]}
+                    "clase": regla["clase"], "gama": regla.get("gama"), "vram_gb": regla.get("vram_gb"),
+                    "regla": regla["patron"]}
     return {"nombre": limpio, "nombre_original": str(nombre), "fabricante": "desconocido",
-            "clase": "desconocida", "vram_gb": None, "regla": None}
+            "clase": "desconocida", "gama": None, "vram_gb": None, "regla": None}
 
 
 def cpu(nombre):
+    from geoda.cpu import grupo
+
     limpio = limpiar(nombre)
     for regla in tabla()["cpus"]:
         if regla["_re"].search(limpio):
-            return {"nombre": limpio, "fabricante": regla["fabricante"], "familia": regla["familia"]}
-    return {"nombre": limpio, "fabricante": "desconocido", "familia": "desconocida"}
+            return {"nombre": limpio, "fabricante": regla["fabricante"], "familia": regla["familia"],
+                    "grupo": grupo(limpio)}
+    return {"nombre": limpio, "fabricante": "desconocido", "familia": "desconocida", "grupo": grupo(limpio)}
 
 
 def nivel(gpus, ram_gb=None, opengl=None):

@@ -30,7 +30,8 @@ Lo construye `geoda/paquete.py` a partir del cubo vigente:
 | Sección | Qué lleva | De dónde sale |
 |---|---|---|
 | `perfiles` | El perfil por nivel (N0–N4): versión de Blender, motor y ajustes | Solo de mediciones **directas** (estudiantes y laboratorios con consentimiento). Un perfil medido con menos de 5 equipos no se publica: en su lugar queda la regla base. |
-| `factores` | Cuánto rinde cada nivel frente al N2, por serie de Blender y escena | De mediciones **relativas** de **velocidad** (Blender Open Data): GPU integradas y dedicadas con confianza alta o media, sin Apple Silicon ni GPU de servidor, y con al menos 30 mediciones por celda. Cada factor va marcado `clase_dato: relativa`. |
+| `factores` | Cuánto rinde cada nivel frente al N2, por serie de Blender y escena | De mediciones **relativas** de **velocidad** (Blender Open Data): GPU integradas **modernas** y dedicadas con confianza alta o media, sin Apple Silicon ni GPU de servidor, y con al menos 30 mediciones por celda. La referencia es el N2 con integradas modernas. Cada factor va marcado `clase_dato: relativa`. |
+| `render_cpu` | El render de Cycles en CPU por grupo de procesador y escena, frente al N2 moderno | Open Data con Blender 4.0 o más nuevo y al menos 3 mediciones por grupo. Es para los equipos con **integradas básicas**, que renderizan con el procesador. Con datos reales hay 111 grupos. |
 | `citas` | La página del manual de cada ajuste, para cada versión (5.2, 4.5 y 3.6) e idioma (es, en) | `fuentes/citas_manual.yml`, comprobada contra el `objects.inv` de cada versión. Cada enlace dice `verificada: inventario`, `conocimiento_g7b` o `sin_verificar`. Solo se guardan enlaces y títulos: el texto del manual no se copia. |
 | `hardware` | El estándar `g7b.hardware/1` | `fuentes/hardware.yml` |
 | `niveles` | Las reglas N0–N4 | `geoda/niveles.py` |
@@ -78,6 +79,7 @@ Lo que `decidir` agrega al plan del planificador:
   - `medido`: perfil confiable de mediciones directas;
   - `provisional`: mediciones directas, todavía pocas;
   - `regla_base`: la regla de las fichas técnicas.
+- **`evidencia.graficos`:** `integrada_basica` cuando el equipo solo tiene gráficos integrados básicos. En ese caso la estimación relativa sale de `render_cpu`, según el grupo de su procesador, y el plan advierte que Cycles usará el procesador.
 - **`evidencia.estimacion_relativa`:** la comparación con datos públicos para el nivel del equipo, siempre con `clase_dato: relativa` y con un texto que dice que **no es una medición de tu equipo**. Para el nivel N0 no se calcula.
 - **`ayuda`:** páginas generales para los niveles bajos (solución de problemas de la GPU, preferencias de la vista 3D).
 - **`kernel`:** la API, la versión de Geoda y la versión del paquete con que se decidió.
@@ -98,13 +100,16 @@ python -m geoda conformidad --paquete paquete.json
 
 ## Casos de conformidad
 
-`geoda/conformidad.json` tiene 12 casos que **cualquier** implementación debe pasar **con cualquier paquete válido**:
+`geoda/conformidad.json` tiene 15 casos que **cualquier** implementación debe pasar **con cualquier paquete válido**:
 
 - un celular va al editor web;
 - con poca RAM u OpenGL viejo, Blender 3.6;
 - integrada, dedicada media y dedicada grande;
 - una dedicada sin VRAM conocida no da confianza alta;
 - Apple Silicon cuenta como integrada;
+- una integrada básica (UHD con i3) no se compara con render en GPU ni recibe Cycles en GPU, y lleva advertencia;
+- una integrada moderna (Radeon 780M) no se trata como básica;
+- una Intel Arc Pro es dedicada;
 - una GPU desconocida no inventa;
 - las citas siguen la versión que recomienda el plan;
 - las citas salen en el idioma pedido;

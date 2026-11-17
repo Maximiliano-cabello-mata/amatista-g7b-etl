@@ -32,6 +32,8 @@ RUTA_HARDWARE = os.path.join(RAIZ, "fuentes", "hardware.yml")
 VERSIONES_MANUAL = ("5.2", "4.5", "3.6")
 MIN_EQUIPOS_PUBLICO = 5        # agregados de 5 equipos o más (misma regla que amatista-agregados)
 MIN_MEDICIONES_FACTOR = 30     # por celda, en el nivel y en la referencia N2
+MIN_MEDICIONES_CPU = 3         # por grupo de procesador y escena (datos públicos, pocos por modelo)
+SERIES_CPU_DESDE = (4, 0)      # render en CPU: Blender 4.0 o más nuevo
 NIVEL_REFERENCIA = "N2"
 
 
@@ -52,7 +54,9 @@ def factores_relativos(con, minimo=MIN_MEDICIONES_FACTOR):
     """Mediana de render de cada nivel dividida entre la del N2, en la misma serie y escena.
 
     Solo GPU integradas y dedicadas con nivel de confianza alta o media: sin Apple Silicon, sin GPU de
-    servidor y sin las dedicadas sin VRAM conocida, que sesgarían la comparación.
+    servidor y sin las dedicadas sin VRAM conocida, que sesgarían la comparación. La referencia N2 es la
+    integrada MODERNA (la única que corre Cycles en GPU): las integradas básicas se comparan con
+    render_cpu, nunca con este factor.
     """
     if con is None or not _tiene(con, "v_relativas"):
         return []
@@ -61,11 +65,13 @@ def factores_relativos(con, minimo=MIN_MEDICIONES_FACTOR):
     columnas = {c[0] for c in con.execute("SELECT column_name FROM information_schema.columns "
                                           "WHERE table_name = 'v_relativas'").fetchall()}
     solo_velocidad = "AND naturaleza = 'velocidad'" if "naturaleza" in columnas else ""
+    solo_moderna = "AND (gpu_clase <> 'integrada' OR gpu_gama = 'moderna')" if "gpu_gama" in columnas else ""
     filas = con.execute(f"""
         SELECT nivel, serie, escena, count(*) AS n, median(valor) AS mediana
         FROM v_relativas
         WHERE fuente = 'blender-open-data' AND mide = 'gpu' AND nivel IS NOT NULL
           AND gpu_clase IN ('integrada', 'dedicada') AND nivel_confianza IN ('alta', 'media') {solo_velocidad}
+          {solo_moderna}
         GROUP BY ALL""").fetchall()
     celdas = {(nivel, serie, escena): (n, mediana) for nivel, serie, escena, n, mediana in filas}
     salida = []
@@ -77,7 +83,44 @@ def factores_relativos(con, minimo=MIN_MEDICIONES_FACTOR):
                        "mediciones_referencia": referencia[0], "mediana_samples_min": round(mediana, 1),
                        "factor_frente_a_N2": round(mediana / referencia[1], 3),
                        "clase_dato": "relativa", "naturaleza": "velocidad", "fuente": "blender-open-data",
+                       "referencia": "N2 con gráficos integrados modernos (Cycles en GPU)",
                        "nota": "render de Cycles en equipos públicos; no es la fluidez de la vista 3D"})
+    return salida
+
+
+def render_cpu(con, minimo=MIN_MEDICIONES_CPU):
+    """Render de Cycles en CPU por grupo de procesador (geoda/cpu.py) y escena, de Open Data.
+
+    Para los equipos con gráficos integrados básicos (Intel UHD, HD, Iris; Radeon Vega), que no
+    renderizan con Cycles en la GPU: su render depende del procesador. Se compara con la mediana de
+    la referencia N2 moderna en la misma escena, con las mismas series.
+    """
+    if con is None or not _tiene(con, "v_relativas"):
+        return []
+    columnas = {c[0] for c in con.execute("SELECT column_name FROM information_schema.columns "
+                                          "WHERE table_name = 'v_relativas'").fetchall()}
+    if "cpu_grupo" not in columnas:
+        return []
+    series = "TRY_CAST(split_part(serie, '.', 1) AS INTEGER) >= ?"
+    filas = con.execute(f"""
+        SELECT cpu_grupo, escena, count(*), median(valor), min(serie), max(serie)
+        FROM v_relativas WHERE fuente = 'blender-open-data' AND mide = 'cpu' AND cpu_grupo IS NOT NULL
+          AND naturaleza = 'velocidad' AND {series}
+        GROUP BY ALL HAVING count(*) >= ?""", [SERIES_CPU_DESDE[0], minimo]).fetchall()
+    referencias = dict((e, m) for e, m in con.execute(f"""
+        SELECT escena, median(valor) FROM v_relativas
+        WHERE fuente = 'blender-open-data' AND mide = 'gpu' AND nivel = ? AND gpu_clase = 'integrada'
+          AND gpu_gama = 'moderna' AND naturaleza = 'velocidad' AND {series}
+        GROUP BY ALL HAVING count(*) >= ?""", [NIVEL_REFERENCIA, SERIES_CPU_DESDE[0], MIN_MEDICIONES_FACTOR]).fetchall())
+    salida = []
+    for grupo, escena, n, mediana, desde, hasta in sorted(filas):
+        referencia = referencias.get(escena)
+        salida.append({"cpu_grupo": grupo, "escena": escena, "mediciones": n, "series": [desde, hasta],
+                       "mediana_samples_min": round(mediana, 2),
+                       "factor_frente_a_N2": round(mediana / referencia, 4) if referencia else None,
+                       "clase_dato": "relativa", "naturaleza": "velocidad", "mide": "cpu",
+                       "fuente": "blender-open-data",
+                       "nota": "render de Cycles en el procesador; pocas mediciones por grupo: orden de magnitud"})
     return salida
 
 
@@ -162,6 +205,7 @@ def construir(con=None, cubo=None, inventarios=None, aceptadas=None, ahora=None)
     secciones = {
         "perfiles": perfiles_publicos(con),
         "factores": factores_relativos(con),
+        "render_cpu": render_cpu(con),
         "citas": citas(inventarios, aceptadas),
         "hardware": hardware_publico(),
         "niveles": {"reglas": [linea.strip() for linea in niveles.__doc__.splitlines()
@@ -180,6 +224,7 @@ def construir(con=None, cubo=None, inventarios=None, aceptadas=None, ahora=None)
         "evidencia": {
             "perfiles_medidos": sum(1 for p in secciones["perfiles"]["perfiles"] if p["estado"] != "base"),
             "factores": len(secciones["factores"]),
+            "grupos_cpu": len({f["cpu_grupo"] for f in secciones["render_cpu"]}),
             "citas_verificadas": sum(1 for e in _enlaces(secciones["citas"]) if e["verificada"] != "sin_verificar"),
             "citas_total": sum(1 for _ in _enlaces(secciones["citas"])),
         },
@@ -212,7 +257,7 @@ def validar(paquete):
     errores = []
     if paquete.get("contrato") != CONTRATO:
         errores.append("contrato desconocido")
-    for k in ("perfiles", "factores", "citas", "hardware", "niveles", "operaciones"):
+    for k in ("perfiles", "factores", "render_cpu", "citas", "hardware", "niveles", "operaciones"):
         if k not in paquete:
             errores.append(f"falta la sección {k}")
         elif paquete.get("huellas", {}).get(k) != huella(paquete[k]):
@@ -225,6 +270,9 @@ def validar(paquete):
                 errores.append("un factor no está marcado como relativo")
             if f.get("naturaleza", "velocidad") != "velocidad":
                 errores.append("un factor no es de velocidad: el rendimiento sale de las directas")
+        for f in paquete["render_cpu"]:
+            if f.get("clase_dato") != "relativa" or f.get("mide") != "cpu":
+                errores.append("una entrada de render_cpu no es relativa o no mide CPU")
         texto = _canon(paquete).decode("utf-8")
         for prohibido in PROHIBIDO_EN_PUBLICO:
             if prohibido in texto:

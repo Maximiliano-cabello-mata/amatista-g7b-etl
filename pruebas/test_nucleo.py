@@ -112,3 +112,47 @@ def test_publicar_paquete_en_el_lago_solo_si_cambia(tmp_path):
     assert lago.leer_json(PUNTERO)["sha256"] == puntero["sha256"]
     assert Nucleo.desde_archivo(publico).info()["paquete"] == documento["version"]
     assert publicar(lago, paq.construir(ahora=datetime(2026, 11, 18, tzinfo=timezone.utc))) is None
+
+
+def _cubo_con_cpu():
+    """v_relativas con gama y grupo de CPU: N2 moderna a 100 y un i3 de 10.ª portátil a 5 en CPU."""
+    con = duckdb.connect()
+    con.execute("""CREATE TABLE v_relativas (fuente VARCHAR, mide VARCHAR, nivel VARCHAR, serie VARCHAR,
+                   escena VARCHAR, gpu_clase VARCHAR, gpu_gama VARCHAR, nivel_confianza VARCHAR,
+                   naturaleza VARCHAR, cpu_grupo VARCHAR, valor DOUBLE)""")
+    od = "blender-open-data"
+    filas = [(od, "gpu", "N2", "5.2", "classroom", "integrada", "moderna", "alta", "velocidad", None, 100.0)] * 40 + \
+            [(od, "gpu", "N2", "5.2", "classroom", "integrada", "basica", "alta", "velocidad", None, 900.0)] * 40 + \
+            [(od, "cpu", None, "5.2", "classroom", None, None, None, "velocidad",
+              "intel-core-i3-g10-portatil", 5.0)] * 4 + \
+            [(od, "cpu", None, "5.2", "classroom", None, None, None, "velocidad", "intel-core-i5-g10-portatil", 9.0)] * 2
+    con.executemany("INSERT INTO v_relativas VALUES (?,?,?,?,?,?,?,?,?,?,?)", filas)
+    return con
+
+
+def test_integrada_basica_se_compara_por_su_procesador():
+    paquete = paq.construir(_cubo_con_cpu(), ahora=AHORA)
+    # La referencia N2 es solo la integrada moderna; los grupos de CPU con menos de 3 mediciones no entran.
+    assert [(f["nivel"], f["mediana_samples_min"]) for f in paquete["factores"]] == [("N2", 100.0)]
+    assert [(f["cpu_grupo"], f["factor_frente_a_N2"]) for f in paquete["render_cpu"]] == [
+        ("intel-core-i3-g10-portatil", 0.05)]
+    nucleo = Nucleo(paquete)
+    plan = nucleo.decidir(nucleo.huella(gpu="Intel(R) UHD Graphics 620", cpu="Intel Core i3-10110U",
+                                        ram_gb=8, opengl=4.6))
+    relativa = plan["evidencia"]["estimacion_relativa"]
+    assert plan["evidencia"]["graficos"] == "integrada_basica"
+    assert relativa["mide"] == "cpu" and "20 veces más lento" in relativa["texto"]
+    assert any("gráficos integrados básicos" in a for a in plan["advertencias"])
+    # Una integrada moderna sigue comparándose con el render en GPU.
+    moderna = nucleo.decidir(nucleo.huella(gpu="AMD Radeon 780M Graphics", ram_gb=16, opengl=4.6))
+    assert moderna["evidencia"]["estimacion_relativa"]["mide"] == "gpu"
+    assert "graficos" not in moderna["evidencia"]
+
+
+def test_perfil_ligero_y_su_plan_dicen_lo_mismo_de_simplificar():
+    from geoda import perfiles, planificador
+
+    for nombre, ajustes in perfiles.AJUSTES.items():
+        acciones = planificador.acciones_blender({"perfil": nombre, "ajustes": ajustes, "motor": "eevee"})
+        simplificar = next(a["valor"] for a in acciones if a["ruta"] == "scene.render.use_simplify")
+        assert simplificar is ajustes["simplify"]

@@ -24,7 +24,7 @@ def acciones_blender(perfil):
     motor = perfil.get("motor", "eevee")
     acciones = [{"ruta": "scene.render.engine", "valores_posibles": MOTORES.get(motor, MOTORES["eevee"]),
                  "por_que": f"motor {motor}"}]
-    simplificar = perfil["perfil"] != "completo"
+    simplificar = bool(a["simplify"])   # una sola fuente: los ajustes del perfil (perfiles.AJUSTES)
     acciones.append({"ruta": "scene.render.use_simplify", "valor": simplificar,
                      "por_que": "limita la subdivisión en la vista 3D" if simplificar else "sin límites"})
     if simplificar:

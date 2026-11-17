@@ -185,8 +185,8 @@ def _equipo(f):
         g = hardware.gpu(gpu_texto) if gpu_texto else {}
         c = hardware.cpu(e.get('cpu'))
         original = {'fuente': 'sonda', 'equipo': e}
-        return (('equipo', g.get('nombre'), g.get('fabricante'), g.get('clase'), g.get('vram_gb'),
-                 c['nombre'], c['familia'], e.get('so'), None, e.get('nivel'),
+        return (('equipo', g.get('nombre'), g.get('fabricante'), g.get('clase'), g.get('gama'), g.get('vram_gb'),
+                 c['nombre'], c['familia'], c.get('grupo'), e.get('so'), None, e.get('nivel'),
                  'estimado' if e.get('nivel_estimado') else ('declarado' if e.get('nivel') else None),
                  serializar(original).decode()))
     # El estándar se aplica AL CONSTRUIR, con la tabla vigente (fuentes/hardware.yml): si la tabla
@@ -196,8 +196,8 @@ def _equipo(f):
     c = (h.get('cpus') or [{}])[0]
     original = {'fuente': f['fuente'], 'dispositivos': sorted(f['dispositivos']), 'backend': f['backend'],
                 'so': f['so'], **({'hardware_capturado': f['hardware']} if f.get('hardware') else {})}
-    return ((h.get('mide') or 'sin_clasificar', g.get('nombre'), g.get('fabricante'), g.get('clase'),
-             g.get('vram_gb'), c.get('nombre'), c.get('familia'), f['so'], f['backend'], h.get('nivel'),
+    return ((h.get('mide') or 'sin_clasificar', g.get('nombre'), g.get('fabricante'), g.get('clase'), g.get('gama'),
+             g.get('vram_gb'), c.get('nombre'), c.get('familia'), c.get('grupo'), f['so'], f['backend'], h.get('nivel'),
              h.get('confianza'), serializar(original).decode()))
 
 
@@ -205,7 +205,8 @@ ESQUEMAS = {
     'dim_fuente': {'clave_fuente': 'VARCHAR', 'fuente': 'VARCHAR', 'licencia': 'VARCHAR', 'entorno': 'VARCHAR',
                    'clase_dato': 'VARCHAR'},
     'dim_equipo': {'clave_equipo': 'VARCHAR', 'mide': 'VARCHAR', 'gpu': 'VARCHAR', 'gpu_fabricante': 'VARCHAR',
-                   'gpu_clase': 'VARCHAR', 'gpu_vram_gb': 'DOUBLE', 'cpu': 'VARCHAR', 'cpu_familia': 'VARCHAR',
+                   'gpu_clase': 'VARCHAR', 'gpu_gama': 'VARCHAR', 'gpu_vram_gb': 'DOUBLE', 'cpu': 'VARCHAR',
+                   'cpu_familia': 'VARCHAR', 'cpu_grupo': 'VARCHAR',
                    'so': 'VARCHAR', 'backend': 'VARCHAR', 'nivel': 'VARCHAR', 'nivel_confianza': 'VARCHAR',
                    'equipo_json': 'VARCHAR'},
     'dim_version': {'clave_version': 'VARCHAR', 'programa': 'VARCHAR', 'version': 'VARCHAR', 'serie': 'VARCHAR'},
@@ -280,7 +281,7 @@ def modelo(con, filas, procedencia):
         con.execute(f'''CREATE VIEW {vista} AS
             WITH base AS (
               SELECT h.*, f.fuente, f.licencia, f.entorno, f.clase_dato, e.mide, e.gpu, e.gpu_fabricante, e.gpu_clase,
-                     e.gpu_vram_gb, e.cpu, e.cpu_familia, e.so, e.backend, e.nivel, e.nivel_confianza,
+                     e.gpu_gama, e.gpu_vram_gb, e.cpu, e.cpu_familia, e.cpu_grupo, e.so, e.backend, e.nivel, e.nivel_confianza,
                      e.equipo_json AS dispositivo, v.programa, v.version, v.serie, p.prueba, p.escena, p.metrica,
                      p.unidad, p.mejor, p.naturaleza, pf.perfil, pf.version_sonda,
                      CASE WHEN p.mejor = 'menor' THEN 1.0 / h.valor ELSE h.valor END AS valor_orientado,
@@ -296,7 +297,8 @@ def modelo(con, filas, procedencia):
             FROM base b LEFT JOIN grupos g USING({grupo})''')
         # Velocidad y rendimiento juntos, por equipo: la base para calibrar una con la otra (docs/CUBO.md).
         con.execute(f'''CREATE VIEW v_equipos_{vista[2:]} AS
-            SELECT clave_equipo, any_value(gpu) AS gpu, any_value(gpu_clase) AS gpu_clase,
+            SELECT clave_equipo, any_value(gpu) AS gpu, any_value(gpu_clase) AS gpu_clase, any_value(gpu_gama) AS gpu_gama,
+                   any_value(cpu_grupo) AS cpu_grupo,
                    any_value(nivel) AS nivel, any_value(mide) AS mide,
                    count(*) FILTER (WHERE naturaleza = 'velocidad') AS mediciones_velocidad,
                    exp(avg(ln(indice)) FILTER (WHERE naturaleza = 'velocidad')) AS indice_velocidad,
@@ -304,13 +306,13 @@ def modelo(con, filas, procedencia):
                    exp(avg(ln(indice)) FILTER (WHERE naturaleza = 'rendimiento')) AS indice_rendimiento
             FROM {vista} WHERE referencia AND indice IS NOT NULL GROUP BY clave_equipo''')
         con.execute(f'''CREATE VIEW v_resumen_{vista[2:]} AS
-            SELECT fuente, entorno, nivel, gpu_clase, backend, serie, version, escena, perfil, prueba, metrica,
+            SELECT fuente, entorno, nivel, gpu_clase, gpu_gama, backend, serie, version, escena, perfil, prueba, metrica,
                    unidad, mejor, naturaleza, estado, sin_ventana, count(*) AS mediciones, median(valor) AS mediana,
                    quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75,
                    min(valor) AS minimo, max(valor) AS maximo, median(indice) AS indice_mediana
             FROM {vista} GROUP BY ALL''')
         con.execute(f'''CREATE VIEW v_naturaleza_por_nivel_{vista[2:]} AS
-            SELECT naturaleza, nivel, gpu_clase, fuente, count(*) AS mediciones, count(DISTINCT clave_equipo) AS equipos,
+            SELECT naturaleza, nivel, gpu_clase, gpu_gama, fuente, count(*) AS mediciones, count(DISTINCT clave_equipo) AS equipos,
                    median(indice) AS indice_mediana, quantile_cont(indice, 0.25) AS indice_p25,
                    quantile_cont(indice, 0.75) AS indice_p75
             FROM {vista} WHERE referencia AND indice IS NOT NULL GROUP BY ALL''')
@@ -318,7 +320,7 @@ def modelo(con, filas, procedencia):
     con.execute("CREATE VIEW v_mediciones_aceptadas AS SELECT * FROM v_directas WHERE estado = 'aceptado'")
     # Comparación relativa entre niveles: solo con las relativas, por serie de versión y escena.
     con.execute('''CREATE VIEW v_relativas_por_nivel AS
-        SELECT nivel, mide, gpu_clase, backend, serie, escena, metrica, unidad, naturaleza, count(*) AS mediciones,
+        SELECT nivel, mide, gpu_clase, gpu_gama, backend, serie, escena, metrica, unidad, naturaleza, count(*) AS mediciones,
                median(valor) AS mediana, quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75
         FROM v_relativas WHERE fuente = 'blender-open-data' GROUP BY ALL''')
     con.execute('''CREATE VIEW v_calidad AS

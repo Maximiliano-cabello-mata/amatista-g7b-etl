@@ -64,6 +64,12 @@ def revisar(plan, espera):
         falla("falta la advertencia")
     if "citas_idioma" in espera and any(x["idioma"] != espera["citas_idioma"] for x in citas):
         falla(f"hay citas en otro idioma que {espera['citas_idioma']}")
+    if "graficos" in espera and plan["evidencia"].get("graficos") != (espera["graficos"] and espera["graficos"]):
+        falla(f"gráficos {plan['evidencia'].get('graficos')} y se esperaba {espera['graficos']}")
+    if espera.get("relativa_no_mide_gpu") and (plan["evidencia"]["estimacion_relativa"] or {}).get("mide") == "gpu":
+        falla("a gráficos básicos se les comparó con render en GPU, que no pueden hacer")
+    if espera.get("sin_cycles_gpu") and any(a.get("valor") == "GPU" for a in plan["acciones"]):
+        falla("se pidió Cycles en GPU a unos gráficos que no lo soportan")
     relativa = plan["evidencia"]["estimacion_relativa"]
     if "estimacion_relativa" in espera and relativa != espera["estimacion_relativa"]:
         falla("estimación relativa distinta de la esperada")
