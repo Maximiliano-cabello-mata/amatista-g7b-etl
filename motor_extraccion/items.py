@@ -6,7 +6,7 @@ CAMPOS_DOCUMENTO_MANUAL = {
     "fuente": "id del catálogo (fuentes/catalogo.yml)",
     "url": "URL canónica (sin #ancla)",
     "programa": "blender, godot...",
-    "version": "versión del manual: 5.2, 4.5, 3.6, 2.79...",
+    "version": "versión del manual: 5.2, 4.5, 3.6...",
     "seccion": "sección de inicio (render/cycles, modeling/meshes...)",
     "titulo": "título de la página",
     "jerarquia": "subtítulos H2 y H3 en orden",

@@ -9,7 +9,7 @@ Firma común:  sensor(fuente, estado, obtener) -> (salida, estado_nuevo)
 import hashlib
 import time
 import xml.etree.ElementTree as ET
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 VISTOS_MAX = 5000
 
@@ -335,7 +335,55 @@ def sensor_json_api(fuente, estado, obtener):
             "nota": f"{len(registros)} nuevos o cambiados de {len(pares)}"}, nuevo
 
 
-SENSORES = {"atom": sensor_feed, "rss": sensor_feed, "pagina": sensor_pagina,
+def sensor_sphinx(fuente, estado, obtener, ahora=None):
+    """Un manual hecho con Sphinx, versión por versión, mirando su inventario (objects.inv).
+
+    Las páginas del manual de Blender se reconstruyen a diario («Last updated on ...»), así que la
+    huella de una página cambia aunque el texto no cambie: con el sensor «pagina» la araña volvía a
+    recorrer el manual entero cada vez. El inventario solo cambia cuando se agregan, quitan o
+    renombran páginas o apartados. Una versión se vuelve a recorrer cuando su inventario cambia o
+    cuando pasaron `refresco_dias` desde su último recorrido (para ediciones de texto).
+
+    Devuelve en «argumentos» las versiones que tocan, para que la araña recorra solo esas.
+    """
+    from motor_extraccion.inventario_sphinx import leer
+
+    cfg = fuente["sensor"]
+    ahora = ahora or datetime.now(timezone.utc)
+    base = cfg["base"].rstrip("/") + "/"
+    refresco = timedelta(days=int(cfg.get("refresco_dias", 30)))
+    anteriores = estado.get("versiones", {})
+    versiones, tocan, notas = {}, [], []
+    for version in cfg["versiones"]:
+        previo = dict(anteriores.get(version, {}))
+        respuesta = obtener(f"{base}{version}/objects.inv", _condicionales(previo))
+        if respuesta.estado == 304:
+            actual = previo
+        elif respuesta.estado == 200:
+            datos = leer(respuesta.contenido)
+            actual = {**_recordar(previo, respuesta), "huella": datos["huella"], "paginas": len(datos["paginas"])}
+        else:
+            raise RuntimeError(f"HTTP {respuesta.estado} en el inventario de {version}")
+        recorrido = actual.get("recorrido")
+        if actual.get("huella") != previo.get("huella") or not recorrido:
+            motivo = "primera vez" if not previo.get("huella") else "inventario cambió"
+        elif ahora - datetime.fromisoformat(recorrido) >= refresco:
+            motivo = f"refresco de {refresco.days} días"
+        else:
+            motivo = None
+        if motivo:
+            tocan.append(version)
+            actual["recorrido"] = ahora.isoformat(timespec="seconds")
+            notas.append(f"{version}: {motivo} ({actual.get('paginas', '?')} páginas)")
+        versiones[version] = actual
+    nuevo = {**estado, "versiones": versiones}
+    if not tocan:
+        return {"urls": [], "registros": [], "nota": "sin cambios en los inventarios"}, nuevo
+    return {"urls": [f"{base}{v}/" for v in tocan], "registros": [], "nota": "; ".join(notas),
+            "argumentos": {"versiones": tocan}}, nuevo
+
+
+SENSORES = {"sphinx": sensor_sphinx, "atom": sensor_feed, "rss": sensor_feed, "pagina": sensor_pagina,
             "sitemap": sensor_sitemap, "stackexchange": sensor_stackexchange,
             "discourse": sensor_discourse, "github_releases": sensor_github_releases,
             "json_api": sensor_json_api}

@@ -63,13 +63,18 @@ def test_manual_descarta_paginas_sin_contenido():
 
 
 def test_manual_semillas_por_version_y_seccion():
-    arana = ManualSphinxSpider(fuente="godot-docs", base="https://docs.godotengine.org/en",
+    # Modo «enlaces» (el anterior, y la reserva cuando una versión no publica objects.inv).
+    arana = ManualSphinxSpider(fuente="godot-docs", base="https://docs.godotengine.org/en", modo="enlaces",
                                versiones=json.dumps(["stable"]), secciones=json.dumps(["tutorials/3d/index.html"]))
     semilla = next(iter(arana.start_requests()))
     assert semilla.url == "https://docs.godotengine.org/en/stable/tutorials/3d/index.html"
     assert semilla.cb_kwargs["prefijo"] == "https://docs.godotengine.org/en/stable/tutorials/3d/"
-    blender = list(BlenderDocsSpider().start_requests())
-    assert len(blender) == 4 * 10 and blender[0].url.startswith("https://docs.blender.org/manual/en/5.2/")
+    blender = list(BlenderDocsSpider(modo="enlaces").start_requests())
+    assert len(blender) == 3 * 10 and blender[0].url.startswith("https://docs.blender.org/manual/en/5.2/")
+    # Modo por omisión: un inventario por versión, en el orden pedido.
+    inventarios = list(BlenderDocsSpider().start_requests())
+    assert [r.url.rsplit("/", 2)[1] for r in inventarios] == ["5.2", "4.5", "3.6"]
+    assert all(r.url.endswith("/objects.inv") for r in inventarios)
 
 
 def test_mongo_guardar_solo_si_cambia():

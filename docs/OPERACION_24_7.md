@@ -30,15 +30,34 @@ Del 11 al 16 de noviembre de 2026 GitHub no disparó **ningún** evento de este 
 
 | Disparador | Para qué |
 |---|---|
-| `schedule` (cada 6 horas) | Si GitHub vuelve a disparar los horarios, no hace falta nada más |
+| **Relevo** (`relevo.yml`, desde el 17 de noviembre) | **El principal.** Cada vuelta del ciclo, al terminar, lanza el relevo. El relevo espera a la hora siguiente (00:11, 06:11, 12:11 o 18:11 UTC) y lanza el ciclo con `workflow_dispatch`, que sí es inmediato |
+| `schedule` (cada 6 horas) | Respaldo: llega tarde o no llega |
 | `workflow_dispatch` | A mano desde la pestaña Actions, o desde un programador externo por la API |
 | `repository_dispatch` (tipo `ciclo`) | Para programadores que solo saben hacer un POST |
 
 Causas documentadas de horarios que no corren: el flujo no está en la rama por defecto, el repositorio es un fork (vienen apagados), 60 días sin actividad en un repositorio público, o retrasos y omisiones de GitHub en horas de carga. Conviene revisar la pestaña Actions y *Settings › Actions › General* de todos modos.
 
-### Programador externo con cron-job.org (gratuito)
+### El relevo (lo que deja el flujo corriendo solo)
 
-Mientras GitHub no dispare los horarios, esto es lo que deja el flujo corriendo solo.
+El 16 de noviembre el ciclo solo corrió en una de sus cuatro horas (03:11, 09:11 y 21:11 no llegaron), y los Cuadernos corrieron casi 10 horas tarde. Los horarios de GitHub no sirven de reloj en este repositorio. En cambio, lanzar un flujo con `workflow_dispatch` desde otro flujo es inmediato: así lanza el ciclo sus tareas desde el primer día.
+
+```
+ciclo ──(último paso, siempre)──▶ relevo: espera a la hora siguiente ──▶ ciclo ──▶ relevo ...
+                                   ▲
+            horario de respaldo del relevo (cada 3 horas): retoma la cadena si se cortó
+```
+
+`.github/scripts/relevo.sh`:
+
+1. **Ciclo sin una vuelta buena en 8 horas:** abre o comenta el aviso `g7b-alerta`. Esto cubre el caso que el aviso del ciclo no veía: que el ciclo ni siquiera arranque. Lo cierra la siguiente vuelta buena.
+2. **La última vuelta tiene más de 6 h 15 min y no hay otra corriendo:** lanza el ciclo enseguida para ponerse al día.
+3. **Si no,** espera a la hora siguiente (como mucho 354 minutos; el tope de un trabajo es 360) y lanza el ciclo, salvo que ya esté corriendo o haya corrido hace menos de 30 minutos.
+
+Solo hay un relevo esperando a la vez (`concurrency` con `cancel-in-progress`), así que en Actions se ven relevos «cancelados»: es lo normal. Como el repositorio es público, la espera no consume minutos de pago. Si el repositorio pasa a privado, el relevo gasta unos 1.440 minutos al día y hay que cambiarlo por el programador externo.
+
+### Programador externo con cron-job.org (opcional)
+
+Con el relevo ya no hace falta. Sirve como tercera vía independiente de GitHub, o si el repositorio pasa a privado.
 
 1. **Token de GitHub de grano fino.** *Settings › Developer settings › Personal access tokens › Fine-grained tokens › Generate new token*:
    - Repository access: *Only select repositories* → `amatista-g7b-etl`.
@@ -52,7 +71,7 @@ Mientras GitHub no dispare los horarios, esto es lo que deja el flujo corriendo 
    - Activa las notificaciones de falla por correo.
 3. **Comprobar:** GitHub responde `204`. En la pestaña Actions aparece una vuelta de «Ciclo G7B (24/7)».
 
-Así hay dos alarmas independientes: cron-job.org avisa si GitHub rechaza el disparo (token vencido, por ejemplo), y el ciclo avisa si una tarea falla o los datos se quedan viejos.
+Con él hay una alarma más: cron-job.org avisa si GitHub rechaza el disparo (token vencido, por ejemplo), y el ciclo avisa si una tarea falla o los datos se quedan viejos.
 
 ## 3. Reprocesamiento: nada de lo extraído se pierde
 
@@ -87,12 +106,12 @@ Del lago real: 2.570 documentos evaluados, 995 aceptados, 70 en revisión y 1.50
 | Causa | Documentos | Diagnóstico |
 |---|---|---|
 | No responde ninguna pregunta del plan | 383 | Correcto con la taxonomía de hoy. Es lo que el reprocesamiento recupera cuando el plan crezca |
-| Casi duplicado o duplicado exacto | 560 | Casi todo es la misma página del manual en 5.2, 4.5, 3.6 y 2.79. No es basura: es información de versión que hoy se descarta (ver «Siguiente») |
+| Casi duplicado o duplicado exacto | 560 | Casi todo es la misma página del manual en 5.2, 4.5 y 3.6. No es basura: es información de versión que hoy se descarta (ver «Siguiente») |
 | Texto insuficiente, página índice o líneas repetidas | 409 | Correcto: páginas índice, menús y fichas casi vacías |
 | Fuente desconocida | 142 | **Error.** 112 son la araña antigua («Blender Docs») y 30 son `krita-noticias` y `freecad-blog`, que llegaron antes que el catálogo. Corregido: alias en el catálogo y reprocesamiento |
 | Genérico (sin medidas, versiones ni ajustes) | 3 | Correcto |
 | Idioma «desconocido» | 8 | **Error.** Resúmenes cortos sin palabras vacías. Corregido: solo se rechaza por idioma un texto de 80 palabras o más |
-| Revisión por «versiones anteriores a 2.80» | 41 | **Error.** Era el manual 2.79, que se extrae a propósito para equipos viejos. Corregido: una página con versión declarada no se marca |
+| Revisión por «versiones anteriores a 2.80» | 41 | **Error.** Eran páginas del manual (5.2, 4.5, 3.6) que mencionan 2.79. Corregido: una página con versión declarada no se marca por mencionar otra |
 
 Además, «mixto» (español e inglés juntos) ya es un idioma admitido.
 
@@ -103,3 +122,25 @@ Con estas correcciones, la simulación sobre una copia del lago da 1.020 aceptad
 - **Variantes de versión:** guardar la página del manual de cada versión como variante del documento aceptado, en lugar de rechazarla como duplicada.
 - **Noticias:** de 79 documentos de fuentes de noticias, casi ninguno pasa. Solo se guarda el título por derechos de autor, y un título rara vez responde una pregunta del plan. Conviene tratarlas como señales de tendencia, igual que los foros.
 - **Retirar de MongoDB** lo que deja de estar aceptado.
+
+## 5. Primera vuelta real (16 de noviembre de 2026)
+
+El PR #22 se fusionó a las 02:39 UTC. El horario `11 */6 * * *` debía disparar a las 03:11 y a las 09:11, y **no lo hizo**. El primer disparo por horario llegó a las 15:33 (programado a las 15:11). Es la primera ejecución por `schedule` en el repositorio desde el 11 de noviembre. GitHub retrasa y a veces omite los horarios, así que **el programador externo (sección 2) sigue siendo necesario**.
+
+[Ejecución 43897649802](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/43897649802), 5 minutos, todo en verde:
+
+| Tarea | Resultado |
+|---|---|
+| Vigilar | 147 registros nuevos de 10 fuentes. Hubo 65 temas de Blender Artists, 29 de Godot, 27 de Three.js, 12 de DevTalk, 6 artículos de arXiv, 4 preguntas de Stack Exchange y 4 entradas más entre blogs y herramientas. 19 de 19 sensores al día |
+| Zyte al lago | Trajo los trabajos `883618-1-14` y `883618-1-15`, de 2.353 páginas cada uno |
+| Procesar | Reevaluó los 20 archivos anteriores por cambio de reglas, más 6 nuevos. Total del lago: **1.021 aceptados**, 56 en revisión y 6.212 rechazados |
+| Publicar en MongoDB | 26 documentos nuevos, 995 sin cambios. La base ocupa 3,15 MB de 512 MB |
+| Catálogos y señales | 1 herramienta nueva; 133 temas de foros resumidos como señales |
+| Publicar estado para Geoda | Correcto |
+| Aviso | Sin fallas ni fuentes atrasadas, así que no se abrió issue |
+
+### Qué dicen estos números
+
+- **Los rechazos crecieron de 1.505 a 6.212 sin que se perdiera nada.** 4.684 son los dos trabajos nuevos de Zyte, que volvieron a recorrer el mismo manual: misma configuración, mismas 2.353 páginas, rechazadas por duplicado exacto. Eso es correcto, pero gasta la unidad gratuita de Zyte y abulta los conteos. Resuelto en la [araña de manuales](ARANA_MANUALES.md): ahora se relanza solo la versión cuyo inventario cambió, y nunca dos recorridos a la vez.
+- **Los 56 en revisión incluyen las mismas 11 páginas del manual repetidas en tres trabajos**: el índice de repetidos solo cuenta lo aceptado. No afecta a MongoDB, porque lo que está en revisión no se publica.
+- **Aceptados 1.021**, frente a 1.020 en la simulación. El reprocesamiento se comportó como en las pruebas.

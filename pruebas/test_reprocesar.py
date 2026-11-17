@@ -173,3 +173,14 @@ def test_el_manual_279_no_se_marca_como_desactualizado():
     sin_version = evaluar({**doc, "metadatos": {}}, _fuente("blender-manual"), cat.cargar_taxonomia(), Indice())
     assert any("desactualizado" in m for m in sin_version.motivos)
     assert r.estado == ACEPTADO
+
+
+def test_cambiar_la_operacion_de_una_fuente_no_reevalua_lo_ya_traido():
+    from g7b_ingesta.procesar import huella_reglas
+
+    fuente = {"id": "x", "activa": True, "modo": "texto_completo", "umbrales": {"valor_min": 0},
+              "sensor": {"tipo": "pagina"}, "frecuencia_horas": 168, "zyte": {"argumentos": {"max_paginas": 3000}}}
+    antes = huella_reglas(fuente, {"P1": []})
+    operativo = {**fuente, "sensor": {"tipo": "sphinx"}, "frecuencia_horas": 24, "zyte": {"argumentos": {}}}
+    assert huella_reglas(operativo, {"P1": []}) == antes
+    assert huella_reglas({**fuente, "umbrales": {"valor_min": 1}}, {"P1": []}) != antes

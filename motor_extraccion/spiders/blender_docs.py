@@ -5,11 +5,11 @@ Antes solo sacaba los títulos del índice de scripting; ahora es manual_sphinx 
     scrapy crawl blender_docs                       # todo (versiones y secciones de abajo)
     scrapy crawl blender_docs -a versiones='["5.2"]' -a max_paginas=20
 
-Versiones: la LTS vigente (5.2), las LTS anteriores (4.5 y 3.6) y 2.79, la última con la interfaz
-anterior a 2.80 (sirve para computadoras viejas, nivel N1).
+Versiones: la LTS vigente (5.2) y las LTS anteriores (4.5 y 3.6). 2.79 (la última con la interfaz
+anterior a 2.80) no se recorre: el robots.txt de docs.blender.org prohíbe /*/2.79/ a todos los bots.
 Secciones: rendimiento y ajustes (P1, P2), equivalencias de teclas (P4) y cómo se hace (P6). Las
-rutas cambian entre versiones; las que no existen en una versión dan 404 y se ven en las
-estadísticas del trabajo en Zyte.
+páginas de cada sección salen del inventario (objects.inv) de su versión, así que una sección que no
+existe en una versión simplemente no aporta páginas.
 """
 from .manual_sphinx import ManualSphinxSpider
 
@@ -19,7 +19,7 @@ class BlenderDocsSpider(ManualSphinxSpider):
     fuente_por_omision = "blender-manual"
     programa = "blender"
     base = "https://docs.blender.org/manual/en/"
-    versiones = ["5.2", "4.5", "3.6", "2.79"]
+    versiones = ["5.2", "4.5", "3.6"]
     secciones = [
         # Rendimiento y ajustes según el equipo (P1, P2)
         "render/cycles/index.html",

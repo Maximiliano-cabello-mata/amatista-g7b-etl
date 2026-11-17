@@ -2,6 +2,7 @@
 import json
 import os
 import uuid
+import zlib
 from datetime import datetime, timezone
 
 import pytest
@@ -44,8 +45,9 @@ def obtener_falso(url, _cabeceras):
         return Respuesta(200, {}, json.dumps(RESPUESTAS).encode())
     if "stackexchange" in url:
         return Respuesta(200, {}, json.dumps(PREGUNTAS).encode())
-    if "docs.blender.org" in url:
-        return Respuesta(200, {}, b"<html>manual v1</html>")
+    if "docs.blender.org" in url and url.endswith("/objects.inv"):
+        cuerpo = zlib.compress(b"render/cycles/index std:doc -1 render/cycles/index.html Cycles\n")
+        return Respuesta(200, {}, b"# Sphinx inventory version 2\n# Project: Blender\n# Version: x\n# zlib\n" + cuerpo)
     return Respuesta(404)
 
 
@@ -90,7 +92,9 @@ def test_cadena_completa(lago):
     assert not any("error" in b for b in bitacora), bitacora
     assert por_fuente["blender-manual"]["accion"].startswith("zyte: trabajo 883618/2/")
     arana, argumentos = zyte.lanzados[0]
-    assert arana == "blender_docs" and argumentos == {"fuente": "blender-manual", "max_paginas": "3000"}
+    assert arana == "blender_docs" and argumentos == {
+        "fuente": "blender-manual", "max_paginas": "3000", "max_por_version": "1200",
+        "versiones": json.dumps(["5.2", "4.5", "3.6"])}
 
     # Recién revisadas: no se vuelven a revisar hasta que les toque.
     assert vigilar(catalogo, lago, obtener=obtener_falso, zyte=zyte, ahora=AHORA, salida=lambda *_: None) == []

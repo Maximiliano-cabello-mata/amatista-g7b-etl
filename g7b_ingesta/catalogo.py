@@ -10,7 +10,7 @@ RUTA_TAXONOMIA = os.path.join(RAIZ, "fuentes", "taxonomia.yml")
 OBLIGATORIOS = ("id", "nombre", "tipo", "licencia", "licencia_verificada", "modo", "preguntas",
                 "sensor", "extractor", "frecuencia_horas", "dominios", "activa")
 MODOS = {"texto_completo", "solo_metadatos", "agregados"}
-SENSORES = {"atom", "rss", "pagina", "sitemap", "stackexchange", "discourse", "github_releases", "json_api",
+SENSORES = {"sphinx", "atom", "rss", "pagina", "sitemap", "stackexchange", "discourse", "github_releases", "json_api",
             "externo"}
 EXTRACTORES = {"directo", "zyte", "descarga", "externo"}
 PREGUNTAS = {"P1", "P2", "P3", "P4", "P5", "P6", "P7"}
@@ -79,7 +79,9 @@ def validar(catalogo):
             errores.append(f"{nombre}: un destino catalogo necesita coleccion")
         if destino(f) in REQUIERE_RESPETO and f["modo"] == "texto_completo":
             errores.append(f"{nombre}: telemetría y señales guardan cifras y metadatos, no texto_completo")
-        necesita = {"discourse": "base", "github_releases": "repos", "json_api": "url",
+        if f["sensor"].get("tipo") == "sphinx" and not f["sensor"].get("versiones"):
+            errores.append(f"{nombre}: el sensor sphinx necesita versiones")
+        necesita = {"discourse": "base", "github_releases": "repos", "json_api": "url", "sphinx": "base",
                     "atom": "url", "rss": "url"}.get(f["sensor"].get("tipo"))
         if necesita and necesita not in f["sensor"]:
             errores.append(f"{nombre}: el sensor {f['sensor']['tipo']} necesita {necesita}")

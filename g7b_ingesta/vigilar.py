@@ -47,7 +47,7 @@ def _procedencia(registro, fuente, detectado):
             json.dumps(registro, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()}}
 
 
-def argumentos_zyte(fuente, urls):
+def argumentos_zyte(fuente, urls, extra=None):
     """La araña y sus argumentos (Zyte los pasa como texto: listas y dicts van en JSON)."""
     zyte = fuente.get("zyte") or {}
     arana = zyte.get("arana", "paginas")
@@ -56,13 +56,32 @@ def argumentos_zyte(fuente, urls):
                       "seguir": "1" if zyte.get("seguir") else "0", "prefijo": zyte.get("prefijo", ""),
                       "max_paginas": str(zyte.get("max_paginas", 200))}
     else:  # araña especializada: sabe qué recorrer; el sensor solo avisó que hubo cambios
-        argumentos = {k: v if isinstance(v, str) else json.dumps(v) for k, v in (zyte.get("argumentos") or {}).items()}
+        # Lo que diga el sensor (por ejemplo, qué versiones del manual cambiaron) manda sobre el catálogo.
+        combinados = {**(zyte.get("argumentos") or {}), **(extra or {})}
+        argumentos = {k: v if isinstance(v, str) else json.dumps(v) for k, v in combinados.items()}
     return arana, {"fuente": fuente["id"], **argumentos}
 
 
-def lanzar_zyte(cliente, proyecto_id, fuente, urls):
-    arana, argumentos = argumentos_zyte(fuente, urls)
-    trabajo = cliente.get_project(int(proyecto_id)).jobs.run(arana, job_args=argumentos)
+class TrabajoEnCurso(Exception):
+    """Ya hay un trabajo de esa araña pendiente o corriendo en Zyte: no se lanza otro."""
+
+
+def en_curso(proyecto, arana):
+    """Claves de los trabajos de la araña que siguen pendientes o corriendo en Zyte."""
+    jobs = proyecto.jobs
+    if not hasattr(jobs, "iter"):
+        return []
+    return [j.get("key") for j in jobs.iter(spider=arana, state=["pending", "running"])]
+
+
+def lanzar_zyte(cliente, proyecto_id, fuente, urls, extra=None):
+    arana, argumentos = argumentos_zyte(fuente, urls, extra)
+    proyecto = cliente.get_project(int(proyecto_id))
+    # Sin esto, dos revisiones seguidas (o una forzada a mano) lanzaban dos recorridos del mismo manual.
+    activos = en_curso(proyecto, arana)
+    if activos:
+        raise TrabajoEnCurso(", ".join(str(a) for a in activos))
+    trabajo = proyecto.jobs.run(arana, job_args=argumentos)
     return getattr(trabajo, "key", str(trabajo))
 
 
@@ -100,7 +119,9 @@ def vigilar(catalogo, lago, obtener=red.obtener, zyte=None, proyecto_id=None, so
             continue
         registro = {"fuente": fuente["id"], "cuando": ahora.isoformat(timespec="seconds")}
         try:
-            resultado, estado_nuevo = SENSORES[fuente["sensor"]["tipo"]](fuente, estado, obtener)
+            tipo = fuente["sensor"]["tipo"]
+            extra = {"ahora": ahora} if tipo == "sphinx" else {}  # el refresco se cuenta con el reloj de la vuelta
+            resultado, estado_nuevo = SENSORES[tipo](fuente, estado, obtener, **extra)
             registro.update({"nota": resultado["nota"], "urls": len(resultado["urls"]),
                              "registros": len(resultado["registros"])})
             detectado = ahora.isoformat(timespec="seconds")
@@ -114,7 +135,14 @@ def vigilar(catalogo, lago, obtener=red.obtener, zyte=None, proyecto_id=None, so
             elif fuente["extractor"] == "zyte" and resultado["urls"]:
                 if zyte is None:
                     raise RuntimeError("hay URLs para Zyte pero falta ZYTE_API_KEY")
-                registro["accion"] = f"zyte: trabajo {lanzar_zyte(zyte, proyecto_id, fuente, resultado['urls'])}"
+                try:
+                    clave = lanzar_zyte(zyte, proyecto_id, fuente, resultado["urls"], resultado.get("argumentos"))
+                    registro["accion"] = f"zyte: trabajo {clave}"
+                except TrabajoEnCurso as activos:
+                    # No se guarda el estado nuevo: la próxima revisión vuelve a ver el cambio y
+                    # lanza el recorrido cuando el trabajo anterior haya terminado.
+                    registro["accion"] = f"zyte: ya hay un trabajo en curso ({activos}); no se lanza otro"
+                    estado_nuevo = dict(estado)
             elif fuente["extractor"] == "descarga" and resultado["urls"]:
                 guardados = descargar(lago, fuente, resultado["urls"], obtener, ahora.date(), detectado)
                 registro["accion"] = f"descarga: {len(guardados)} archivos"
