@@ -15,7 +15,7 @@ En cada tarea, «Hecho cuando» dice cómo se comprueba. De dónde sale cada una
 
 | # | Tarea | Por qué | Hecho cuando |
 |---|---|---|---|
-| T1 | **Reconstruir el cubo con la primera tanda real de Open Data** (lanzar «Cubo G7B» o el ciclo con `completo`) | La tanda de 20.000 registros (59.998 mediciones, del 15 de junio al 16 de noviembre de 2026) entró al lago a las 07:56, pero el cubo se había reconstruido a las 07:55 y sigue en 3.018 mediciones | El cubo tiene unas 63.000 mediciones y `v_render_por_nivel` muestra filas N2 (integradas) |
+| T1 | **Reconstruir el cubo con la primera tanda real de Open Data** (lanzar «Cubo G7B» o el ciclo con `completo`), **después de T14–T16** para que los niveles salgan bien | La tanda de 20.000 registros (59.998 mediciones) entró al lago a las 07:56, pero el cubo se había reconstruido a las 07:55 y sigue en 3.018 mediciones | El cubo publicado tiene 63.019 mediciones |
 | T2 | **Medir la cobertura de `fuentes/hardware.yml`** en la tanda real: qué porcentaje de GPUs queda «desconocida» y cuáles son los 20 nombres más comunes sin regla | Lo que no se reconoce no recibe nivel. Hay que saber cuánto se pierde | Hay un informe con el porcentaje y, si pasa del 10 %, las reglas nuevas con sus pruebas |
 | T3 | **Primer vistazo a P1 con datos reales**: mediana de render por nivel y clase de GPU para Blender 4.x y 5.x | Es la primera vez que hay datos de equipos modestos recientes | Hay una tabla en `docs/reportes/` con N2, N3 y N4, versión y escena, citando la versión del cubo |
 | T4 | **Destrabar `blender-reportes`**: confirmar si `Type/Report` es la etiqueta de los reportes nuevos y si `since`/`before` filtran por actualización. Probar sin etiqueta y con otras, con `geodar probar` en Actions | La prueba con ventanas dio solo 5 reportes en 6 días, pocos para el tráfico de Blender | Hay un número creíble de reportes por día, y la configuración ajustada en el catálogo |
@@ -42,6 +42,7 @@ En cada tarea, «Hecho cuando» dice cómo se comprueba. De dónde sale cada una
 | D8 | **Registro de procedencia por documento**: licencia, copia del `robots.txt`, señal de contenido y uso permitido (ingerir, referenciar o solo enlazar) | Cada documento en plata lleva esos campos y el asistente se niega a citar en extenso lo que está en rojo |
 | D9 | **Cobertura con alerta**: si un trabajo extrae menos páginas de las que lista el inventario, o no hubo ingesta en N días, se abre el aviso | El aviso `g7b-alerta` se abre en una prueba con un trabajo incompleto |
 | D10 | **Lista de oro** de 50 a 100 páginas de nicho conocidas, para medir cuánto encuentra cada araña y cuánto descubre de dominios nuevos | La lista está en `fuentes/` y hay una primera medición |
+| D12 | **Manual de Blender 5.3**: Open Data ya tiene 2.433 mediciones de 5.3, pero el sensor vigila 5.2, 4.5 y 3.6. Confirmar que existe `docs.blender.org/manual/en/5.3/objects.inv` y agregarlo | El sensor `sphinx` incluye 5.3 y la siguiente revisión lo recorre |
 | D11 | **Descubrir fuentes** con el índice de URL de Common Crawl (Parquet consultado con DuckDB) y los dominios que citan los foros | Una lista de candidatas, cada una con su licencia por revisar |
 
 ## Después: radar de telemetría
@@ -54,6 +55,11 @@ En cada tarea, «Hecho cuando» dice cómo se comprueba. De dónde sale cada una
 | T9 | **Censo de equipo en clase**: formulario de 2 minutos al inicio de cada grupo | Llega el primer grupo, cruzado con la ENDUTIH de INEGI |
 | T10 | **Decidir las licencias pendientes** de los colectores: Steam, OpenBenchmarking, Web3D Survey y GPUinfo | Cada una queda activada con su colector o descartada con su motivo |
 | T11 | **Ritmo de Open Data**: con 20.000 por semana, el archivo se completa en unas 18 semanas. Decidir si se sube a 50.000 | La decisión queda escrita en `telemetria.yml` |
+| T13 | **Conservar solo algunas versiones del cubo** en `oro/cubos/`: hoy hay 7 versiones con 61,4 MB, el 72 % del lago ([auditoría del 17 de noviembre](reportes/2026-11-17_auditoria_flujo_y_datos.md)) | Se conservan las últimas 3, y el puntero `control/cubo_actual.json` sigue funcionando |
+| T14 | **VRAM de las GPU nuevas** en `fuentes/hardware.yml`: RTX serie 50 (5090: 32 GB, 5080: 16 GB…), sus versiones para laptop y Radeon RX 9070. Hoy 18.282 mediciones quedan en N3 con confianza baja | Esas mediciones salen con su nivel y confianza media |
+| T15 | **Apple Silicon como clase propia** (`apple`), no como «integrada». Hoy los M Max y M Pro inflan el N2 | En `v_render_por_nivel`, el N2 contiene solo integradas Intel y AMD |
+| T16 | **Reglas que faltan**: «Intel Graphics» (Core Ultra), «Radeon 8060S», y las GPU de servidor (Tesla V100, P100, P4), que deben marcarse como servidor y quedar fuera del análisis de estudiantes | Las desconocidas bajan del 1,9 % |
+| T17 | **Carga del cubo con DuckDB**: leer los JSONL o los Parquet directamente en lugar de insertar fila por fila. Con 63.000 mediciones ya tarda minutos, y el límite es 1.000.000 | El cubo de la siguiente tanda se construye en menos de un minuto |
 | T12 | **Contexto de población**: ENDUTIH de INEGI (hogares con computadora, laptop o escritorio) y la encuesta de Steam como cota superior | Las dos fuentes están en el cubo como dimensión de población |
 
 ## Común a las dos
