@@ -30,15 +30,34 @@ Del 11 al 16 de noviembre de 2026 GitHub no disparó **ningún** evento de este 
 
 | Disparador | Para qué |
 |---|---|
-| `schedule` (cada 6 horas) | Si GitHub vuelve a disparar los horarios, no hace falta nada más |
+| **Relevo** (`relevo.yml`, desde el 17 de noviembre) | **El principal.** Cada vuelta del ciclo, al terminar, lanza el relevo. El relevo espera a la hora siguiente (00:11, 06:11, 12:11 o 18:11 UTC) y lanza el ciclo con `workflow_dispatch`, que sí es inmediato |
+| `schedule` (cada 6 horas) | Respaldo: llega tarde o no llega |
 | `workflow_dispatch` | A mano desde la pestaña Actions, o desde un programador externo por la API |
 | `repository_dispatch` (tipo `ciclo`) | Para programadores que solo saben hacer un POST |
 
 Causas documentadas de horarios que no corren: el flujo no está en la rama por defecto, el repositorio es un fork (vienen apagados), 60 días sin actividad en un repositorio público, o retrasos y omisiones de GitHub en horas de carga. Conviene revisar la pestaña Actions y *Settings › Actions › General* de todos modos.
 
-### Programador externo con cron-job.org (gratuito)
+### El relevo (lo que deja el flujo corriendo solo)
 
-Mientras GitHub no dispare los horarios, esto es lo que deja el flujo corriendo solo.
+El 16 de noviembre el ciclo solo corrió en una de sus cuatro horas (03:11, 09:11 y 21:11 no llegaron), y los Cuadernos corrieron casi 10 horas tarde. Los horarios de GitHub no sirven de reloj en este repositorio. En cambio, lanzar un flujo con `workflow_dispatch` desde otro flujo es inmediato: así lanza el ciclo sus tareas desde el primer día.
+
+```
+ciclo ──(último paso, siempre)──▶ relevo: espera a la hora siguiente ──▶ ciclo ──▶ relevo ...
+                                   ▲
+            horario de respaldo del relevo (cada 3 horas): retoma la cadena si se cortó
+```
+
+`.github/scripts/relevo.sh`:
+
+1. **Ciclo sin una vuelta buena en 8 horas:** abre o comenta el aviso `g7b-alerta`. Esto cubre el caso que el aviso del ciclo no veía: que el ciclo ni siquiera arranque. Lo cierra la siguiente vuelta buena.
+2. **La última vuelta tiene más de 6 h 15 min y no hay otra corriendo:** lanza el ciclo enseguida para ponerse al día.
+3. **Si no,** espera a la hora siguiente (como mucho 354 minutos; el tope de un trabajo es 360) y lanza el ciclo, salvo que ya esté corriendo o haya corrido hace menos de 30 minutos.
+
+Solo hay un relevo esperando a la vez (`concurrency` con `cancel-in-progress`), así que en Actions se ven relevos «cancelados»: es lo normal. Como el repositorio es público, la espera no consume minutos de pago. Si el repositorio pasa a privado, el relevo gasta unos 1.440 minutos al día y hay que cambiarlo por el programador externo.
+
+### Programador externo con cron-job.org (opcional)
+
+Con el relevo ya no hace falta. Sirve como tercera vía independiente de GitHub, o si el repositorio pasa a privado.
 
 1. **Token de GitHub de grano fino.** *Settings › Developer settings › Personal access tokens › Fine-grained tokens › Generate new token*:
    - Repository access: *Only select repositories* → `amatista-g7b-etl`.
@@ -52,7 +71,7 @@ Mientras GitHub no dispare los horarios, esto es lo que deja el flujo corriendo 
    - Activa las notificaciones de falla por correo.
 3. **Comprobar:** GitHub responde `204`. En la pestaña Actions aparece una vuelta de «Ciclo G7B (24/7)».
 
-Así hay dos alarmas independientes: cron-job.org avisa si GitHub rechaza el disparo (token vencido, por ejemplo), y el ciclo avisa si una tarea falla o los datos se quedan viejos.
+Con él hay una alarma más: cron-job.org avisa si GitHub rechaza el disparo (token vencido, por ejemplo), y el ciclo avisa si una tarea falla o los datos se quedan viejos.
 
 ## 3. Reprocesamiento: nada de lo extraído se pierde
 

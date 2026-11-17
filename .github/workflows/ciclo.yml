@@ -10,7 +10,9 @@ name: Ciclo G7B (24/7)
 #   entrega    ── publicar estado para Geoda → API de Amatista
 #
 # Disparadores (docs/OPERACION_24_7.md):
-#   schedule             cada 6 horas, si GitHub dispara los horarios de este repositorio
+#   relevo.yml           el de verdad: al terminar, cada vuelta lanza el relevo, que espera a la hora
+#                        siguiente y lanza la próxima vuelta
+#   schedule             cada 6 horas, de respaldo (GitHub los atrasa o se los salta en este repositorio)
 #   workflow_dispatch    a mano, o por la API desde un programador externo (cron-job.org)
 #   repository_dispatch  tipo «ciclo», para programadores que solo hacen un POST
 on:
@@ -79,3 +81,9 @@ jobs:
           ATRASADAS: ${{ steps.frescura.outputs.atrasadas }}
           VUELTA: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: bash .github/scripts/aviso.sh
+
+      # La siguiente vuelta no depende del horario de GitHub: el relevo espera a la hora y la lanza
+      # (relevo.yml). Va al final y siempre, aunque esta vuelta haya fallado.
+      - name: Pasar el relevo
+        if: ${{ always() }}
+        run: gh workflow run relevo.yml --ref main || echo "::warning::no se pudo lanzar el relevo; lo retoma su horario de respaldo"

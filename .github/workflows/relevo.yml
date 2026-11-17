@@ -1,0 +1,37 @@
+name: Relevo del ciclo G7B
+
+# Lanza el ciclo a su hora sin depender de los horarios de GitHub, que en este repositorio llegan
+# tarde o no llegan (docs/OPERACION_24_7.md, sección 2). Cada vuelta del ciclo, al terminar, lanza
+# este relevo; el relevo espera a la hora siguiente (00:11, 06:11, 12:11, 18:11 UTC) y lanza el ciclo.
+#
+# Solo hay un relevo esperando a la vez: uno nuevo cancela al anterior (por eso en Actions se ven
+# relevos «cancelados»: es lo normal). El horario de abajo es solo respaldo: si la cadena se corta,
+# el próximo relevo que llegue la retoma y, si el ciclo se saltó una hora, lo lanza enseguida.
+# El repositorio es público: esperar no consume minutos de pago.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 */3 * * *"
+
+permissions:
+  actions: write    # lanzar el ciclo y ver sus vueltas
+  contents: read
+  issues: write     # aviso si el ciclo lleva más de 8 horas sin una vuelta buena
+
+concurrency:
+  group: g7b-relevo
+  cancel-in-progress: true
+
+jobs:
+  relevo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/scripts
+      - name: Esperar la hora y lanzar el ciclo
+        run: bash .github/scripts/relevo.sh
