@@ -32,7 +32,7 @@ El catálogo no deja mezclarlas: una araña de Zyte solo puede ir a `destino: do
   ├─ destino documentos ─► embudo de calidad ─► plata ─► MongoDB conocimiento_3d.documentos
   ├─ destino catalogo ───► MongoDB g7b_catalogo.<coleccion>   (texturas, hdri, modelos, herramientas…)
   ├─ destino senales ────► Azure oro/senales/semanal.json  (+ g7b_panel.senales para Atlas Charts)
-  └─ destino telemetria ─► bronce y plata/telemetria → cubo DuckDB (v_render_por_nivel) → Geoda
+  └─ destino telemetria ─► bronce y plata/telemetria → cubo DuckDB: directas → Geoda; relativas → v_relativas_por_nivel
 ```
 
 **La división que se acordó:**

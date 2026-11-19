@@ -2,7 +2,7 @@
 
 **El motor de datos del 3D libre.** G7B mide cómo corre el software 3D libre en ordenadores reales, de los más antiguos a los más potentes, y reúne lo que se sabe de él: documentación, técnicas, texturas y herramientas. Con eso decide cómo debe trabajar cada equipo. Cada dato lleva su fuente, su versión y su licencia.
 
-[Geoda en GitHub Actions](docs/GEODA_KERNEL.md): planificador de laboratorio que procesa el cubo verificado después de cada construcción exitosa. Sus resultados se conservan como artefactos separados del estado público de Amatista.
+[Núcleo público de Geoda](docs/GEODA_NUCLEO.md): del equipo y la tarea al plan, sin red, con un paquete de conocimiento versionado (`publicacion/geoda_paquete.json`) que se construye cada semana desde el cubo del lago. Cada plan dice de dónde sale su evidencia y enlaza el manual de Blender.
 
 Es el proyecto hermano de **[Amatista](https://github.com/Maximiliano-cabello-mata/amatista)**, la plataforma que enseña 3D con Blender y A-Frame.
 - **Separados:** cada uno tiene su repositorio y sus nubes.

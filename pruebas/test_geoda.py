@@ -161,6 +161,7 @@ def test_de_punta_a_punta_con_el_cubo_real(tmp_path):
                 'escena': 'media', 'perfil': 'ligero', 'sonda': '0.2.0', 'metrica': 'cuadros_por_segundo_vista3d',
                 'unidad': 'fps', 'valor': fps, 'motivos': [], 'variacion': .01, 'valores': [fps] * 3,
                 'prueba': 'vista3d', 'licencia': 'propia', 'sin_ventana': False,
+                'entorno': 'laboratorio_escolar', 'consentimiento': True,   # medición DIRECTA
                 'equipo': {'cpu': 'CPU', 'so': 'Linux', 'huella': equipo, 'nivel': nivel}}
 
     entradas = [('lote', medicion(i, 'N2', 31 + i, f'e{i % 3}')) for i in range(6)]

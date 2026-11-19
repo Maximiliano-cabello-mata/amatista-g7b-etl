@@ -1,5 +1,7 @@
 # Plan maestro: el camino a seguir
 
+> **Actualización del 17 de noviembre de 2026:** el cubo ahora es `g7b.cubo/2`. Separa las mediciones **directas** (estudiantes y laboratorios escolares, con consentimiento) de las **relativas** (Open Data, la sonda en servidores) en `hechos_directos` y `hechos_relativos`, con dimensiones normalizadas. Las tablas `hechos_medicion`, `hechos_render` y `dim_dispositivo` ya no existen. Ver [CUBO.md](CUBO.md).
+
 Fecha: 2026-11-02. Un solo camino, de principio a fin, para que G7B quede **funcional y automático** con las ofertas del GitHub Student Developer Pack, y para que **Amatista, Geoda y G7B se alimenten entre sí**.
 
 - **Reúne** lo que se construyó con los dos agentes (PR #1 a #10): ingesta de texto, lago, warehouse, publicación segura, Azure privado y catálogo de ofertas.

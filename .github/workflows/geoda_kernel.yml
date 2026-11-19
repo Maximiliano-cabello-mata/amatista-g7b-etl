@@ -1,44 +1,61 @@
 name: Geoda kernel
+# Construye el paquete de conocimiento del kernel (g7b.geoda.paquete/1) desde el cubo VIGENTE del lago
+# (control/cubo_actual.json, con sus huellas verificadas), comprueba las citas del manual contra los
+# objects.inv, corre los casos de conformidad y publica:
+#   - en el lago: oro/geoda/<versión>/paquete.json + control/geoda_paquete_actual.json
+#   - en el repositorio: publicacion/geoda_paquete.json (la copia pública que lee el núcleo)
+# Solo si el contenido cambió. El paquete lleva solo agregados (geoda/paquete.py valida que no haya
+# huellas ni mediciones individuales).
 on:
   push:
     branches: [main]
-    paths: ['geoda/**', '.github/workflows/geoda_kernel.yml']
+    paths: ['geoda/**', 'fuentes/citas_manual.yml', 'fuentes/hardware.yml', '.github/workflows/geoda_kernel.yml']
   workflow_dispatch:
   # Sin workflow_run: el ciclo (ciclo.yml) lo lanza después del cubo.
 permissions:
-  contents: read
-  actions: read
+  contents: write
+concurrency:
+  group: geoda-publicacion
+  cancel-in-progress: false
 jobs:
-  planificar:
-    if: ${{ github.ref == 'refs/heads/main' && (github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository)) }}
+  paquete:
+    if: ${{ github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    environment: amatista1
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install duckdb==2.0.0
-      - id: origen
+      - run: pip install -r requirements-cubo.txt
+      - name: Construir el paquete desde el cubo del lago
         env:
-          GH_TOKEN: ${{ github.token }}
-          RUN_CUBO: ${{ github.event.workflow_run.id }}
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
         run: |
-          id="$RUN_CUBO"
-          if [ -z "$id" ]; then
-            id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/cubo.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          test -n "$AZURE_LAGO_URL" || { echo 'Falta AZURE_LAGO_URL en amatista1'; exit 1; }
+          python -m g7b_almacen.paquete_geoda --trabajo "$RUNNER_TEMP/geoda" --publico publicacion/geoda_paquete.json
+      - name: Conformidad del núcleo con el paquete publicado
+        run: python -m geoda conformidad --paquete publicacion/geoda_paquete.json > "$RUNNER_TEMP/conformidad.json" || { cat "$RUNNER_TEMP/conformidad.json"; exit 1; }
+      - name: Publicar en el repositorio solo si cambió
+        run: |
+          git add -- publicacion/geoda_paquete.json
+          if git diff --cached --quiet; then
+            echo "Paquete sin cambios"; exit 0
           fi
-          [[ "$id" =~ ^[0-9]+$ ]] || { echo 'No hay ejecución válida de Cubo G7B'; exit 1; }
-          echo "id=$id" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@v4
-        with:
-          github-token: ${{ github.token }}
-          run-id: ${{ steps.origen.outputs.id }}
-          name: cubo-${{ steps.origen.outputs.id }}
-          path: insumo
-      - run: python -m geoda.ejecutar --entrada insumo --salida salida
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m "data(geoda): publicar paquete de conocimiento del kernel [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
       - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
         with:
-          name: geoda-${{ github.run_id }}-cubo-${{ steps.origen.outputs.id }}
-          path: salida/
-          retention-days: 14
+          name: geoda-paquete-${{ github.run_id }}
+          path: |
+            publicacion/geoda_paquete.json
+            ${{ runner.temp }}/conformidad.json
+          retention-days: 30
+          if-no-files-found: ignore

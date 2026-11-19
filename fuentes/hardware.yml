@@ -11,18 +11,42 @@
 #   - vram_gb solo cuando el modelo tiene una sola cantidad de memoria. Si hay variantes (RTX 3060 de
 #     escritorio con 8 o 12 GB, RX 580 con 4 u 8), se deja vacío: Geoda asume con prudencia y lo dice.
 #   - Lo que no coincide con nada queda como «desconocida»: no se adivina.
-version: 1
+#   - Clases: integrada (Intel y AMD en el procesador), dedicada, apple (Apple Silicon: memoria
+#     unificada y rendimiento muy distinto de una integrada de laptop), servidor (GPU de centro de
+#     datos: no es el equipo de un estudiante) y desconocida. Para el nivel N0–N4, apple cuenta como
+#     integrada y servidor como dedicada; para comparar niveles, las dos se separan.
+version: 2
 
 gpus:
   # --- Integradas -------------------------------------------------------------------------------
-  - {patron: 'apple m\d', fabricante: apple, clase: integrada, nota: memoria unificada}
-  - {patron: 'intel.*(uhd|hd graphics|iris)', fabricante: intel, clase: integrada}
-  - {patron: 'intel.*arc.*\b[ab]\d{3}m?\b', fabricante: intel, clase: dedicada}
-  - {patron: 'intel.*arc', fabricante: intel, clase: integrada, nota: gráficos Arc de los Core Ultra}
-  - {patron: 'radeon.*\b(6[0-9]0|7[0-9]0|8[0-9]0)m\b', fabricante: amd, clase: integrada}
-  - {patron: 'radeon.*vega \d+ graphics|radeon\(tm\) graphics|radeon graphics', fabricante: amd, clase: integrada}
+  # gama: basica = no puede renderizar con Cycles en la GPU (Cycles usa el procesador) y su vista 3D
+  # es la más modesta; moderna = Cycles en GPU (oneAPI o HIP). Sin gama: no se sabe (no se adivina).
+  - {patron: 'apple (m|a)\d', fabricante: apple, clase: apple, nota: Apple Silicon, memoria unificada}
+  - {patron: 'intel.*iris.*xe', fabricante: intel, clase: integrada, gama: basica, nota: Iris Xe (11.ª a 13.ª gen), sin Cycles en GPU}
+  - {patron: 'intel.*(uhd|hd graphics|iris)', fabricante: intel, clase: integrada, gama: basica, nota: UHD, HD e Iris Plus, sin Cycles en GPU}
+  - {patron: 'intel.*arc pro b50\b', fabricante: intel, clase: dedicada, vram_gb: 16}
+  - {patron: 'intel.*arc pro b60\b', fabricante: intel, clase: dedicada, vram_gb: 24}
+  - {patron: 'intel.*arc b580\b', fabricante: intel, clase: dedicada, vram_gb: 12}
+  - {patron: 'intel.*arc b570\b', fabricante: intel, clase: dedicada, vram_gb: 10}
+  - {patron: 'intel.*arc a750\b', fabricante: intel, clase: dedicada, vram_gb: 8}
+  - {patron: 'intel.*arc a380\b', fabricante: intel, clase: dedicada, vram_gb: 6}
+  - {patron: 'intel.*arc.*\b(pro )?[ab]\d{2,3}m?\b', fabricante: intel, clase: dedicada, nota: Arc A, B y Pro B (tarjetas)}
+  - {patron: 'intel.*arc', fabricante: intel, clase: integrada, gama: moderna, nota: gráficos Arc de los Core Ultra (130V, 140V, 140T)}
+  - {patron: '^intel(\(r\))? graphics', fabricante: intel, clase: integrada, gama: moderna, nota: Core Ultra recientes}
+  - {patron: 'radeon.*\b610m\b', fabricante: amd, clase: integrada, gama: basica, nota: RDNA 2 de 2 unidades}
+  - {patron: 'radeon.*\b(6[0-9]0|7[0-9]0|8[0-9]0)m\b', fabricante: amd, clase: integrada, gama: moderna}
+  - {patron: 'radeon.*\b\d{3,4}s graphics', fabricante: amd, clase: integrada, gama: moderna, nota: Strix Halo (8050S, 8060S)}
+  - {patron: 'radeon.*vega \d+ graphics', fabricante: amd, clase: integrada, gama: basica, nota: Vega, sin Cycles en GPU}
+  - {patron: 'radeon\(tm\) graphics|radeon graphics', fabricante: amd, clase: integrada, nota: nombre genérico, de Vega a RDNA 3}
+
+  # --- Centro de datos (no son equipos de estudiantes) ---------------------------------------------
+  - {patron: 'tesla|nvidia [ahlbv]\d{2,3}\b|instinct', fabricante: nvidia, clase: servidor}
 
   # --- NVIDIA, portátiles (antes que escritorio: el nombre lleva «Laptop») ---------------------------
+  - {patron: 'rtx 5090 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 24}
+  - {patron: 'rtx 5080 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 16}
+  - {patron: 'rtx 5070 ti laptop', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 50[5-7]0 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 8}
   - {patron: 'rtx 4090 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 16}
   - {patron: 'rtx 4080 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 12}
   - {patron: 'rtx 40[67]0 laptop', fabricante: nvidia, clase: dedicada, vram_gb: 8}
@@ -34,6 +58,11 @@ gpus:
   - {patron: 'geforce mx\s?\d+', fabricante: nvidia, clase: dedicada, vram_gb: 2}
 
   # --- NVIDIA, escritorio -------------------------------------------------------------------------
+  - {patron: 'rtx 5090', fabricante: nvidia, clase: dedicada, vram_gb: 32}
+  - {patron: 'rtx (5080|5070 ti)', fabricante: nvidia, clase: dedicada, vram_gb: 16}
+  - {patron: 'rtx 5070', fabricante: nvidia, clase: dedicada, vram_gb: 12}
+  - {patron: 'rtx 5060 ti', fabricante: nvidia, clase: dedicada}
+  - {patron: 'rtx 50[56]0', fabricante: nvidia, clase: dedicada, vram_gb: 8}
   - {patron: 'rtx (4090|3090)', fabricante: nvidia, clase: dedicada, vram_gb: 24}
   - {patron: 'rtx 4080', fabricante: nvidia, clase: dedicada, vram_gb: 16}
   - {patron: 'rtx 4070', fabricante: nvidia, clase: dedicada, vram_gb: 12}
@@ -54,6 +83,9 @@ gpus:
   - {patron: 'nvidia|geforce|quadro|rtx a\d', fabricante: nvidia, clase: dedicada}
 
   # --- AMD dedicadas ------------------------------------------------------------------------------
+  - {patron: 'radeon ai pro r9700', fabricante: amd, clase: dedicada, vram_gb: 32}
+  - {patron: 'rx 9070', fabricante: amd, clase: dedicada, vram_gb: 16}
+  - {patron: 'rx 9060 xt', fabricante: amd, clase: dedicada}
   - {patron: 'rx 7900 xtx', fabricante: amd, clase: dedicada, vram_gb: 24}
   - {patron: 'rx 7900 xt', fabricante: amd, clase: dedicada, vram_gb: 20}
   - {patron: 'rx (7800 xt|6800|6900|6950)', fabricante: amd, clase: dedicada, vram_gb: 16}

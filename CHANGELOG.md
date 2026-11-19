@@ -5,8 +5,40 @@ La etiqueta **`hack4edu`** (commit `3aad461`) separa lo que ya teníamos de lo t
 
 ## Sin publicar · 16 de noviembre de 2026
 
+- **Vigía, la sonda continua** (`sonda/g7b_vigia.py`, [instrucciones](sonda/INSTALAR_VIGIA.txt)):
+  - Lanza Blender renderizando una animación y lee el tiempo de cada cuadro.
+  - Cada 5 s mira el equipo: procesador, memoria, frecuencia, temperaturas y GPU NVIDIA.
+  - Cada 5 min cierra una ventana `g7b.ventana/1`, comparada con la primera y con la anterior: estable, variación desde 10 %, caída importante desde 25 %.
+  - Sube cada ventana a `bronce/telemetria/vigia/` con una SAS de solo creación (`G7B_VIGIA_SAS`), sin sobrescribir; lo que no sube se reintenta.
+  - Funciona solo con Python; `psutil` es opcional. Falta llevar las ventanas al cubo (T20).
+- **Integradas básicas y modernas** (correcciones del análisis de un i3 de 10.ª con UHD):
+  - `fuentes/hardware.yml` (versión 2) da gama a cada integrada: `basica` (sin Cycles en GPU) o `moderna`. Las Intel Arc Pro B son dedicadas (antes inflaban el N2), y se agregó la VRAM de Arc B580, B570, A750, A380 y Pro B50/B60.
+  - El cubo guarda `gpu_gama` y `cpu_grupo` (`geoda/cpu.py`).
+  - El paquete compara el N2 solo con integradas modernas y agrega `render_cpu` (111 grupos de procesador). El núcleo ya no le dice a un i3 con UHD que «rinde 1 vez un N2»: le dice que su procesador renderiza unas 20 veces más lento (en portátil), y le advierte que Cycles no usará su GPU.
+  - Perfil ligero: `simplify` pasa a `true` y el plan lo toma de ahí. Antes el perfil decía «no» y el plan activaba Simplificar.
+  - Conformidad: 15 casos.
+- **Cubo `g7b.cubo/3`: velocidad y rendimiento** ([CUBO.md](docs/CUBO.md), sección 1 bis):
+  - Cada métrica tiene su naturaleza: **velocidad** (render: Open Data y las pruebas de render de la sonda) o **rendimiento** (fluidez de la vista 3D y de la animación, respuesta al editar: la sonda).
+  - Cada medición lleva un **índice sin unidades** frente a la mediana geométrica de su grupo, calculado dentro de su clase y con referencia solo de mediciones fiables.
+  - Vistas nuevas: `v_equipos_*` (velocidad y rendimiento juntos por equipo, para calibrar) y `v_naturaleza_por_nivel_*`.
+  - El paquete de Geoda toma sus factores solo de la velocidad.
+- **Núcleo público de Geoda** ([núcleo](docs/GEODA_NUCLEO.md); [revisión del flujo hasta el kernel](docs/reportes/2026-11-17_flujo_hasta_el_kernel.md)):
+  - **Paquete de conocimiento** `g7b.geoda.paquete/1` (`geoda/paquete.py`): perfiles de directas (con un mínimo de 5 equipos), factores relativos de Open Data entre niveles, citas del manual verificadas contra `objects.inv` (`fuentes/citas_manual.yml`), el estándar de hardware, los niveles y las operaciones. Cada sección lleva su huella, y el paquete se valida para que no lleve datos de equipos.
+  - **API** `geoda.nucleo/1` (`geoda/nucleo.py`): de la huella y la tarea al plan, sin red, con escalera de evidencia (`medido`, `provisional`, `regla_base`), estimación relativa marcada como tal y citas por versión e idioma.
+  - **Conformidad** (`geoda/conformidad.json`): 12 casos para cualquier implementación futura. Hay comandos nuevos: `python -m geoda paquete | plan | conformidad`.
+  - **`geoda_kernel.yml`** lee el cubo vigente del lago, en lugar del artefacto que caducaba, y publica el paquete en `oro/geoda/` y en `publicacion/geoda_paquete.json` solo si cambió.
+  - **Primer paquete real:** 18 factores y 84 de 84 citas verificadas; todavía 0 perfiles medidos.
+- **Hardware** (T14–T16): las clases `apple` y `servidor` se separan para comparar niveles, y hay VRAM de las RTX 50, RX 9000 y GTX 16. El cubo recalcula el hardware de Open Data al construirse, así que las correcciones de la tabla llegan sin volver a capturar. Además, el cubo lee el modelo de GPU de la vista que reporta la sonda.
 - **Ciclo 24/7** (`.github/workflows/ciclo.yml`): un solo reloj que lanza en orden extracción, análisis, la parte semanal (telemetría, cubo y kernel de Geoda) y la entrega, espera cada tarea y abre un issue `g7b-alerta` si algo falla o hay fuentes atrasadas. Las demás tareas dejan de tener horario propio y encadenamientos. Se puede disparar desde un programador externo ([operación 24/7](docs/OPERACION_24_7.md)).
 - **Reprocesamiento** (`g7b_ingesta/procesar.py`): cada archivo de bronce guarda su huella de reglas y se reevalúa solo cuando cambian la taxonomía, los umbrales, el catálogo de su fuente o la versión del embudo. Sin duplicar conteos ni chocar con el índice de repetidos. A mano: `--fuente`, `--lote`, `--forzar`.
+- **Cubo `g7b.cubo/2`: mediciones directas y relativas separadas** ([CUBO.md](docs/CUBO.md)):
+  - Las **directas** (estudiantes y laboratorios escolares, con consentimiento) y las **relativas** (Open Data, la sonda en servidores) viven en tablas separadas (`hechos_directos` y `hechos_relativos`) y ninguna vista las mezcla.
+  - Geoda solo lee directas y aceptadas.
+  - Las dimensiones son tipadas: el equipo con el estándar `g7b.hardware/1`, y un diccionario de métricas.
+  - Identidad semántica para Open Data, y en la sonda un id que ya no depende del orden de la lista.
+  - Carga en bloque: 63.019 mediciones en unos 9 segundos.
+  - La sonda declara `--entorno` y `--consentimiento`; en GitHub Actions corre con `--entorno ci`.
+- **Bitácora del 16 y 17 de noviembre** ([bitácora](docs/bitacoras/2026-11-17.md)): incluye la primera tanda real de Open Data (20.000 registros y 59.998 mediciones), la [lista de tareas de las arañas](docs/TAREAS_ARANAS.md), el [índice de fuentes consultadas](docs/investigacion/2026-11-17_fuentes_consultadas.md) y la [revisión de arañas de telemetría del navegador](docs/investigacion/2026-11-17_aranas_telemetria_navegador/REVISION.md). El documento original de esa revisión pasa de la raíz a `docs/investigacion/`.
 - **Radar de telemetría separado de las arañas de documentación** ([estándar de telemetría](docs/ESTANDAR_TELEMETRIA.md)):
   - **Estándar `g7b.hardware/1`** (`fuentes/hardware.yml` y `g7b_telemetria/hardware.py`): cualquier nombre de GPU o CPU se traduce a fabricante, clase y VRAM, y recibe un nivel N0–N4 con las reglas de Geoda, su confianza y sus motivos.
   - **Blender Open Data completo:** se recorre por tandas, de lo nuevo hacia atrás, con el estado guardado en el lago. Antes se tomaban siempre los primeros 1.000 registros: marzo de 2022 y Blender 3.0.1.

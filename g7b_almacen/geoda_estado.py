@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 
-from .cubo import ACTUAL, CONTRATO, sha
+from .cubo import ACTUAL, CONTRATOS_LEGIBLES, sha
 
 CONTRATO_GEODA = "g7b.geoda.estado/1"
 LIMITE_MANIFIESTO = 256_000
@@ -21,7 +21,7 @@ def entero(valor):
 
 def estado_del_cubo(lago):
     puntero = lago.leer_json(ACTUAL)
-    if not isinstance(puntero, dict) or puntero.get("contrato") != CONTRATO:
+    if not isinstance(puntero, dict) or puntero.get("contrato") not in CONTRATOS_LEGIBLES:
         raise ValueError("G7B: no hay cubo vigente verificado")
     version = puntero.get("version")
     if not isinstance(version, str) or not version or len(version) > 100:
@@ -33,7 +33,7 @@ def estado_del_cubo(lago):
     if len(contenido) > LIMITE_MANIFIESTO or sha(contenido) != puntero.get("sha256"):
         raise ValueError("G7B: integridad del manifiesto fallida")
     manifiesto = json.loads(contenido)
-    if (manifiesto.get("contrato") != CONTRATO or manifiesto.get("estado") != "verificado"
+    if (manifiesto.get("contrato") != puntero.get("contrato") or manifiesto.get("estado") != "verificado"
             or manifiesto.get("version") != version):
         raise ValueError("G7B: versión del manifiesto no verificada")
     cubo = manifiesto.get("archivos", {}).get("oro/cubo.duckdb", {})
@@ -48,8 +48,18 @@ def estado_del_cubo(lago):
     # Publicarlas sin un validador de perfiles sería científicamente incorrecto.
     if manifiesto.get("recomendaciones_habilitadas") is not False:
         raise ValueError("G7B: estado de recomendaciones desconocido; revisar contrato")
-    return {"version": version, "mediciones": total, "aceptadas": aceptadas,
-            "revision": revision, "recomendaciones_habilitadas": False}
+    estado = {"version": version, "mediciones": total, "aceptadas": aceptadas,
+              "revision": revision, "recomendaciones_habilitadas": False}
+    if manifiesto.get("contrato") in ("g7b.cubo/2", "g7b.cubo/3"):
+        # Separación de clases: lo directo (estudiantes y laboratorios, con consentimiento) y lo relativo.
+        directas, relativas = manifiesto.get("directas"), manifiesto.get("relativas")
+        if not isinstance(directas, dict) or not isinstance(relativas, dict) or \
+                not all(entero(n) for n in [*directas.values(), *relativas.values()]) or \
+                sum(directas.values()) + sum(relativas.values()) != total:
+            raise ValueError("G7B: conteos por clase de dato inconsistentes")
+        estado.update(directas=sum(directas.values()), directas_aceptadas=directas.get("aceptado", 0),
+                      relativas=sum(relativas.values()))
+    return estado
 
 
 def generar(lago, documentos):

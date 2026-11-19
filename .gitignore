@@ -32,3 +32,9 @@ Thumbs.db
 .vscode/
 research_notes/
 reports/
+
+# Ventanas del vigía (sonda continua): se suben al lago, no al repositorio
+vigia/
+vigia_prueba/
+vigia_registro.txt
+vigia_errores.txt

@@ -15,12 +15,23 @@ def ejecutar(entrada, salida):
     meta = json.loads((entrada / 'manifiesto.json').read_text(encoding='utf-8'))
     db = entrada / 'oro/cubo.duckdb'
     digest = hashlib.sha256(db.read_bytes()).hexdigest()
-    if meta.get('contrato') != 'g7b.cubo/1' or digest != meta['archivos']['oro/cubo.duckdb']['sha256']:
+    contrato = meta.get('contrato')
+    if contrato not in ('g7b.cubo/1', 'g7b.cubo/2', 'g7b.cubo/3') or digest != meta['archivos']['oro/cubo.duckdb']['sha256']:
         raise ValueError('No coincide el contrato o la huella del cubo')
     with duckdb.connect(str(db), read_only=True) as con:
-        calidad = dict(con.execute('SELECT estado,count(*) FROM mediciones GROUP BY estado').fetchall())
-        if calidad != meta['calidad'] or sum(calidad.values()) != meta['mediciones']:
-            raise ValueError('No coinciden los conteos del manifiesto')
+        def conteos(tabla):
+            return dict(con.execute(f'SELECT estado,count(*) FROM {tabla} GROUP BY estado').fetchall())
+        if contrato == 'g7b.cubo/1':  # cubo anterior, mientras se publica el primero de la versión 2
+            calidad = conteos('mediciones')
+            if calidad != meta['calidad'] or sum(calidad.values()) != meta['mediciones']:
+                raise ValueError('No coinciden los conteos del manifiesto')
+        else:
+            directas, relativas = conteos('hechos_directos'), conteos('hechos_relativos')
+            if directas != meta['directas'] or relativas != meta['relativas'] or \
+                    sum(directas.values()) + sum(relativas.values()) != meta['mediciones']:
+                raise ValueError('No coinciden los conteos del manifiesto')
+            calidad = {'directas': directas, 'relativas': relativas}
+        # Geoda solo decide con mediciones directas (v_mediciones_aceptadas = directas aceptadas).
         medidas, omitidas = perfiles.leer_cubo(con)
         documento = perfiles.generar(medidas, omitidas, cubo_version=digest)
         tabla = costos.TablaCostos.desde_cubo(con)
