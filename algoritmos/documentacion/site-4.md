@@ -39,3 +39,7 @@ Site 4.1 envía a revisión las descripciones de interfaz estandarizadas que car
 El segundo piloto duplica el presupuesto solo para esta evaluación (hasta 128 intentos en un mismo trabajo). El radar ordinario conserva 64. Se contrasta cada URL con todas las páginas del trabajo 4.0 antes de seleccionar etiquetas. Se reportan por separado el recorrido operativo y las páginas nunca descargadas por 4.0. La habilitación utiliza únicamente muestras de páginas inéditas, revisadas con la rúbrica fijada antes de la corrida. El resultado también se contrasta con los primeros 64 intentos. Esta prueba valida la precisión de una muestra por página con candidatos en este capítulo. El rendimiento de captura y la cobertura de otras fuentes requieren mediciones propias.
 
 [Compendio de modelos matemáticos del proyecto](compendio-2026-11-19.txt) · [Etiquetas por versión](auditoria.json). El compendio conserva las alternativas de investigación; esta ficha delimita las ecuaciones que ejecuta el código.
+
+## Comprobación del inventario con el modelo congelado
+
+El trabajo `883618/3/3` entregó 67 candidatos en 43 de 128 páginas. La primera reserva aportó 17 útiles de 21 muestras. Antes de extraer más páginas se fijó el segundo conjunto: todas las páginas `std:doc` del capítulo oficial ausentes de ambos trabajos anteriores, ordenadas por URL, hasta un máximo de 128. El auditor reutiliza el trabajo ya terminado al repetir la operación. El recorrido ordinario mantiene su presupuesto. [Dictámenes del piloto](revision-piloto-4.1.json) · [Plan de validación](validacion-site.json).

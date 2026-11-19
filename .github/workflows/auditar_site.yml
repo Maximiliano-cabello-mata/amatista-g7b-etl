@@ -1,0 +1,28 @@
+name: Auditar el corpus de Site
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["algoritmos/documentacion/validacion-site.json"]
+
+permissions:
+  contents: read
+concurrency:
+  group: ingesta
+  cancel-in-progress: false
+
+jobs:
+  auditar:
+    runs-on: ubuntu-latest
+    environment: amatista1
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install -r requirements-lago.txt
+      - name: Examinar las citas y cubrir el inventario pendiente
+        env:
+          SHUB_APIKEY: ${{ secrets.ZYTE_API_KEY }}
+        run: python -m herramientas.auditar_site
