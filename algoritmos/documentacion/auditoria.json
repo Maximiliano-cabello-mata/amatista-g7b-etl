@@ -1,1 +1,227 @@
-[]
+[
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#inputs",
+    "id": "0de3fa457ac7bded267d12790b36f236a7f444ce8b03782e26e24cd4b7450ffe",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Especifica qué pases de Cycles conservan detalle al quitar ruido y qué habilita HDR."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/compositor_system.html#type",
+    "id": "749dc34d31d10dbe1c112332a2d35bd2b15af504ef186d243ea73a8e0e4cdcaa",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Distingue la interpretación de los canales del vector de velocidad entre fotogramas."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/filter.html#inputs",
+    "id": "c00e6ffb095d315cedd9b6bc8bae895ba351bae241496fd8ecbcac9269233e92",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": false,
+    "motivo": "La entrada estándar y el factor de influencia describen el patrón genérico de interfaz."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/mask.html#example",
+    "id": "21007951ceafd876d4f12f36680498e9c10bb6fddefdd95cf17301cc820188fd",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Aísla el objeto con una máscara para excluirlo de la corrección del fondo."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/mask/ellipse_mask.html#usage",
+    "id": "2338dafcedfb9e7de27cc610856a73b308952d0cf6609b1650eac92c919b3bf5",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Da gestos distintos para rotar, mover y conservar la proporción de la máscara."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/color_spill.html#inputs",
+    "id": "f92d05669cde62c27df0f2cb0cadee900bd1a12704a8fd8de65c4021e38969ed",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Explica el significado de Fac=1 y de mezclar la corrección con la imagen original."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/alpha_over.html#fade-in",
+    "id": "46e4d0a7d113adf12a51687d1c91b99b5ff4241d3b988402492106be228e6d67",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Interpola Factor de cero a uno en 30 fotogramas para producir un fundido."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/vector_blur.html#usage",
+    "id": "c168c0c33288650aa1af8607453f3b46e2a76aca243696c46d19c2861a5fe19b",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Propone dos ajustes para reducir artefactos del pase Speed y advierte del exceso de blur."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#inputs",
+    "id": "4093329b1d4474f98e03e7b03610dca9010719008ed59973847f0df8b5316075",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": false,
+    "motivo": "Solo reformula la función básica de mezclar A y B; carece de un ajuste o consecuencia específica del caso."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/despeckle.html#despeckle-node",
+    "id": "0822dde0a2e055e2671b2b1c49a8a62dce00fc424682f9fc6e0c5f4cdf4b1eae",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Describe la condición de suavizado y el mecanismo que usa el filtro."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#properties",
+    "id": "0c152f8294c95c39c09ad0fdf470060a46058da85473c9edfafaee7b0bcb0e34",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Relaciona resolución de proceso, precisión visual y tiempo para las distintas calidades de Glare."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/kuwahara.html#kuwahara-node",
+    "id": "68f2f5979ec0f4d1e4e8c7e658e081c2f51b5832e9184e3e8be55df6cd8a3f75",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Distingue la preservación de contornos y el aspecto de la variante anisotrópica."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/mask/cryptomatte_legacy.html#usage",
+    "id": "a3b8e454ee69cef80c3bdcdb4c2869e20416fa5e0c470db9f737f101829ee361",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Da la secuencia de pases, conexiones, selección y salida Matte para extraer una máscara."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/anti_aliasing.html#examples",
+    "id": "213fddd8f8379357748f5426c51d382d3141085c38f6f3995575913418af4fa6",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Distingue el conjunto de bordes que cambian con Threshold y Contrast Limit."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/dilate_erode.html#properties",
+    "id": "c759c5b1e0a7b006ccc2f7b6d282ef50c9b3d22ecf0794fc180993dc52bdaa68",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Relaciona el modo de dilatación con forma, esquinas y conservación de grises."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/sun_beams.html#example",
+    "id": "b9980126bd98e2041a4ed72d0a0c1dea77ee3dd042c900a796ea6a3e579d32ad",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": false,
+    "motivo": "Enumera posibilidades de control, sin identificar una configuración reproducible de Sun Beams ni su resultado."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/blur.html#inputs",
+    "id": "b37b3bd5d7745ec65f481044e5c4d9d05f852038632cc7a2326cc6d5d5f17221",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Explica la escala de la máscara, el intervalo del radio y la aproximación separable."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/color_balance.html#inputs",
+    "id": "adf910fc76bb668a6e0e3fbc764324c248b989bdacf4618360e589199016e328",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": false,
+    "motivo": "Describe una entrada y un factor genéricos sin enseñar un comportamiento propio de Color Balance."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/color_correction.html#inputs",
+    "id": "3ad4ba3546b7ba203a2018625d39b7dfbcbac223233472dec761b4c882131a48",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": false,
+    "motivo": "Repite el patrón de influencia de una entrada estándar sin una decisión específica de corrección."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#postprocess",
+    "id": "d9d45c7d3569ad5222f501baee358506a74ee1e169cd6a3728d0741d0fee73a2",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Documenta el signo y la unidad de Dilate y Feather y el efecto en el borde."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/rotate.html#properties",
+    "id": "e5455363d964bbb1fc17a9195934e5567dafe863eb945b069fef61126fd0117c",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Contrasta los artefactos y el coste de tres interpoladores al rotar."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/scale.html#properties",
+    "id": "d1d51e485d4954a040133fd943b4742ab72883f678662f53dfc167f88a0d86cb",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Añade reglas específicas de escala por resolución, Stretch, Fit y Crop."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/transform.html#properties",
+    "id": "f4bd96cc6752b4133e455efeb4754428973de4c1294ee7ec911f76f0b2897e1d",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": false,
+    "motivo": "Repite el mismo pasaje de interpolación ya aportado por Rotate, sin conocimiento adicional en el bloque."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/displace.html#inputs",
+    "id": "34d0421ce06758d0e499d518ba9408148010fc26a5b268087d61a25408e217ea",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Asigna R y G a los ejes y explica el efecto particular de una imagen en escala de grises."
+  },
+  {
+    "modelo": "site/4.0",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/math.html#properties",
+    "id": "231db15e613c534acedb8633734caacdecc8abda6d44ee16482e6957d99f1c75",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "El fragmento visible especifica el efecto exacto de Epsilon en Compare y las salidas booleanas."
+  }
+]

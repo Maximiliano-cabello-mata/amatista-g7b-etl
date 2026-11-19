@@ -57,6 +57,10 @@ class ModeloDocumental:
     version_modelo = MODELO
     clasificar = staticmethod(decidir)
 
+    @staticmethod
+    def clave_referencia(item, frag, bloque, estado, original):
+        return original
+
     def __init__(self):
         self.vistos = {}
         self.tablas = {}
@@ -83,10 +87,11 @@ class ModeloDocumental:
                         evento["decision"] = "conflicto"
                         evento.setdefault("contrasta_con", []).extend(sorted(set(valores.values())))
                     valores.setdefault(fila[1], frag["url"])
-                if clave in self.vistos:
-                    evento.update(decision="referencia", referencia=self.vistos[clave])
+                referencia = self.clave_referencia(item, frag, bloque, evento["decision"], clave)
+                if referencia in self.vistos:
+                    evento.update(decision="referencia", referencia=self.vistos[referencia])
                 else:
-                    self.vistos[clave] = frag["url"]
+                    self.vistos[referencia] = frag["url"]
                 eventos.append(evento)
         counts = Counter(ev["decision"] for ev in eventos)
         evaluables = sum(counts[k] for k in ("candidato", "revision", "descartado", "hipotesis", "conflicto"))

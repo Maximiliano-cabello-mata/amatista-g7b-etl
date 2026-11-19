@@ -1,4 +1,4 @@
-# Site 4.0 · selección de documentación técnica
+# Site 4.1 · selección de documentación técnica
 
 La araña ocupa el nombre `paginas` en Zyte. `blender_docs` recorre su inventario Sphinx. Site tiene asignado el capítulo de composición del manual de Blender 4.5, fuera de las secciones de esa otra araña. Geodar revisa el índice de composición cada 168 horas y, si observa un cambio, envía un trabajo de hasta 64 intentos. Una modificación exclusiva de una página interior puede pasar inadvertida al sensor del índice.
 
@@ -22,10 +22,20 @@ La frontera canoniza URLs, elimina fragmentos y reserva una única visita por UR
 
 ## Evaluación del 80 %
 
-La población operativa de este piloto son las páginas seleccionadas en el recorrido acotado de composición 4.5. Antes de conocer etiquetas, se toma un candidato por página con el menor SHA-256 de `piloto-site-4/` seguido del identificador de bloque. La rúbrica exige una acción o parámetro con un efecto o comprobación útil y correctamente atribuida. Un índice, una coincidencia léxica o un texto insuficiente cuentan como fallo. La traza registra la fracción de páginas que produjeron candidatos por separado.
+La población operativa de este piloto son las páginas seleccionadas en el recorrido acotado de composición 4.5. Antes de conocer etiquetas, se toma un candidato por página con el menor SHA-256 de `piloto-site-41/` seguido del identificador de bloque. La rúbrica exige una acción o parámetro con un efecto o comprobación útil y correctamente atribuida. Un índice, una coincidencia léxica o un texto insuficiente cuentan como fallo. La traza registra la fracción de páginas que produjeron candidatos por separado.
 
 El auditor cuenta $k$ muestras útiles entre $n$ revisadas. Se informa $k/n$ y el [límite inferior unilateral de Wilson al 95 %](README.md). Con $n=0$ o límite inferior por debajo de 0.80, los candidatos quedan pendientes de calibración. Las etiquetas se aíslan por fuente y versión del modelo. Un resultado solo cubre las condiciones y la unidad de muestreo evaluadas.
 
 ## Operación
 
-El radar y el despliegue comparten el grupo de concurrencia de ingesta. Antes del relevo se espera a que concluya cualquier trabajo de Site o histórico. El registro de la release admite exactamente `paginas` y `blender_docs`. El piloto comprueba la firma `site/4.0`, el número de páginas, las decisiones y la cola del proyecto. La muestra y la clave de trabajo están en el registro de GitHub Actions.
+El radar y el despliegue comparten el grupo de concurrencia de ingesta. Antes del relevo se espera a que concluya cualquier trabajo de Site o histórico. El registro de la release admite exactamente `paginas` y `blender_docs`. El piloto comprueba la firma `site/4.1`, el número de páginas, las decisiones y la cola del proyecto. La muestra y la clave de trabajo están en el registro de GitHub Actions.
+
+## Ajuste después del primer piloto
+
+Site 4.0 produjo 44 candidatos en 25 de 64 páginas. La revisión previa al ajuste valoró como útiles 19 de 25 (76 %). Quedaron identificados cuatro bloques de interfaz genérica, un ejemplo impreciso y un pasaje repetido entre nodos. [Despliegue 4.0](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44616678446).
+
+Site 4.1 envía a revisión las descripciones de interfaz estandarizadas que carecen de explicación adicional y los usos nominales de «control» que antes simulaban una relación de efecto. Para bloques de prosa candidatos de al menos 30 palabras, conserva como referencia la repetición del mismo texto normalizado dentro de la misma fuente, programa y versión. Un cambio de valor, operador o contenido conserva su propia evidencia. En bronce se mantiene cada aparición con su cita.
+
+El segundo piloto duplica el presupuesto solo para esta evaluación (hasta 128 intentos en un mismo trabajo). El radar ordinario conserva 64. Se contrasta cada URL con todas las páginas del trabajo 4.0 antes de seleccionar etiquetas. Se reportan por separado el recorrido operativo y las páginas nunca descargadas por 4.0. La habilitación utiliza únicamente muestras de páginas inéditas, revisadas con la rúbrica fijada antes de la corrida. El resultado también se contrasta con los primeros 64 intentos. Esta prueba valida la precisión de una muestra por página con candidatos en este capítulo. El rendimiento de captura y la cobertura de otras fuentes requieren mediciones propias.
+
+[Compendio de modelos matemáticos del proyecto](compendio-2026-11-19.txt) · [Etiquetas por versión](auditoria.json). El compendio conserva las alternativas de investigación; esta ficha delimita las ecuaciones que ejecuta el código.

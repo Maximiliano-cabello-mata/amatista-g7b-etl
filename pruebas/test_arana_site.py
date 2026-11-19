@@ -86,3 +86,23 @@ def test_arana_site_catalogo_operativo():
     spider = PaginasSpider(**argumentos)
     assert spider.explorar and spider.version == "4.5" and "blur" in spider.temas
     assert spider.max_paginas == 64
+
+def test_arana_site_quita_plantilla_y_repite_con_referencia():
+    from motor_extraccion.site import ModeloSite
+
+    modelo = ModeloSite()
+    def evaluar(texto, titulo, url):
+        frag = {"fragmento_id": "f", "url": url, "programa": "blender", "version": "4.5",
+                "titulo": titulo, "jerarquia": [titulo], "bloques": [{"tipo": "parrafo", "texto": texto}]}
+        item = modelo.anotar({"fuente": "f", "fragmentos": [frag]})
+        return item["documental"]["eventos"][0]
+
+    plantilla = "Factor Controls the amount of influence the node exerts on the output image. Image Standard color input."
+    assert evaluar(plantilla, "Inputs", "a")["decision"] == "revision"
+    cita = ("Filter determines how pixel values are interpolated. When applied to a photograph, "
+            "a larger neighborhood preserves gradients and reduces the jagged edges; nearest sampling "
+            "is faster at the cost of visible steps in motion.")
+    assert evaluar(cita, "Rotate", "a")["decision"] == "candidato"
+    repetido = evaluar(cita, "Transform", "b")
+    assert repetido["decision"] == "referencia" and repetido["referencia"] == "a"
+    assert evaluar(cita.replace("faster", "slower"), "Transform", "c")["decision"] == "candidato"

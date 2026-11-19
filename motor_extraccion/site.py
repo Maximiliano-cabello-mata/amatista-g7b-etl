@@ -4,21 +4,39 @@ import re
 from collections import Counter
 from urllib.parse import unquote, urlsplit
 
-from .documental import CONDICION, VERSION, ModeloDocumental, decidir, normal
+from .documental import CONDICION, VERSION, ModeloDocumental, decidir, huella, normal
 from .frontera_documental import palabras
 
-MODELO_SITE = "site/4.0"
+MODELO_SITE_ANTERIOR = "site/4.0"
+MODELO_SITE = "site/4.1"
 PARAMETRO = re.compile(r"\b(?:blur|radius|threshold|samples?|filter|alpha|resolution|intensity|"
                        r"exposure|saturation|opacity|contrast|gamma|scale|kernel|factor|mask|"
                        r"buffer|pixel size|precision|quality|denois\w*|render time|frame rate)\b")
 EFECTO = re.compile(r"\b(?:determines?|controls?|reduces?|increases?|decreases?|limits?|"
                     r"preserves?|prevents?|multiplies|divides|affects?|specifies|clamps?|"
                     r"controla|reduce|aumenta|limita|determina)\b")
+# Descripciones de interfaz que se repiten en numerosos nodos. Solo puntúan
+# cuando el bloque aporta además una condición, un ejemplo o un efecto específico.
+FRASE_ESTANDAR = re.compile(
+    r"\b(?:standard (?:color|float|vector|image) input|controls the amount of influence "
+    r"the node exerts on the output image|controls the amount of mixing between the [ab] and [ab] inputs|"
+    r"the two inputs that are mixed together)\b", re.I)
+UNIDADES = re.compile(r"\b\d+(?:[.,]\d+)?\s*(?:%|px|pixels?|ms|fps|gib|frames?|seconds?)\b")
+EVIDENCIA = re.compile(r"\b(?:if|when|unless|instead|whereas|because|without|at the cost of|"
+                       r"for example|by default|in order to|si|cuando|a costa de)\b")
 PESOS = (0.25, 0.40, 0.20)
 
 
 class ModeloSite(ModeloDocumental):
     version_modelo = MODELO_SITE
+
+    @staticmethod
+    def clave_referencia(item, frag, bloque, estado, original):
+        texto = normal(bloque.get("texto", ""))
+        if estado == "candidato" and len(texto.split()) >= 30 and bloque.get("tipo") in {
+                "parrafo", "definiciones", "lista", "aviso"} and not bloque.get("bloques_codigo"):
+            return huella([item.get("fuente"), frag.get("programa"), frag.get("version"), texto])
+        return original
 
     @staticmethod
     def clasificar(bloque, frag, foro):
@@ -35,6 +53,19 @@ class ModeloSite(ModeloDocumental):
             if CONDICION.search(texto) or VERSION.fullmatch(str(frag.get("version") or "")):
                 estado, destinos = ("hipotesis" if foro else "candidato"), ["geoda"]
                 senales["parametro_con_efecto"] = True
+        if estado == "candidato" and destinos == ["geoda"]:
+            if FRASE_ESTANDAR.search(texto):
+                restante = FRASE_ESTANDAR.sub(" ", texto)
+                if len(restante.split()) < 12 and not (UNIDADES.search(restante) or EVIDENCIA.search(restante)):
+                    return "revision", [], {**senales, "descripcion_generica": True}
+            # En «for ultimate control» y expresiones similares el sustantivo
+            # no establece la relación técnica que busca el clasificador base.
+            sin_sustantivo = re.sub(r"\b(?:for|more|greater|full|ultimate|total|fine) (?:\w+ )?control\b",
+                                    "", texto)
+            if sin_sustantivo != texto:
+                alterno, _, _ = decidir({**bloque, "texto": sin_sustantivo}, frag, foro)
+                if alterno != "candidato" and not EFECTO.search(sin_sustantivo):
+                    return "revision", [], {**senales, "efecto_sin_demostrar": True}
         return estado, destinos, senales
 
 

@@ -1,6 +1,6 @@
 # Selección documental v3
 
-Esta ficha describe la versión 3. Para el despliegue vigente de sitios, consulta [Site 4.0](site-4.md). El recorrido por inventario de `blender_docs` sigue usando este clasificador.
+Esta ficha describe la versión 3. Para el despliegue vigente de sitios, consulta [Site 4.1](site-4.md). El recorrido por inventario de `blender_docs` sigue usando este clasificador.
 
 El identificador público de Zyte para sitios es **paginas**. **blender_docs** usa el inventario Sphinx del manual y el mismo clasificador de bloques. El cargador de Scrapy registra esos dos nombres. Los trabajos previos siguen identificados por su clave de Zyte. [Código histórico de paginas](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/blob/0f870b2fabab07ca29025230c7bdb864cc1505d5/motor_extraccion/spiders/paginas.py) · [Prototipo y ocho recorridos del PR 29](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/pull/29).
 
