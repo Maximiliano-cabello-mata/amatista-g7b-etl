@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: desplegar-zyte
+  group: ingesta
   cancel-in-progress: false
 
 jobs:
@@ -41,8 +41,13 @@ jobs:
       - name: Pruebas de las arañas
         run: python -m pytest pruebas -q -k "arana or manual or mongo"
       - name: Las arañas cargan
-        run: scrapy list
+        run: |
+          scrapy list | tee /tmp/g7b-spiders
+          diff -u <(printf '%s\n' blender_docs paginas) /tmp/g7b-spiders
       - name: Desplegar
         env:
           SHUB_APIKEY: ${{ secrets.ZYTE_API_KEY }}
-        run: shub deploy
+        run: |
+          python -m herramientas.verificar_zyte_documental antes
+          shub deploy
+          python -m herramientas.verificar_zyte_documental despues
