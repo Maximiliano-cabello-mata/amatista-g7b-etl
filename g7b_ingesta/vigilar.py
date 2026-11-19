@@ -54,7 +54,8 @@ def argumentos_zyte(fuente, urls, extra=None):
     if arana == "paginas":
         argumentos = {"urls": json.dumps(urls), "modo": fuente["modo"], "dominios": json.dumps(fuente["dominios"]),
                       "seguir": "1" if zyte.get("seguir") else "0", "prefijo": zyte.get("prefijo", ""),
-                      "max_paginas": str(zyte.get("max_paginas", 200))}
+                      "max_paginas": str(zyte.get("max_paginas", 200)), "programa": fuente.get("programa", ""),
+                      "tipo_fuente": fuente.get("tipo", "")}
     else:  # araña especializada: sabe qué recorrer; el sensor solo avisó que hubo cambios
         # Lo que diga el sensor (por ejemplo, qué versiones del manual cambiaron) manda sobre el catálogo.
         combinados = {**(zyte.get("argumentos") or {}), **(extra or {})}

@@ -1,0 +1,89 @@
+"""Relevo en el proyecto de scrapinghub.yml y prueba end-to-end del código recién desplegado."""
+import argparse
+import hashlib
+import json
+import os
+import time
+
+from scrapinghub import ScrapinghubClient
+
+from motor_extraccion.documental import MODELO
+
+NOMBRES = {"paginas", "blender_docs"}
+RETIRADAS = {"manual_sphinx", "paginas_laboratorio"}
+BASE = "https://docs.blender.org/manual/en/4.5/render/"
+SEMILLA = BASE + "cycles/render_settings/sampling.html"
+TAG = "g7b-documental-v3-piloto"
+
+
+def activos(proyecto):
+    return list(proyecto.jobs.iter(state=["pending", "running"], meta=["spider", "state"]))
+
+
+def comprobar_trabajos(proyecto, esperar):
+    fin = time.monotonic() + esperar
+    while True:
+        trabajos = activos(proyecto)
+        nombres = [j["spider"] for j in trabajos]
+        print("Trabajos pendientes o en ejecución:", [(j["key"], j["spider"]) for j in trabajos], flush=True)
+        if (not (set(nombres) & (RETIRADAS | {"paginas"})) and len(nombres) < 2):
+            return
+        if time.monotonic() >= fin:
+            raise RuntimeError("El proyecto todavía tiene trabajos que se solaparían con el relevo")
+        time.sleep(10)
+
+
+def ejecutar(proyecto):
+    remotas = proyecto.spiders.list()
+    actual = next(s["version"] for s in remotas if s["id"] == "paginas")
+    disponibles = {s["id"] for s in remotas if s.get("version") == actual}
+    print("Arañas en la versión desplegada:", actual, sorted(disponibles), flush=True)
+    if disponibles != NOMBRES:
+        raise RuntimeError("El inventario remoto de la versión no coincide con la release")
+    comprobar_trabajos(proyecto, 120)
+    previo = next(iter(proyecto.jobs.iter(spider="paginas", state="finished", has_tag=TAG,
+                                         meta=["close_reason", "items"], count=1)), {})
+    piloto = not (previo.get("close_reason") == "finished" and previo.get("items", 0))
+    limite = 32 if piloto else 1
+    args = {"fuente": "blender-manual", "programa": "blender", "version": "4.5",
+            "urls": json.dumps([SEMILLA]), "prefijo": BASE, "seguir": "1" if piloto else "0",
+            "temas": json.dumps(["render", "sampling", "noise", "memory", "performance"]),
+            "max_paginas": str(limite)}
+    job = proyecto.jobs.run("paginas", job_args=args, add_tag=[TAG] if piloto else ["g7b-documental-smoke"])
+    print("Prueba real en Zyte:", job.key, "máximo de páginas:", limite, flush=True)
+    fin = time.monotonic() + 600
+    while job.metadata.get("state") != "finished":
+        if time.monotonic() >= fin:
+            raise RuntimeError(f"Tiempo agotado esperando el trabajo {job.key}")
+        time.sleep(8)
+    razon = job.metadata.get("close_reason")
+    paginas, candidatos = 0, 0
+    for item in job.items.iter():
+        if item.get("documental", {}).get("modelo") != MODELO:
+            raise RuntimeError("Zyte devolvió una salida sin la firma del modelo desplegado")
+        paginas += 1
+        eventos = [e for e in item["documental"]["eventos"] if e["decision"] == "candidato"]
+        candidatos += len(eventos)
+        if eventos:
+            # Elegir un candidato reproducible por página antes de conocer su etiqueta.
+            e = min(eventos, key=lambda x: hashlib.sha256(("piloto-1/" + x["id"]).encode()).digest())
+            f = next(f for f in item["fragmentos"] if f["fragmento_id"] == e["fragmento"])
+            bloque = f["bloques"][e["bloque"]]
+            print("MUESTRA " + json.dumps({"url": e["url"], "id": e["id"], "titulo": f["titulo"],
+                  "destinos": e["destinos"], "texto": bloque["texto"][:1200]}, ensure_ascii=False), flush=True)
+    print(f"RESULTADO job={job.key} modelo={MODELO} cierre={razon} paginas={paginas} candidatos={candidatos}",
+          flush=True)
+    if razon != "finished" or not 0 < paginas <= limite or not candidatos:
+        raise RuntimeError("El trabajo remoto no entregó evidencia clasificada")
+    comprobar_trabajos(proyecto, 0)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("fase", choices=["antes", "despues"])
+    fase = parser.parse_args().fase
+    proyecto = ScrapinghubClient(os.environ["SHUB_APIKEY"]).get_project(883618)
+    if fase == "antes":
+        comprobar_trabajos(proyecto, 240)
+    else:
+        ejecutar(proyecto)

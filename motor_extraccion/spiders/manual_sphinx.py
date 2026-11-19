@@ -31,6 +31,7 @@ from urllib.parse import urlparse
 import scrapy
 from scrapy.exceptions import CloseSpider
 
+from ..documental import ModeloDocumental, huella
 from ..inventario_sphinx import filtrar, leer
 from .fragmentos_sphinx import extraer_fragmentos
 
@@ -81,6 +82,7 @@ class ManualSphinxSpider(scrapy.Spider):
         self.modo = modo
         self.max_por_version = int(max_por_version)  # 0: sin tope por versión (solo el global)
         self.esperadas, self.extraidas = {}, {}
+        self.modelo = ModeloDocumental()
         self._contenidos = {}  # (versión, hash_contenido) -> primera url con ese contenido
 
     async def start(self):  # Scrapy 2.13 o más nuevo
@@ -117,6 +119,7 @@ class ManualSphinxSpider(scrapy.Spider):
             yield from self.por_enlaces(version)
             return
         paginas = filtrar(inventario["paginas"], self.secciones)
+        self._estadistica(f"g7b/elegibles/{version}", len(paginas), fijar=True)
         if self.max_por_version:
             paginas = paginas[:self.max_por_version]
         self.esperadas[version] = len(paginas)
@@ -155,8 +158,8 @@ class ManualSphinxSpider(scrapy.Spider):
         self._estadistica(f"g7b/extraidas/{version}")
         documento = self.extraer(response, version, seccion)
         if documento:
-            # Solo el texto: hash_contenido incluye los fragmentos, que llevan la URL de cada apartado.
-            clave = (version, hashlib.sha256(documento["contenido"].encode("utf-8")).hexdigest())
+            estructura = [(f["jerarquia"], f["bloques"]) for f in documento["fragmentos"]]
+            clave = (version, huella([documento["contenido"], estructura]))
             primera = self._contenidos.setdefault(clave, documento["url"])
             if primera != documento["url"]:
                 # La misma página publicada en otra ruta: se anota la ruta, sin repetir el texto.
@@ -165,6 +168,10 @@ class ManualSphinxSpider(scrapy.Spider):
                     "schema_version", "extractor_version", "doc_id", "fuente", "url", "programa", "version",
                     "seccion", "titulo", "hash_contenido", "canonica", "ruta", "extraido_en")}
                 documento["duplicado_de"] = primera
+            else:
+                self.modelo.anotar(documento)
+                for estado, cantidad in documento["documental"]["conteos"].items():
+                    self._estadistica(f"g7b/documental/{estado}", cantidad)
             yield documento
         else:
             self._estadistica("g7b/descartadas_sin_contenido")
