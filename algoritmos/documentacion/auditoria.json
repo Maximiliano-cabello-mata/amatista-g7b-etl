@@ -475,5 +475,38 @@
     "orden": 128,
     "tramo": "reserva",
     "inedita_40": true
+  },
+  {
+    "modelo": "site/4.1",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_correct.html#properties",
+    "id": "04367682bb92e3b426275fe9173bb9b4c609478d467027efaa979ae0d83af13c",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Explica cómo mover puntos en la curva HSV afecta intervalos específicos del matiz.",
+    "trabajo": "883618/3/4",
+    "muestra": true
+  },
+  {
+    "modelo": "site/4.1",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_saturation.html#inputs",
+    "id": "b21ca509f0d10750adb705cf2c46ecbd32310f34562f440c194f3984c4a9bc36",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Relaciona los extremos equivalentes de Hue y cuantifica el efecto de Saturation y Value.",
+    "trabajo": "883618/3/4",
+    "muestra": true
+  },
+  {
+    "modelo": "site/4.1",
+    "fuente": "blender-compositor-45",
+    "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/tone_map.html#inputs",
+    "id": "7b096274f8532027c250de57de84bd852156d70cf34377c1915a0a1d49f4c46f",
+    "revisor": "Codex (revisión de citas, 2026-11-19)",
+    "util": true,
+    "motivo": "Da valores precisos para elegir adaptación global o local y entre canales.",
+    "trabajo": "883618/3/4",
+    "muestra": true
   }
 ]
