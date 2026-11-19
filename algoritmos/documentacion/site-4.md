@@ -43,3 +43,20 @@ El segundo piloto duplica el presupuesto solo para esta evaluación (hasta 128 i
 ## Comprobación del inventario con el modelo congelado
 
 El trabajo `883618/3/3` entregó 67 candidatos en 43 de 128 páginas. La primera reserva aportó 17 útiles de 21 muestras. Antes de extraer más páginas se fijó el segundo conjunto: todas las páginas `std:doc` del capítulo oficial ausentes de ambos trabajos anteriores, ordenadas por URL, hasta un máximo de 128. El auditor reutiliza el trabajo ya terminado al repetir la operación. El recorrido ordinario mantiene su presupuesto. [Dictámenes del piloto](revision-piloto-4.1.json) · [Plan de validación](validacion-site.json).
+
+## Resultado verificado el 19 de noviembre de 2026
+
+| Medición | Resultado |
+|---|---:|
+| Páginas del inventario de composición 4.5 visitadas con Site 4.1 | 131 de 131 |
+| Páginas que produjeron candidatos | 46 de 131 (35,1 %) |
+| Bloques útiles tras revisar todos los candidatos del lote | 64 de 70 (91,4 %) |
+| Muestras útiles en páginas inéditas para el ajuste, una por página con candidatos | 20 de 24 (83,3 %) |
+| Límite inferior unilateral de Wilson al 95 % sobre esas 24 páginas | 67,6 % |
+| Umbral de habilitación automática de la fuente y el modelo | 80,0 % |
+
+El piloto entregó 67 candidatos y la reserva final aportó otros 3. Codex revisó cada bloque con la rúbrica de utilidad técnica. La evaluación carece de segunda lectura humana. Los seis fallos fueron descripciones genéricas de mezcla o influencia, un parámetro que reformulaba su nombre y un pie de figura sin ajustes reproducibles. El censo mide este lote completo. **La publicación automática de candidatos de esta fuente y modelo queda pendiente de calibración.** Se agotó la reserva de páginas inéditas de esta edición.
+
+El máximo observado en las verificaciones de Zyte fue un trabajo a la vez. La cola estaba vacía al cierre. En Azure quedaron `883618-3-3.jsonl.gz` (128 registros) y `883618-3-4.jsonl.gz` (3 registros), bajo `bronce/zyte/paginas/2026-11-19/`.
+
+[Censo y dictamen por bloque](resultados-site-4.1.json) · [Despliegue y piloto](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44617738668) · [Inventario](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44619074242) · [Copia de las 128 páginas](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44585217011/attempts/3) · [Copia de las 3 restantes](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44585217011/attempts/4).

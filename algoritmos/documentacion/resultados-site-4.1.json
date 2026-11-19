@@ -1,0 +1,587 @@
+{
+  "fuente": "blender-compositor-45",
+  "modelo": "site/4.1",
+  "inventario": 131,
+  "paginas_visitadas": 131,
+  "paginas_con_candidatos": 46,
+  "censo_de_bloques": {
+    "n": 70,
+    "k": 64,
+    "utilidad": 0.9142857142857143
+  },
+  "calibracion_paginas_ineditas": {
+    "n": 24,
+    "k": 20,
+    "precision": 0.8333333333333334,
+    "inferior_95_unilateral": 0.6762292729584085,
+    "umbral": 0.8,
+    "habilitada": false
+  },
+  "trabajos": [
+    "883618/3/3",
+    "883618/3/4"
+  ],
+  "revisor": "Codex, evaluación del texto citado. Sin segunda revisión humana.",
+  "evidencia": [
+    {
+      "id": "7911498a34c54125f6e7b872edf38462f454e2e54aa88db75a245a075f7d7f27",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#denoise-node",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Usa denoising con menos muestras para acortar el render de Cycles."
+    },
+    {
+      "id": "0de3fa457ac7bded267d12790b36f236a7f444ce8b03782e26e24cd4b7450ffe",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Pases para conservar detalle y activar los datos del denoiser."
+    },
+    {
+      "id": "7e829c9840ad4ab7456918e15647fbd397a7a4488b54028f92e5802b4a106010",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Contrasta prefiltrado None, Fast y Accurate según ruido inicial, detalle y tiempo."
+    },
+    {
+      "id": "df693ab7a8a6121808fc5b14ea12680fcb94936d3aec625004dfa49ae3215799",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Relaciona el número de muestras de entrada con detalle que conserva el denoiser."
+    },
+    {
+      "id": "749dc34d31d10dbe1c112332a2d35bd2b15af504ef186d243ea73a8e0e4cdcaa",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/compositor_system.html#type",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Diferencia los canales de velocidad previa y posterior de Vector Blur."
+    },
+    {
+      "id": "361953fdb6d60efb513b01fe767f7f77d4f755cd4b12e5526c2fe6c4faee45a0",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/filter.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Elegir filtro según realce de bordes, ruido y artefactos de afilado."
+    },
+    {
+      "id": "cb9b9e6f970f5d6b16e5b2e4755e46bcfdb5c444c84bf4695cfb21fb59cca1be",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/mask.html#motion-blur",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Distingue coste y calidad de Samples y las unidades de Shutter."
+    },
+    {
+      "id": "21007951ceafd876d4f12f36680498e9c10bb6fddefdd95cf17301cc820188fd",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/mask.html#example",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "La máscara permite excluir un objeto de la corrección de fondo."
+    },
+    {
+      "id": "2338dafcedfb9e7de27cc610856a73b308952d0cf6609b1650eac92c919b3bf5",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/mask/ellipse_mask.html#usage",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Los gestos modifican tamaño, rotación y relación de aspecto de la máscara."
+    },
+    {
+      "id": "f92d05669cde62c27df0f2cb0cadee900bd1a12704a8fd8de65c4021e38969ed",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/color_spill.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "La cita cuantifica la aplicación completa del efecto y el mezclado parcial."
+    },
+    {
+      "id": "46e4d0a7d113adf12a51687d1c91b99b5ff4241d3b988402492106be228e6d67",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/alpha_over.html#fade-in",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica cómo producir un fundido de 30 fotogramas con Time Curve y Factor."
+    },
+    {
+      "id": "c168c0c33288650aa1af8607453f3b46e2a76aca243696c46d19c2861a5fe19b",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/vector_blur.html#usage",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Relaciona los artefactos de movimiento con el límite Maximum Speed y el suavizado del pase."
+    },
+    {
+      "id": "978d933f9dd89e5539895b0541686e802e5db40c26d612807db0bcb19ca2d675",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#mix-color-node",
+      "trabajo": "883618/3/3",
+      "util": false,
+      "muestra": false,
+      "motivo": "Definición genérica de mezcla por factor que aparece también bajo el nodo de vectores."
+    },
+    {
+      "id": "dbd6de75cb2f8e97387febc7a98bbc84747a5ed03776247b60f24652b2c11015",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Distingue factores por eje y extrapolación con Clamp Factor desactivado."
+    },
+    {
+      "id": "d1107f41f3f78e1e1f309883e357207b1d994b7e5933aebaef51c4c0a870a241",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#encoding-your-watermark-in-an-image",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Combina Translate, RGB to BW y Map Range para atenuar y localizar la marca de agua."
+    },
+    {
+      "id": "0822dde0a2e055e2671b2b1c49a8a62dce00fc424682f9fc6e0c5f4cdf4b1eae",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/despeckle.html#despeckle-node",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Especifica la decisión basada en desviación local y el suavizado condicional."
+    },
+    {
+      "id": "461ed90fbc5079eb02cdb72ad2f734621443c5f0e1170f62f13bccd32be902d8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/despeckle.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Distingue umbral de complejidad y número de píxeles vecinos coincidentes."
+    },
+    {
+      "id": "467bb7208d1656ff8f706563a500cdab58e6c80921a4991b2a112efda72bfb24",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#highlights",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica cómo cambian la región de brillo y su transición al variar dos controles."
+    },
+    {
+      "id": "c7f8026566687dd39399d51c233263e69c42a1ebd33045408135ef8c7c36216a",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#clamp",
+      "trabajo": "883618/3/3",
+      "util": false,
+      "muestra": false,
+      "motivo": "Reformula el nombre Maximum sin explicar una elección, condición ni consecuencia más allá de ese nombre."
+    },
+    {
+      "id": "0c152f8294c95c39c09ad0fdf470060a46058da85473c9edfafaee7b0bcb0e34",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Explica el coste de los modos de Glare y cómo bajar resolución para la vista previa."
+    },
+    {
+      "id": "68f2f5979ec0f4d1e4e8c7e658e081c2f51b5832e9184e3e8be55df6cd8a3f75",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/kuwahara.html#kuwahara-node",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "El filtro suaviza conservando contornos y la variante anisotrópica aproxima pinceladas."
+    },
+    {
+      "id": "10be3c289a7f1cafa65048b75073ebe585f2167e58e2661778c1660981c5e5a9",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/kuwahara.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Precisa cuándo Size incrementa coste y artefactos y cuándo dejar de aumentar Uniformity."
+    },
+    {
+      "id": "a3b8e454ee69cef80c3bdcdb4c2869e20416fa5e0c470db9f737f101829ee361",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/mask/cryptomatte_legacy.html#usage",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Guía la obtención de una máscara mediante pases y conexiones concretas."
+    },
+    {
+      "id": "12dea255e4e373e010a63ab36a4327c0f3b9f6e83abacc5d8a5eb77dba5c9475",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/anti_aliasing.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Explica los artefactos por bajo contraste y el valor cero para desactivar la detección de esquinas."
+    },
+    {
+      "id": "213fddd8f8379357748f5426c51d382d3141085c38f6f3995575913418af4fa6",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/anti_aliasing.html#examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Identifica qué bordes afectan Threshold y Contrast Limit."
+    },
+    {
+      "id": "b6facad76c9da461d8d10dff1ef426479d7d6b4df400104ee313b680095e1bc8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/dilate_erode.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Relaciona signo de Size y dilatación o erosión y distingue los dos controles Falloff."
+    },
+    {
+      "id": "c759c5b1e0a7b006ccc2f7b6d282ef50c9b3d22ecf0794fc180993dc52bdaa68",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/dilate_erode.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica los compromisos entre esquinas, grises y forma del filtro."
+    },
+    {
+      "id": "b37b3bd5d7745ec65f481044e5c4d9d05f852038632cc7a2326cc6d5d5f17221",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/blur.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Incluye el intervalo del radio con máscara y el beneficio de la aproximación separable."
+    },
+    {
+      "id": "ba2efc48595c989917f8290c841ab88594e51deb0a7a66f7cce0fdf09bc18d30",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/blur.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Distingue velocidad y preservación de bordes entre perfiles de desenfoque."
+    },
+    {
+      "id": "38e90283a22a3f5cb8be2c36e4a39d547641337c17de7f24acff77db54bf2f76",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/color_balance.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Separa el efecto de Lift, Gamma y Gain por rango tonal."
+    },
+    {
+      "id": "4828f1f7a881029dd5c0e33cbb40d5b0c1cfed27be1d2738142c6f28e096d9b4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#preprocess",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Describe un prefiltrado que cambia el cálculo del matte conservando luminancia e imagen de salida."
+    },
+    {
+      "id": "10e8b1e9211b2a882e5d2538a8e1663d37e99c5d9ae5f63479fed70ee40b6de2",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#edges",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Ofrece un procedimiento de comprobación visual y valores para equilibrar detalle y halo."
+    },
+    {
+      "id": "d9d45c7d3569ad5222f501baee358506a74ee1e169cd6a3728d0741d0fee73a2",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#postprocess",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Da dirección y unidades de la expansión y del suavizado de bordes del matte."
+    },
+    {
+      "id": "e5455363d964bbb1fc17a9195934e5567dafe863eb945b069fef61126fd0117c",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/rotate.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Compara velocidad, escalones y suavidad para elegir interpolación al rotar."
+    },
+    {
+      "id": "d1d51e485d4954a040133fd943b4742ab72883f678662f53dfc167f88a0d86cb",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/scale.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Especifica escalas por tamaño de escena y distingue los tres ajustes de encuadre."
+    },
+    {
+      "id": "34d0421ce06758d0e499d518ba9408148010fc26a5b268087d61a25408e217ea",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/displace.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Mapea R y G a los ejes de desplazamiento y explica el caso monocromo."
+    },
+    {
+      "id": "231db15e613c534acedb8633734caacdecc8abda6d44ee16482e6957d99f1c75",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/math.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "El extracto documenta el criterio Epsilon de Compare y la salida binaria."
+    },
+    {
+      "id": "8729d8285fb2bcca9af6c1767d02da507b0996284fc2b03859c3c91fb90858c9",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/math.html#brightening-scaling-a-channel",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Combina Multiply en el canal Y y acotación de la salida mediante Map Value."
+    },
+    {
+      "id": "47e8087317973896e3de26feeb3f7674e7fe8643830a21d568635cafa59f84bb",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/bokeh_blur.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Limita Bokeh Blur a una zona con una máscara para reducir tiempo de recomposición."
+    },
+    {
+      "id": "dcb0a045a5e8f501afc4dc57e2e98646c64394f09b446cb22ca09857130046d4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/bokeh_blur.html#examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Indica cómo mantener el primer plano enfocado y corregir bordes de la máscara."
+    },
+    {
+      "id": "ded95f0c0933bc002afc5c41227faab6dcacf0a3126aee4b6f1b8635aba86ca9",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/directional_blur.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Cuantifica el crecimiento exponencial del coste de Samples y su efecto visual."
+    },
+    {
+      "id": "38aacad94507579728cd2b0c752fb9aa2aae88fc6f4800ff7a988ec0e692b7fb",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/movie_clip.html#movie-clip-node",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Distingue salidas y controles entre secuencias de imágenes y clips con tracking."
+    },
+    {
+      "id": "239897ba3867f52e14f2b59bbcba6ce9e0127926bcafd5aee84cae576472876a",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/difference_key.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Relaciona Tolerance y Falloff con la transparencia y continuidad de los bordes."
+    },
+    {
+      "id": "556edeec6f858df0e1132a7a433dd9e70eec3be1feb1929e0c09462dabccd622",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/distance_key.html#distance-key-node",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Define el cálculo específico del alfa por distancia tridimensional de color en Distance Key."
+    },
+    {
+      "id": "3e9c9b9bd470925f3a6623f349eeea790591123346628a51d5bf5ac3b5290be7",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/distance_key.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica la diferencia de transparencia con Falloff alto o bajo respecto al color clave."
+    },
+    {
+      "id": "e1c818b6fee14cd470183e1e70fd72d9ac83a6d6390f690458de5614624623f4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying_screen.html#example",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Describe el falso recorte del primer plano como coste de ampliar las tolerancias."
+    },
+    {
+      "id": "931008bb24d0a9075c279db81d8fc534f0a95da56b772f7b3eb4c62b6e2a1a91",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/brick.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Frequency=2 alterna filas y distingue el ajuste de anchura en filas concretas."
+    },
+    {
+      "id": "a14ca791d33bb4170f6d50cbc6a73a3784bfed66148a5b1d7925fd9d857c5366",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/gabor.html#examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Relaciona anisotropía, frecuencia, contraste y elección de Scale."
+    },
+    {
+      "id": "501d036a7d3316dd529c0b92e491b2fa38914234407758544e37b2b967f3b300",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/noise.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "El valor fraccionario de Detail interpola dos octavas y se ejemplifica con 2.5."
+    },
+    {
+      "id": "e2641257f65ca8c8a06bb2dc1964b25deba7fed054f957cfbee1e29195507b1c",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/corner_pin.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Añade el beneficio de la interpolación anisotrópica al proyectar en ángulos oblicuos."
+    },
+    {
+      "id": "b1648283f3bfffa89eedda8dce3dbcddc14618e9a88e05bc09837c74b3031e40",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/map_uv.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica las dos alternativas documentadas para Map UV y cuándo la anisotrópica evita aliasing."
+    },
+    {
+      "id": "41439b3bb9b3c00721ae5320e6081989c80b045591f6b8e576c24f639d095d41",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/mix_vector.html#mix-vector-node",
+      "trabajo": "883618/3/3",
+      "util": false,
+      "muestra": true,
+      "motivo": "Definición general de mezcla e interpolación; no concreta ajustes de un caso ni una consecuencia específica."
+    },
+    {
+      "id": "a1642deb0d16d24daeff4a1b11de5e0d9e39ef5ce875446dbf5866ec2b672d36",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/vector_curves.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": false,
+      "muestra": true,
+      "motivo": "Plantilla de influencia sobre el vector, sin condición, operación o consecuencia propia."
+    },
+    {
+      "id": "ad798652505b76835d54da39fa7a7bf6f20e219702b67b2fcf109490164660ac",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/scene/time_curve.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica cómo invertir la curva invierte el tiempo de entrada."
+    },
+    {
+      "id": "e1f8974e96d0d21ff75394a56327eecc32dce6283fa3a20b29000bfc759569e7",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/relative_to_pixel.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "La imagen determina la resolución de referencia de la conversión de unidades relativas a píxeles."
+    },
+    {
+      "id": "2d0ede96309024ebec71c4a376cfd544f59eed74ec867c4832f985e7483d08d8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#properties",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Relaciona F-Stop, magnitud de blur y situaciones en que el control queda inactivo."
+    },
+    {
+      "id": "c6aa97c2bb0a435825712c90701f18cc8bc24393e5626696d12b6ad7fa6c262d",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#no-z-buffer-examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Sustituye el Z-buffer con una imagen gris y precisa cómo se interpretan blanco y negro."
+    },
+    {
+      "id": "57b25aabcea4a8873813f694660543964a6c7d4788e112c07702f0b6ad387adc",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#no-z-buffer-examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Explica por qué se debe escalar una textura que regula el blur sin Z-buffer."
+    },
+    {
+      "id": "208836b87679c1c7c03351bbfe21b8fc1bc404187fe96ea4676ec9c71be9103e",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#hints",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Identifica artefactos por grandes discontinuidades de distancia y una limitación del posprocesado."
+    },
+    {
+      "id": "38e617fccd80788c89896615b5982149a1509b205c3a0e6341d9fb49be6130a4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/limitations.html#tdr-on-windows",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Identifica un fallo de GPU, su condición temporal bajo Windows y el nodo costoso asociado."
+    },
+    {
+      "id": "f98c4333a6e068f905eb3c446d5c03c7adf6e0bca9388cb33ef1fd7d02c32a49",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/float_curve.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": false,
+      "muestra": true,
+      "motivo": "Plantilla de influencia sobre un valor y entrada estándar."
+    },
+    {
+      "id": "9aaad891db285ba7a891fc0f4e75b600f6ea510e3a38bf478e6d7a2d15c912c2",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/exposure.html#examples",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Da una operación localizada: usar máscara con Exposure para aclarar solo la ventana."
+    },
+    {
+      "id": "d2457400141bf1909a6e6d5c0ca844a915477db8ef9007dbd4d9629f5d530a27",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/rgb_curves.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Negro y blanco se mapean a valores de entrada específicos del compositor."
+    },
+    {
+      "id": "0dc4722176fe2db5308a2a218291a5eb725e0a6b472d2b0d1b8185c37cf4b713",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/rgb_curves.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Da una operación concreta para fijar niveles con el cuentagotas sobre la imagen."
+    },
+    {
+      "id": "2cbf515bea8f8c2dd36a3555cd28cb3032dfe603791bb645af9444df105b7454",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/rgb_curves.html#examples",
+      "trabajo": "883618/3/3",
+      "util": false,
+      "muestra": true,
+      "motivo": "Pie de figura que enumera cuatro resultados sin los ajustes que los producen."
+    },
+    {
+      "id": "9cfe4e230277e2dbf6d7df1da7a887950eac82de5c9891bf6351371bc5a2a923",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/bright_contrast.html#inputs",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": false,
+      "motivo": "Distingue el efecto aditivo de Brightness y el escalado de Contrast incluidos los valores negativos."
+    },
+    {
+      "id": "1a9e0f83b48f85883164e1f74f2bc16595becf34da99f971d40d91d302b4d0b7",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/bright_contrast.html#notes",
+      "trabajo": "883618/3/3",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica el efecto de sumar sin acotar el pase especular y nombra dos ajustes correctivos."
+    },
+    {
+      "id": "04367682bb92e3b426275fe9173bb9b4c609478d467027efaa979ae0d83af13c",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_correct.html#properties",
+      "trabajo": "883618/3/4",
+      "util": true,
+      "muestra": true,
+      "motivo": "Explica cómo mover puntos en la curva HSV afecta intervalos específicos del matiz."
+    },
+    {
+      "id": "b21ca509f0d10750adb705cf2c46ecbd32310f34562f440c194f3984c4a9bc36",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_saturation.html#inputs",
+      "trabajo": "883618/3/4",
+      "util": true,
+      "muestra": true,
+      "motivo": "Relaciona los extremos equivalentes de Hue y cuantifica el efecto de Saturation y Value."
+    },
+    {
+      "id": "7b096274f8532027c250de57de84bd852156d70cf34377c1915a0a1d49f4c46f",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/tone_map.html#inputs",
+      "trabajo": "883618/3/4",
+      "util": true,
+      "muestra": true,
+      "motivo": "Da valores precisos para elegir adaptación global o local y entre canales."
+    }
+  ]
+}

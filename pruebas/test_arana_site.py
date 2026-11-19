@@ -106,3 +106,19 @@ def test_arana_site_quita_plantilla_y_repite_con_referencia():
     repetido = evaluar(cita, "Transform", "b")
     assert repetido["decision"] == "referencia" and repetido["referencia"] == "a"
     assert evaluar(cita.replace("faster", "slower"), "Transform", "c")["decision"] == "candidato"
+
+def test_arana_site_separa_censo_y_calibracion_del_lote():
+    from g7b_ingesta.calidad_documental import AUDITORIA
+
+    informe = json.loads((AUDITORIA.parent / "resultados-site-4.1.json").read_text(encoding="utf8"))
+    filas = json.loads(AUDITORIA.read_text(encoding="utf8"))
+    decisiones = {e["id"]: e["util"] for e in informe["evidencia"]}
+    assert len(decisiones) == informe["censo_de_bloques"]["n"]
+    assert sum(decisiones.values()) == informe["censo_de_bloques"]["k"]
+    corte = [f for f in filas if f["modelo"] == informe["modelo"] and f["id"] in decisiones]
+    assert all(f["util"] == decisiones[f["id"]] for f in corte)
+    resultado = calibraciones(corte)[clave(informe["fuente"], informe["modelo"])]
+    esperado = informe["calibracion_paginas_ineditas"]
+    assert (resultado["n"], resultado["k"]) == (esperado["n"], esperado["k"])
+    assert resultado["inferior95"] == pytest.approx(esperado["inferior_95_unilateral"])
+    assert resultado["habilitada"] is esperado["habilitada"]
