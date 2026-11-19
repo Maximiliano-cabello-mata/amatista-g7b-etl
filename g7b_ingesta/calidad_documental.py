@@ -6,9 +6,9 @@ from pathlib import Path
 from urllib.parse import urldefrag
 
 from motor_extraccion.documental import MODELO
-from motor_extraccion.site import MODELO_SITE
+from motor_extraccion.site import MODELO_SITE, MODELO_SITE_ANTERIOR
 
-MODELOS = {MODELO, MODELO_SITE}
+MODELOS = {MODELO, MODELO_SITE_ANTERIOR, MODELO_SITE}
 
 AUDITORIA = Path(__file__).resolve().parents[1] / "algoritmos/documentacion/auditoria.json"
 Z = 1.6448536269514722  # límite inferior unilateral del 95 %

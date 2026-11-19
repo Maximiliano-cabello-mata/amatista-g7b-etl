@@ -1,0 +1,533 @@
+COMPENDIO CIENTÍFICO Y MATEMÁTICO PARA ARAÑAS CIBERNÉTICAS DETERMINISTAS
+ESPECIALIZADAS EN DOCUMENTACIÓN TÉCNICA (CON EXPANSIÓN CONTROLADA DE LÍMITES)
+
+Fecha de compilación: 19 de noviembre de 2026
+Naturaleza del sistema: 100% determinista (sin LLMs ni IA generativa en tiempo de rastreo).
+
+================================================================================
+1. ANÁLISIS ARQUITECTÓNICO: CÓMO FUNCIONA UNA ARAÑA DE DOCUMENTACIÓN INTELIGENTE
+   Y DETERMINISTA
+================================================================================
+
+Una araña web tradicional limitada por un prefijo estricto (ej. url.startswith(prefijo))
+pierde documentación valiosa cuando un manual enlaza hacia notas de versión, guías de
+migración, APIs en otro subdominio o páginas puente (índices/portales) que no contienen
+palabras clave densas. Por el contrario, una araña sin límites sufre explosión exponencial
+de la frontera y deriva temática (topic drift).
+
+La literatura científica en Recuperación de Información (IR) resuelve este dilema
+combinando cinco motores matemáticos deterministas en paralelo:
+
+  1) Puntuación de Enlaces y Prioridad (Focused Crawling): Evalúa qué enlace merece
+     descargarse primero usando TF-IDF, BM25, texto ancla, ruta URL y contexto local.
+  2) Expansión Controlada de Límites (Tunneling): Permite cruzar un número acotado
+     de páginas puente ("duds") o salir un máximo de saltos del prefijo/dominio
+     original usando decaimiento exponencial (delta^k) y presupuestos de túnel.
+  3) Extracción Estructural DOM (Boilerplate Removal): Separa prosa técnica, tablas
+     y bloques &lt;pre&gt;/&lt;code&gt; de menús de navegación mediante densidad textual y
+     densidad de código, distinguiendo páginas índice de páginas de contenido.
+  4) Planificación y Deduplicación (Frontier & Dedup): Mantiene cortesía por servidor
+     (t_next = t_now + k*x), canonicaliza URLs (DUST), filtra URLs vistas en RAM
+     (Bloom Filters) y elimina cuasi-duplicados (SimHash 64-bit / MinHash).
+  5) Auditoría de Calidad y Rendimiento: Mide entropía léxica H(X), Harvest Rate
+     y Target Recall para detener ramas estériles de forma automática.
+
+================================================================================
+2. ALGORITMOS DE RASTREO ENFOCADO (FOCUSED CRAWLING)
+================================================================================
+
+2.1. Fish-Search (De Bra, Houben, Kornatzky & Post, 1994)
+Fuentes:
+- https://www.ambuehler.ethz.ch/CDstore/www7/1849/com1849.htm
+- https://www.cs.cmu.edu/~dpelleg/bin/360.html
+- https://carl.cs.indiana.edu/fil/Papers/sigir-01.pdf
+
+Ecuaciones:
+- Evaluación binaria del nodo p respecto a la consulta q:
+    R(p) in {0, 1}
+- Profundidad dinámica heredada por cada hijo c desde el padre p (con tope D):
+    depth(c) = D              si R(p) = 1
+    depth(c) = depth(p) - 1   si R(p) = 0
+  Si depth(p) = 0, la rama se poda. Si c ya está en frontera, se toma
+  max(depth_actual(c), depth_nuevo(c)).
+- Prioridad en frontera (con ancho fijo width y multiplicador a > 1, típico a = 1.5):
+    potential_score(c) = 1.0   si R(p) = 1 y c está en los primeros (a * width) hijos
+    potential_score(c) = 0.5   si R(p) = 0 y c está en los primeros width hijos
+    potential_score(c) = 0.0   para el resto
+
+--------------------------------------------------------------------------------
+
+2.2. Shark-Search (Hersovici, Jacovi, Maarek, Pelleg, Shtalhaim & Ur, 1998)
+Fuentes:
+- https://www.ambuehler.ethz.ch/CDstore/www7/1849/com1849.htm
+- https://www.cs.cmu.edu/~dpelleg/bin/360.html
+- https://homepage.divms.uiowa.edu/~psriniva/Papers/crawlingFinal.pdf
+
+Ecuaciones (parámetros empíricos óptimos: delta = 0.5, beta = 0.8, gamma = 0 o 0.5):
+- Similitud continua VSM: sim(q, p) in [0, 1]
+- Relevancia heredada con decaimiento exponencial delta in (0, 1):
+    inherited_score(c) = delta * sim(q, p)              si sim(q, p) > 0
+    inherited_score(c) = delta * inherited_score(p)     en otro caso
+- Puntuación de vecindad (texto ancla T_a y ventana de contexto T_c):
+    anchor_score(c) = sim(q, T_a)
+    anchor_context_score(c) = 1                         si anchor_score(c) > 0
+    anchor_context_score(c) = sim(q, T_c)               en otro caso
+    neighbourhood_score(c) = beta * anchor_score(c) + (1 - beta) * anchor_context_score(c)
+- Prioridad final en frontera:
+    potential_score(c) = gamma * inherited_score(c) + (1 - gamma) * neighbourhood_score(c)
+- Métrica de información del mapa M: Sum_{d in M} sim(d, q)
+
+--------------------------------------------------------------------------------
+
+2.3. Focused Crawling (Chakrabarti, van den Berg & Dom, 1999)
+Fuentes:
+- https://repository.ias.ac.in/100130/
+- https://www.cse.iitb.ac.in/~soumen/doc/vldb1999/america95.pdf
+- https://www.ra.ethz.ch/cdstore/www8/data/2178/html/index.htm
+
+Ecuaciones:
+- Clasificador Bayesiano Jerárquico con suavizado de Laplace sobre taxonomía C:
+    theta(c_i, t) = [1 + Sum_{d in D(c_i)} n(d, t)] /
+                    [|Union_{d in D(c_0)} {t in d}| + Sum_{d in D(c_i)} Sum_{t in d} n(d, t)]
+    Pr[c_i | c_0, d] = Pr[c_i | c_0] * (Pr[d | c_i] / Pr[d | c_0])
+    donde Pr[d | c_i] proportional to Prod_{t in d} theta(c_i, t)^n(d, t)
+- Regla Soft-Focus (relevancia sobre clases buenas C*):
+    R(d) = Sum_{good(c)} Pr[c | d]
+- Destilador HITS asimétrico (excluye enlaces intra-servidor sid_src == sid_dst):
+    a(v) <- Sum_{(u,v) in E, R(v) > rho} h(u) * E_F[u, v]   (donde E_F[u, v] = R(v))
+    h(u) <- Sum_{(u,v) in E} a(v) * E_B[u, v]                (donde E_B[u, v] = R(u))
+  Normalizando ambos vectores en L1 tras cada iteración.
+- Orden de frontera: lexicográfico por (numtries ASC, R(u) DESC, serverload ASC).
+
+--------------------------------------------------------------------------------
+
+2.4. Context Graphs (Diligenti, Coetzee, Lawrence, Giles & Gori, 2000)
+Fuente:
+- https://www.vldb.org/conf/2000/P527.pdf
+
+Ecuaciones:
+- Vector TF-IDF reducido (40 términos de mayor peso por documento):
+    nu(w) = (f_d(w) / f_{d,max}) * log(N / f(w))
+- Clasificador Naive Bayes paralelo para cada capa j in {0, 1, ..., N}
+  (donde la capa j agrupa documentos a distancia mínima j de una semilla):
+    P(c_j | d_i) proportional to P(c_j) * Prod_{k=1}^{N_{d_i}} P(w_{d_i,k} | c_j)
+    P(w_t | c_j) = [1 + Sum_{d_i in D_j} N(w_t, d_i) * P(c_j | d_i)] /
+                   [|V| + Sum_{d_i in D_j} Sum_{s=1}^{|V|} N(w_s, d_i) * P(c_j | d_i)]
+- Asignación de cola de prioridad (M = N + 2 colas Q_0..Q_{N+1}):
+    j* = argmax_{j in {0..N}} P(c_j | d_i)
+  Si P(c_{j*} | d_i) < umbral_j*, se envía a la cola residual Q_{N+1} ("other").
+  El rastreador siempre extrae de la primera cola no vacía de menor índice j.
+  (Configuración de referencia: N = 4 capas, 300 docs/capa -> +50% a +60% de captura).
+
+--------------------------------------------------------------------------------
+
+2.5. PageRank (Page, Brin, Motwani & Winograd, 1999)
+Fuentes:
+- https://www.cis.upenn.edu/~mkearns/teaching/NetworkedLife/pagerank.pdf
+- https://arxiv.org/html/1501.06350v3
+- https://cgi.di.uoa.gr/~ad/MDE519.docs/cho1.pdf
+
+Ecuaciones (factor de amortiguamiento típico d = 0.85):
+- Forma matricial con vector de teletransportación Z:
+    x = d * P * x + (1 - d) * Z   =>   x = (1 - d) * (I - d * P)^(-1) * Z
+  donde P_{i,j} = 1 / |out(j)| si existe arista (j, i) in E.
+- Forma escalar para la página p:
+    PR(p) = (1 - d) / n + d * Sum_{q in in(p)} [ PR(q) / |out(q)| ]
+
+--------------------------------------------------------------------------------
+
+2.6. HITS - Hyperlink-Induced Topic Search (Kleinberg, 1999)
+Fuente:
+- https://www.cs.cornell.edu/home/kleinber/auth.pdf
+
+Ecuaciones (autoridad x(p) y hub y(p) sobre subgrafo base S_sigma):
+    x(p) <- Sum_{q: (q,p) in E} y(q)    (x <- A^T * y)
+    y(p) <- Sum_{q: (p,q) in E} x(q)    (y <- A * x)
+  Normalización L2 en cada paso:
+    Sum_{p} x(p)^2 = 1,   Sum_{p} y(p)^2 = 1
+  (Converge al autovector principal de A^T A para autoridades y A A^T para hubs).
+
+--------------------------------------------------------------------------------
+
+2.7. OPIC - On-line Page Importance Computation (Abiteboul, Preda & Cobena, 2003)
+Fuentes:
+- https://www.researchgate.net/publication/200111112_Adaptive_on-line_page_importance_computation
+- https://arxiv.org/html/1501.06350v3
+
+Ecuaciones (modelo push sin matriz en RAM, fluido actual F(i) e historial H(i)):
+  Al visitar el nodo i:
+    1) H(i) <- H(i) + F(i)
+    2) Para cada j in out(i): F(j) <- F(j) + F(i) / |out(i)|
+    3) F(i) <- 0
+  Importancia estimada:
+    x_hat(i) = H(i) / Sum_{k in V} H(k)
+  Prioridad codiciosa en frontera: seleccionar argmax_i F(i).
+
+--------------------------------------------------------------------------------
+
+2.8. Best-First y Breadth-First (Menczer, Pant & Srinivasan, 2001)
+Fuentes:
+- https://carl.cs.indiana.edu/fil/Papers/sigir-01.pdf
+- https://arxiv.org/html/2610.40855v1
+
+Ecuaciones:
+- Breadth-First (BFS): Cola FIFO por orden de descubrimiento tau(u).
+- Best-First (BF): Cola de prioridad ordenada por similitud coseno entre tópico q y
+  página padre p (o texto ancla/contexto):
+    sim(q, p) = Sum_{k in q & p} (f_{kq} * f_{kp}) /
+                [ sqrt(Sum_{k in p} f_{kp}^2) * sqrt(Sum_{k in q} f_{kq}^2) ]
+
+================================================================================
+3. TUNNELING Y EXPANSIÓN CONTROLADA DE LÍMITES (CRUZAR PÁGINAS PUENTE Y PREFIJOS)
+================================================================================
+
+El "Tunneling" permite que una araña determinista ignore temporalmente un bloqueo
+local (página de baja relevancia o salida de un sub-prefijo) si la ruta promete
+alcanzar documentación de alto valor en pocos saltos.
+
+3.1. Tunneling entre Nuggets y Duds (Bergmark, Lagoze & Sbityakov, 2002; Pecina et al., 2015)
+Fuentes:
+- https://pascal-francis.inist.fr/vibad/index.php?action=getRecordDetail&idt=14559215
+- https://www.google.com/search?q=https://scispaces.com/pdf/gray-tunneling-based-on-block-relevance-for-focused-crawling-2rbpklv1om.pdf (nota: https://scispace.com/pdf/gray-tunneling-based-on-block-relevance-for-focused-crawling-2rbpklv1om.pdf)
+- https://d-nb.info/1189632772/34
+
+Definiciones y ecuaciones:
+- Nugget: página cuya similitud coseno con algún centroide temático >= umbral_nugget.
+- Dud: página puente por debajo del umbral, cuyos enlaces salientes SÍ se conservan.
+- Longitud de camino en túnel:
+    L_path = 2 - (# de duds en el camino)
+- Condición de parada estricta del túnel:
+    Abortar rama si (# duds consecutivos > L_max)   [típico L_max = 4 pasos en Pecina 2015]
+    o si la pendiente de relevancia cae bajo el corte adaptativo (adaptive cutoff).
+
+--------------------------------------------------------------------------------
+
+3.2. Gray Tunneling por Bloques DOM (Luo, Zuo & Yuan; Liu et al., 2025)
+Fuentes:
+- https://scispace.com/pdf/gray-tunneling-based-on-block-relevance-for-focused-crawling-2rbpklv1om.pdf
+- https://www.fitee.zjujournals.com/rc-pub/front/front-article/download/145014261/lowqualitypdf/A%20focused%20crawling%20strategy%20based%20on%20comprehensive%20priority%20evaluation%20of%20hyperlinks%20and%20improved%20Bayesian%20classifier.pdf
+
+Mecanismo:
+- En lugar de evaluar la página entera (que puede tener ruido de menú), particiona el
+  DOM en bloques B_i (Content_Block_Partition): un nodo v se subdivide si tiene al menos
+  k = 1 enlaces hijos y su altura relativa supera:
+    s = Block_Height(root, 0) * alpha   (con alpha = 0.5)
+- Si la página completa está por debajo del umbral tau, pero un bloque interno B_i
+  cumple R(B_i) > lambda, solo se extraen y tunelizan los enlaces dentro de B_i;
+  los bloques con R(B_i) <= lambda se podan.
+
+--------------------------------------------------------------------------------
+
+3.3. Decaimiento Exponencial y Estimadores Adaptativos (Gouriten, Maniu & Senellart, 2014)
+Fuente:
+- https://pierre.senellart.com/publications/gouriten2014scalable.pdf
+
+Ecuaciones:
+- Decaimiento por saltos sin señal k:
+    SharkSearch:  delta^k  (con delta = 0.50 .. 0.85, decae rápido tras k = 3..4)
+    Distancia BFS: 1 / (k + 1)
+- Estrategia Altered Greedy (exploración controlada de puentes):
+    Con probabilidad q:     elegir argmax_v beta_tilde(v)
+    Con probabilidad (1-q): elegir de { v | beta_tilde(v) >= zeta * max_u beta_tilde(u) }
+- Bandit determinista/adaptativo con reinicio variable (mab_var):
+    r = h(p), donde p es la racha del mejor estimador (ej. epsilon = 0.2, h(p) = 200*(p+1)).
+- Navigational Rank a 2 pasos (NR1):
+    NR1(v)_{t+1} = eta * beta(v) + (1 - eta) * avg_{(v,u)} [ NR1(u)_t / d_i(u) ]
+- Condición de parada global: agotamiento de presupuesto entero budgetLeft = 0 o frontera vacía.
+
+================================================================================
+4. EXTRACCIÓN DETERMINISTA DE CONTENIDO Y ESTRUCTURA EN DOCUMENTACIÓN (DOM)
+================================================================================
+
+4.1. Boilerpipe (Kohlschütter, Fankhauser & Nejdl, WSDM 2010)
+Fuentes:
+- https://www.researchgate.net/publication/221519989_Boilerplate_Detection_Using_Shallow_Text_Features
+- https://medecau.com/notes-on-boilerplate-detection-using-shallow-text-features/
+- https://www.scielo.org.mx/scielo.php?script=sci_arttext&pid=S1405-55462018000200483
+
+Ecuaciones por bloque de texto b (ajustado a ancho de columna fijo w, típico w = 80 chars):
+- Densidad textual (Text Density):
+    TextDensity(b) = |T(b)| / |L(b)|
+  donde |T(b)| es el número de tokens y |L(b)| el número de líneas envueltas.
+- Densidad de enlaces (Link Density):
+    LinkDensity(b) = numLinkedWords(b) / numWords(b)
+- Principio de localidad: bloques con alto TextDensity y LinkDensity < 0.2 suelen
+  ser prosa principal; bloques adyacentes con propiedades similares se fusionan.
+
+--------------------------------------------------------------------------------
+
+4.2. CETR - Content Extraction via Tag Ratios (Weninger, Hsu & Han, WWW 2010)
+Fuente:
+- https://archives.iw3c2.org/www2010/proceedings/www/p971.pdf
+
+Ecuaciones (complejidad lineal O(|D|)):
+- Tag Ratio de la línea i (tras limpiar &lt;script&gt;, &lt;style&gt;, comentarios):
+    T_i = x_i / max(y_i, 1)
+  donde x_i = caracteres fuera de etiquetas y y_i = número de etiquetas HTML en línea i.
+- Kernel Gaussiano discreto 1D y suavizado (Ecs. 1-3):
+    k_i = Sum_{j=-sigma}^{sigma} exp(-j^2 / (2 * sigma^2)),   0 <= i <= 2*sigma
+    k_tilde_i = k_i / Sum_{j=0}^{sigma} k_j
+    T_tilde_i = Sum_{j=-sigma}^{sigma} k_tilde_{j+sigma} * T_{i-j}
+- Derivada absoluta suavizada para bordes de bloque (alpha = 3, Ec. 4):
+    G_i = [ Sum_{j=0}^{alpha} T_tilde_{i+j} / alpha ] - T_tilde_i
+  Se suaviza G para obtener G_tilde y se toma G_hat_i = |G_tilde_i|.
+- Regla umbral (CETR-TM): línea i es contenido si T_tilde_i >= lambda * sigma (lambda = 1.0).
+- Regla 2D (CETR 2D): k-Means (k = 3) sobre (T_tilde_i, G_hat_i) fijando el primer
+  centroide en el origen m_1 = (0, 0) para aislar el clúster de ruido/menú.
+
+--------------------------------------------------------------------------------
+
+4.3. CETD (Sun, Song & Liao, SIGIR 2011) y Code Density (Rahman & Roy, 2018)
+Fuentes:
+- https://ofey.me/assets/pdf/cetd-sigir11.pdf
+- https://arxiv.org/html/1807.02274
+
+Ecuaciones para nodos del árbol DOM i (y cuerpo b = &lt;body&gt;):
+- Densidades base por nodo i:
+    TD_i = C_i / max(T_i, 1)          (caracteres totales C_i / etiquetas totales T_i)
+    LD_i = LC_i / max(T_i, 1)         (caracteres dentro de enlaces LC_i / T_i)
+    CD_i = CC_i / max(T_i, 1)         (caracteres en &lt;code&gt;, &lt;pre&gt;, &lt;blockquote&gt; / T_i)
+- Composite Text Density clásica (CETD, SIGIR 2011):
+    CTD_i = (C_i / T_i) * log_{ ln( (C_i / not_LC_i)*LC_i + (LC_b / C_b)*C_i + e ) } ( (C_i / LC_i) * (T_i / LT_i) )
+- Adaptación para Documentación Técnica y Código (Rahman & Roy 2018, Ec. 6):
+  Suma la proporción de código (CD_i / TD_i) para no descartar documentación con
+  fragmentos de código y enlaces de referencia API:
+    CTD_tech(i) = (TD_i + CD_i / TD_i) *
+                  log_{ ln( (TD_i * LD_i)/not_LD_i + (LD_b * TD_i)/TD_b + e ) } ( (TD_i / LD_i) + (CD_i / TD_i) )
+- Suma de densidad en hijos directos:
+    DensitySum_N = Sum_{i in children(N)} TD_i
+
+--------------------------------------------------------------------------------
+
+4.4. VIPS - Vision-based Page Segmentation (Cai, Yu, Wen & Ma, 2003)
+Fuentes:
+- https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-2003-79.pdf
+- http://www.cad.zju.edu.cn/home/dengcai/VIPS/VIPS.html
+
+Modelo formal:
+- Estructura visual: Omega = (O, Phi, delta)
+  donde O son bloques visuales no superpuestos, Phi separadores H/V y delta mapea
+  pares de bloques adyacentes a su separador.
+- Coherencia jerárquica: DoC(hijo) >= DoC(padre), con DoC in [1, 10].
+- Condición de parada: la subdivisión se detiene cuando DoC > PDoC (ej. PDoC = 6).
+
+--------------------------------------------------------------------------------
+
+4.5. Clasificación Determinista: Páginas Índice vs. Páginas de Contenido Técnico
+Fuentes:
+- jusText (Pomikálek, 2011): https://is.muni.cz/th/45523/fi_d/phdthesis.pdf | https://code.google.com/archive/p/justext/wikis/Algorithm.wiki
+- GOCE (Nguyen-Hoang et al., PACLIC 2018): https://aclanthology.org/Y18-1055.pdf
+- eMINE (Yesilada, 2011): http://emine.ncc.metu.edu.tr/deliverables/emine_D0.pdf
+
+Reglas y ecuaciones deterministas:
+- jusText (por bloque DOM):
+    Si link_density > 0.2                              => 'bad' (menú/índice)
+    Si length < 70 y link_density > 0                  => 'bad'
+    Si stopwords_density > 0.32 y length > 200         => 'good' (prosa técnica)
+- GOCE (detección de estructuras repetitivas de lista/índice por tupla (nivel_DOM, className)):
+    R = (2 * O * L) / (O + L),     ATL = L / O
+  donde O = número de ocurrencias de la clase al mismo nivel y L = texto total.
+  Un índice tiene O alto y ATL bajo. En páginas de artículo, los dos hijos más largos
+  (m_1, m_2) cumplen: (l_{m_1} - l_{m_2}) > SD (desviación estándar entre hijos).
+
+================================================================================
+5. CRAWL FRONTIER, CORTESÍA, CANONICALIZACIÓN Y DEDUPLICACIÓN
+================================================================================
+
+5.1. Mercator Frontier y Politeness (Heydon & Najork, 1999; Olston & Najork, 2010)
+Fuentes:
+- https://marc.najork.org/papers/wwwmerc.pdf
+- https://www.ccs.neu.edu/home/vip/teach/IRcourse/IR_surveys/olston-najork@web-crawling10-crop.pdf
+
+Ecuación de cortesía (Min-Heap de colas traseras por host, B = 3 * num_hilos):
+  Cuando un hilo descarga u de la cola q con latencia x:
+    t_next = t_now + k * x    (parámetro estándar k = 10)
+
+--------------------------------------------------------------------------------
+
+5.2. DUST / DustBuster - Canonicalización de URLs (Bar-Yossef, Keidar & Schonfeld, 2007)
+Fuente:
+- https://iditkeidar.com/wp-content/uploads/files/ftp/www2007-dust.pdf
+
+Ecuaciones:
+- Regla de sustitución: alpha -> beta si u_1 = p * alpha * s y u_2 = p * beta * s.
+- Soporte por intersección de envolventes E_L(alpha) = {(p, s)}:
+    |support_L(alpha -> beta)| = |E_L(alpha) intersect E_L(beta)|
+- Soporte filtrado (descartando cubetas desbordadas O y pares disímiles D_{alpha,beta}):
+    support_hat_L(alpha -> beta) = |(E_L(alpha) intersect E_L(beta)) \ (O union D_{alpha,beta})| >= MS
+  (con soporte mínimo MS = 3 y longitud máxima S = 35 tokens).
+- Validación por muestreo N = 100 páginas (umbral de refutación epsilon in [0.05, 0.10]):
+    Aceptar regla si positivos >= (1 - epsilon) * N
+    Refutar regla si negativos >= epsilon * N
+
+--------------------------------------------------------------------------------
+
+5.3. SimHash para Cuasi-Duplicados (Charikar, 2002; Manku et al., 2007)
+Fuentes:
+- https://www.cs.princeton.edu/courses/archive/spr04/cos598B/bib/CharikarEstim.pdf
+- https://research.google.com/pubs/archive/33026.pdf
+
+Ecuaciones:
+- Hash por hiperplano aleatorio r ~ N(0, I_d):
+    h_r(u) = 1  si (r . u) >= 0;   0  en otro caso.
+- Relación exacta entre ángulo coseno theta(u, v) y distancia de Hamming d_H en f bits:
+    Pr[h_r(u) = h_r(v)] = 1 - theta(u, v) / pi
+    E[ d_H(F(u), F(v)) / f ] = theta(u, v) / pi
+- Criterio estándar de producción (Manku et al., 2007):
+    f = 64 bits,  cuasi-duplicado si d_H(F_1, F_2) <= 3.
+- Tablas de permutación requeridas para búsqueda en 2^d huellas:
+    X(f, k, d) = 1                                            si d < tau
+    X(f, k, d) = min_{r > k} C(r, k) * X(f*k/r, k, d - (r-k)*f/r)   en otro caso
+
+--------------------------------------------------------------------------------
+
+5.4. MinHash & Shingling (Broder, 1997)
+Fuente:
+- https://www.cs.princeton.edu/courses/archive/spring13/cos598C/broder97resemblance.pdf
+
+Ecuaciones (sobre conjunto de w-shingles S(D, w)):
+- Parecido (Jaccard) y Contención:
+    r_w(A, B) = |S(A, w) intersect S(B, w)| / |S(A, w) union S(B, w)|
+    c_w(A, B) = |S(A, w) intersect S(B, w)| / |S(A, w)|
+- Teorema MinHash (permutación aleatoria uniforme pi):
+    Pr[ min(pi(S(A, w))) = min(pi(S(B, w))) ] = r_w(A, B)
+- Estimadores con sketch de tamaño s:
+    r_hat_w(A, B) = |MIN_s(M(A) union M(B)) intersect M(A) intersect M(B)| / |MIN_s(M(A) union M(B))|
+
+--------------------------------------------------------------------------------
+
+5.5. Bloom Filters para URLs Vistas (Bloom, 1970)
+Fuentes:
+- https://crystal.uta.edu/~mcguigan/cse6350/papers/Bloom.pdf
+- https://en.wikipedia.org/wiki/Bloom_filter
+
+Ecuaciones (m bits, n URLs insertadas, k funciones hash):
+- Probabilidad de falso positivo:
+    epsilon = (1 - (1 - 1/m)^(k*n))^k  ~=  (1 - exp(-k*n / m))^k
+- Número óptimo de funciones hash k*:
+    k* = (m / n) * ln(2)  ~=  0.693 * (m / n)
+- Memoria óptima m para tasa objetivo epsilon:
+    m = - (n * ln(epsilon)) / (ln(2))^2  ~=  1.4427 * n * log2(1 / epsilon)
+    k* = -log2(epsilon)    (ej. epsilon = 0.01 -> ~9.6 bits/URL y k* = 7)
+
+================================================================================
+6. ECUACIONES DE RELEVANCIA TEXTUAL, CALIDAD DOCUMENTAL Y EVALUACIÓN
+================================================================================
+
+6.1. TF-IDF y Similitud Coseno (Salton & Buckley, 1988; Stanford CS276)
+Fuentes:
+- https://ecommons.cornell.edu/entities/publication/d81a71f9-8de9-4ef1-9ee2-8544cdb48372
+- https://web.stanford.edu/class/cs276/19handouts/lecture6-tfidf-1per.pdf
+
+Ecuaciones:
+    w_{t,d} = (1 + log10(tf_{t,d})) * log10(N / df_t)   (si tf_{t,d} > 0; 0 si no)
+    sim(q, d) = (q . d) / (||q||_2 * ||d||_2)
+
+--------------------------------------------------------------------------------
+
+6.2. Okapi BM25 (Robertson & Zaragoza, 2009)
+Fuentes:
+- https://www.staff.city.ac.uk/~sbrp622/papers/foundations_bm25_review.pdf
+- https://www.emerald.com/ftinr/article/4/1-2/1/1326508/The-Probabilistic-Relevance-Framework-BM25-and
+
+Ecuación (parámetros estándar: k_1 in [1.2, 2.0], b = 0.75):
+    Score(D, Q) = Sum_{i=1}^{n} IDF(q_i) * [ f(q_i, D) * (k_1 + 1) ] /
+                                            [ f(q_i, D) + k_1 * (1 - b + b * |D| / avgdl) ]
+    IDF_RSJ(q_i) = ln( (N - n(q_i) + 0.5) / (n(q_i) + 0.5) )
+
+--------------------------------------------------------------------------------
+
+6.3. Divergencia KL con Suavizado de Dirichlet (Lafferty & Zhai, 2001)
+Fuentes:
+- https://www.iro.umontreal.ca/~nie/IFT6255/lafferty-zhai.pdf
+- https://timan.cs.illinois.edu/czhai/pub/cikm2001-fb.pdf
+- https://arxiv.org/html/1705.03556v2
+
+Ecuaciones:
+    D_KL(theta_Q || theta_D) = Sum_{w in V} p(w | theta_Q) * log( p(w | theta_Q) / p(w | theta_D) )
+    Score(Q, D) = -D_KL(theta_Q || theta_D)  =rank=  Sum_{w in V} p(w | theta_Q) * log p(w | theta_D)
+    p(w | theta_D) = ( c(w; D) + mu * p(w | C) ) / ( |D| + mu )
+
+--------------------------------------------------------------------------------
+
+6.4. Entropía de Shannon para Filtrado de Ruido vs. Prosa/Código (Shannon, 1948)
+Fuentes:
+- https://people.math.harvard.edu/~ctm/home/text/others/shannon/entropy/entropy.pdf
+- https://arxiv.org/html/2610.01493v1
+
+Ecuación:
+    H(X) = - Sum_{i=1}^{n} p(x_i) * log2( p(x_i) )
+  Rangos deterministas de control por carácter:
+  - H(X) < 2.5 bits/char: texto repetitivo, menús o plantillas vacías (rechazar).
+  - 3.5 <= H(X) <= 5.2 bits/char: prosa técnica (~4.40) y código fuente (~4.78) (aceptar).
+  - H(X) > 5.8 bits/char: cadenas aleatorias, hashes largos o basura binaria (rechazar).
+
+--------------------------------------------------------------------------------
+
+6.5. Puntuación Combinada de Enlaces (Pal, Tomar & Shrivastava, 2009)
+Fuentes:
+- https://arxiv.org/pdf/0906.5034
+- https://www.ijergs.org/Datacenter/Vol2/Issue4/75.pdf
+
+Ecuación:
+    LinkScore(u) = w_1 * URLScore(u) + w_2 * AnchorScore(u) +
+                   w_3 * ParentScore(p) + w_4 * SurroundingScore(u)
+
+--------------------------------------------------------------------------------
+
+6.6. Métricas de Evaluación de Arañas (Chakrabarti 1999; Pant et al. 2004)
+Fuentes:
+- https://homepage.divms.uiowa.edu/~psriniva/Papers/crawlingFinal.pdf
+- https://carl.cs.indiana.edu/fil/Papers/crawl_framework.pdf
+
+Ecuaciones:
+    HarvestRate  = |P_r intersect P_c| / |P_c|
+    TargetRecall = |P_t intersect P_c| / |P_t|
+
+================================================================================
+7. FÓRMULA MAESTRA Y PSEUDOCÓDIGO PARA TU ARAÑA DE DOCUMENTACIÓN DETERMINISTA
+================================================================================
+
+Para que tu araña de documentación pueda extenderse de forma inteligente y controlada
+un poco más allá de un prefijo/dominio permitido (sin perder el rumbo ni explotar en
+millones de URLs), unifica las ecuaciones anteriores en esta función de prioridad y
+control de túnel:
+
+7.1. Ecuación Unificada de Prioridad de Frontera con Expansión Controlada:
+
+  Sea u una URL descubierta en el bloque DOM B_i de la página padre p, con distancia
+  en saltos fuera del prefijo/dominio autorizado k >= 0 (k = 0 si está dentro del
+  prefijo permitido; k = k_padre + 1 si cruzó fuera del prefijo):
+
+    LinkScore(u) = w_1 * sim_BM25(q, path_tokens(u))
+                 + w_2 * sim_BM25(q, anchor_text(u))
+                 + w_3 * R_bloque(B_i)
+                 + w_4 * R_pagina(p)
+
+    ScopeDecay(k) = 1.0          si k = 0 (dentro del prefijo/dominio permitido)
+    ScopeDecay(k) = delta^k      si 1 <= k <= L_max   (túnel controlado; delta = 0.5, L_max = 2 o 3)
+    ScopeDecay(k) = 0.0          si k > L_max         (poda estricta del túnel)
+
+    Priority(u) = ScopeDecay(k) * LinkScore(u)
+
+  Condición de apertura de túnel (cuándo permitir k > 0):
+    Solo se permite cruzar fuera del prefijo (k -> k + 1) si:
+      (1) k + 1 <= L_max, Y
+      (2) LinkScore(u) >= tau_tunel (umbral estricto de relevancia de ancla/bloque), Y
+      (3) Si u regresa a un dominio/prefijo permitido en el catálogo, k se reinicia a 0.
+
+7.2. Regla de Extracción y Calidad (por cada página descargada p):
+  1) Deduplicación URL: Verificar BloomFilter(canonical(u)) y reglas DUST.
+  2) Cortesía por host: Esperar hasta t_now >= t_next(host), actualizando t_next = t_now + 10 * latencia.
+  3) Extracción técnica: Calcular CTD_tech(nodo) (con CodeDensity CD_i) para extraer
+     prosa + tablas + &lt;pre&gt;/&lt;code&gt; sin menús.
+  4) Clasificador Índice vs. Contenido:
+       Si link_density > 0.2 o (R = 2*O*L/(O+L) alto con ATL = L/O bajo):
+           Marcar p como ÍNDICE -> NO guardar como documento final, pero SÍ extraer
+           sus enlaces filtrados por bloque (Gray Tunneling) para seguir navegando.
+       En otro caso:
+           Verificar 3.5 <= H(X) <= 5.2 (Entropía de Shannon) y d_H(SimHash(p)) > 3.
+           Si cumple -> Guardar documento en Bronce/Plata.
+  5) Parada adaptativa: Si en una ventana móvil de W = 50 páginas fuera de prefijo (k > 0)
+     el HarvestRate local cae por debajo de HR_min (ej. < 0.15), cerrar expansión externa
+     y regresar exclusivamente a k = 0.

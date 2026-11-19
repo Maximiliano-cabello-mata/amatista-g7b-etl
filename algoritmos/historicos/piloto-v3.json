@@ -1,0 +1,83 @@
+{
+  "modelo": "documental/3.0",
+  "fuente": "blender-manual",
+  "trabajo": "883618/3/1",
+  "revisor": "Codex, revisión de citas",
+  "tipo": "piloto histórico de render 4.5; excluido de la calibración operativa",
+  "paginas": 32,
+  "candidatos": 45,
+  "muestras": [
+    {
+      "id": "1bab697403e8226e020fe99ff91998e6a1949e12bedbbb4ba2fffecb30145308",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/render_settings/sampling.html#denoising",
+      "util": true,
+      "criterio": "Relaciona los pases de entrada con el emborronamiento al denoising con pocas muestras."
+    },
+    {
+      "id": "b3d46ce4158e49785668fe813bdc16144b63c6f94813f5072ced90f73d502730",
+      "url": "https://docs.blender.org/manual/en/4.5/render/eevee/render_settings/sampling.html#sampling",
+      "util": true,
+      "criterio": "Explica el coste de rendimiento al aumentar las muestras de TAA."
+    },
+    {
+      "id": "f7d16152c19cf9b3ea4d512ed8921dde5594c3dec1788a56b728f45b8abb2f90",
+      "url": "https://docs.blender.org/manual/en/4.5/render/eevee/render_settings/performance.html#viewport",
+      "util": true,
+      "criterio": "Pixel Size cambia la resolución y acelera la vista previa en pantallas de alta densidad."
+    },
+    {
+      "id": "eeb453bae0b8ac2ccd6a19c2808f388c72a151beba3ba0fd60acda49c2464582",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/render_settings/performance.html#acceleration-structure",
+      "util": true,
+      "criterio": "Describe el intercambio entre memoria y tiempo de render al desactivar Curves BVH."
+    },
+    {
+      "id": "cad7be09bddf154798b80808e05802a63ef254a9b418cdb1f76c584029e93416",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/optimizations/reducing_noise.html#caustics-and-filter-glossy",
+      "util": true,
+      "criterio": "Explica cuándo Filter Glossy reduce ruido y cuánto altera la precisión de la reflexión."
+    },
+    {
+      "id": "9e3c3e1c74eb8c9107fbd9ccbd7908498c8fa2c82c1e7bcad669fdf67a220e9f",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/baking.html#setup",
+      "util": true,
+      "criterio": "Explica cómo reutilizar AO horneada para ahorrar tiempo en el render final."
+    },
+    {
+      "id": "5820e3b47aede57ae5e2319ec9b9a854d482a704bbbf931e726c44ecc12b4ba6",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/render_settings/index.html#render-settings",
+      "util": false,
+      "criterio": "Índice de enlaces a ajustes sin decisión ni condición comprobable."
+    },
+    {
+      "id": "dd2e38eeb7c4994cd6588767faac1bc7e5eda1dead4ffc94fafb7812cc7681ea",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/render_settings/simplify.html#simplify",
+      "util": true,
+      "criterio": "La cota de textura limita tamaño y memoria en escenas grandes."
+    },
+    {
+      "id": "640410bbb7f37d27e6a435c3f5f555e6cb8af0236e66d833d7d1bb9de324172a",
+      "url": "https://docs.blender.org/manual/en/4.5/render/cycles/render_settings/grease_pencil.html#render",
+      "util": true,
+      "criterio": "Relaciona el número de muestras de SSAA con suavidad de las líneas y tiempo."
+    },
+    {
+      "id": "d47c0654d5236cf463e5148720bd951129e7dbdd7fcdd5df409a9ba047272455",
+      "url": "https://docs.blender.org/manual/en/4.5/render/eevee/material_settings.html#surface",
+      "util": true,
+      "criterio": "Distingue desplazamiento y bump, sus límites y su coste según las muestras."
+    },
+    {
+      "id": "2a575c685ccb89ed2c97b35f41ac2f583047ccb5a93b35bdd1299a4a4e789e5a",
+      "url": "https://docs.blender.org/manual/en/4.5/render/eevee/light_settings.html#shadow",
+      "util": true,
+      "criterio": "Aclara por qué jitter impide reutilizar mapas de sombra y eleva el coste."
+    },
+    {
+      "id": "0277e997f1e01e9e37d25960b08dcaa24a2764b1e5377c835c08e0c3916ae6b7",
+      "url": "https://docs.blender.org/manual/en/4.5/render/color_management.html#display",
+      "util": true,
+      "criterio": "Relaciona la visualización HDR en el viewport con hardware, sistema y transformada de vista."
+    }
+  ]
+}

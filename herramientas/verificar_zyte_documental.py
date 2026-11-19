@@ -13,7 +13,7 @@ from motor_extraccion.site import MODELO_SITE as MODELO
 
 NOMBRES = {"paginas", "blender_docs"}
 FUENTE = "blender-compositor-45"
-TAG = "g7b-site-v4-piloto"
+TAG = "g7b-site-v41-piloto"
 
 
 def activos(proyecto):
@@ -50,10 +50,18 @@ def ejecutar(proyecto):
         anterior = proyecto.jobs.get(previo["key"])
         semilla = next((i["url"] for i in anterior.items.iter()
                         if i.get("documental", {}).get("conteos", {}).get("candidato")), semilla)
+    vistas_40 = set()
+    if piloto:
+        anterior_40 = next(iter(proyecto.jobs.iter(spider="paginas", state="finished",
+                           has_tag="g7b-site-v4-piloto", meta=["close_reason", "items"], count=1)), {})
+        if anterior_40.get("close_reason") != "finished" or not anterior_40.get("items"):
+            raise RuntimeError("Falta el recorrido de referencia 4.0 para identificar la reserva")
+        vistas_40 = {i["url"] for i in proyecto.jobs.get(anterior_40["key"]).items.iter()}
     _, args = argumentos_zyte(fuente, [semilla])
-    limite = int(args["max_paginas"]) if piloto else 1
+    presupuesto_operativo = int(args["max_paginas"])
+    limite = 2 * presupuesto_operativo if piloto else 1
     args.update(max_paginas=str(limite), seguir="1" if piloto else "0")
-    job = proyecto.jobs.run("paginas", job_args=args, add_tag=[TAG] if piloto else ["g7b-site-v4-smoke"])
+    job = proyecto.jobs.run("paginas", job_args=args, add_tag=[TAG] if piloto else ["g7b-site-v41-smoke"])
     print("Prueba real en Zyte:", job.key, "máximo de páginas:", limite, flush=True)
     fin = time.monotonic() + 600
     max_activos = 0
@@ -77,11 +85,14 @@ def ejecutar(proyecto):
         if eventos:
             con_candidatos += 1
             # Elegir un candidato reproducible por página antes de conocer su etiqueta.
-            e = min(eventos, key=lambda x: hashlib.sha256(("piloto-site-4/" + x["id"]).encode()).digest())
+            e = min(eventos, key=lambda x: hashlib.sha256(("piloto-site-41/" + x["id"]).encode()).digest())
             f = next(f for f in item["fragmentos"] if f["fragmento_id"] == e["fragmento"])
             bloque = f["bloques"][e["bloque"]]
             print("MUESTRA " + json.dumps({"url": e["url"], "id": e["id"], "titulo": f["titulo"],
-                  "destinos": e["destinos"], "texto": bloque["texto"][:1800],
+                  "destinos": e["destinos"], "orden": paginas,
+                  "tramo": "operativo" if paginas <= presupuesto_operativo else "reserva",
+                  "inedita_40": item["url"] not in vistas_40 if piloto else None,
+                  "texto": bloque["texto"][:1800],
                   "truncado": len(bloque["texto"]) > 1800}, ensure_ascii=False), flush=True)
     print(f"RESULTADO job={job.key} modelo={MODELO} cierre={razon} paginas={paginas} candidatos={candidatos} "
           f"paginas_con_candidatos={con_candidatos} max_activos_observados={max_activos}",
