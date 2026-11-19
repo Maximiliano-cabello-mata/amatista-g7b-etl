@@ -1,5 +1,7 @@
 # Geoda: cómo está estructurado y qué ya existe
 
+> **Enfoque acordado el 17 de noviembre de 2026:** [separación de responsabilidades](GEODA_RESPONSABILIDADES.md). Conocimiento para IA y motor adaptativo avanzan como líneas independientes; la generación de escenas es un consumidor separado. El contenido fechado abajo describe los cimientos, no acredita la implementación del nuevo alcance.
+
 Fecha: 2026-11-03 (cimientos, `geoda` 0.1.0). Geoda es el **kernel** que adapta el trabajo 3D a los recursos de cada equipo. Usa los datos que mide G7B y deja el trabajo listo para las herramientas libres que ya existen. No es un programa 3D ni un fork de Blender. Definiciones exactas: [FICHAS_TECNICAS.md](FICHAS_TECNICAS.md), secciones 1.3, 2 y 3.
 
 Viene después en el orden acordado: **captura → cubo → Geoda**. La captura y el cubo se integraron el 3 de noviembre ([TELEMETRIA.md](TELEMETRIA.md), [CUBO.md](CUBO.md)).

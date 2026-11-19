@@ -1,5 +1,11 @@
 # Plan maestro: el camino a seguir
 
+## Actualización de enfoque — 17 de noviembre de 2026
+
+La [decisión de responsabilidades de Geoda](GEODA_RESPONSABILIDADES.md) rige la separación entre **conocimiento y alimentación de IA** y **motor adaptativo**. G7B prepara documentos y telemetría por recorridos separados; Amatista integra sus resultados. Los agentes que generen escenas serán consumidores con ejecutor y validación propios. El motor debe funcionar con reglas locales sin depender de consultas documentales, entrenamiento o IA generativa durante la interacción.
+
+Esta actualización reemplaza la lectura de un único ciclo obligatorio para ambos frentes en las secciones 1 y 2: pueden desarrollarse y evaluarse independientemente, intercambiando solamente artefactos aprobados y evidencia trazable. Conserva las reglas operativas, no activa servicios ni acredita capacidades nuevas en producción.
+
 Fecha: 2026-11-02. Un solo camino, de principio a fin, para que G7B quede **funcional y automático** con las ofertas del GitHub Student Developer Pack, y para que **Amatista, Geoda y G7B se alimenten entre sí**.
 
 - **Reúne** lo que se construyó con los dos agentes (PR #1 a #10): ingesta de texto, lago, warehouse, publicación segura, Azure privado y catálogo de ofertas.
