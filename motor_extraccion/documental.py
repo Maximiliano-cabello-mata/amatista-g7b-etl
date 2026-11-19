@@ -54,6 +54,9 @@ def decidir(bloque, frag, foro):
 
 
 class ModeloDocumental:
+    version_modelo = MODELO
+    clasificar = staticmethod(decidir)
+
     def __init__(self):
         self.vistos = {}
         self.tablas = {}
@@ -63,7 +66,7 @@ class ModeloDocumental:
         eventos = []
         for frag in item.get("fragmentos", []):
             for pos, bloque in enumerate(frag["bloques"]):
-                estado, destinos, senales = decidir(bloque, frag, foro)
+                estado, destinos, senales = self.clasificar(bloque, frag, foro)
                 # La misma versión y contenido estructurado equivalen a la misma evidencia.
                 identidad = [item.get("fuente"), frag.get("programa"), frag.get("version"),
                              frag.get("jerarquia"), bloque]
@@ -92,6 +95,6 @@ class ModeloDocumental:
             observado = counts["candidato"] / evaluables
             delta = observado - self.rendimiento
             self.rendimiento += 0.25 * delta
-        item["documental"] = {"modelo": MODELO, "eventos": eventos, "conteos": dict(counts),
+        item["documental"] = {"modelo": self.version_modelo, "eventos": eventos, "conteos": dict(counts),
                               "gradiente": delta, "rendimiento": self.rendimiento}
         return item

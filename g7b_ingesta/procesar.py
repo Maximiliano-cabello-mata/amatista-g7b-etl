@@ -122,7 +122,7 @@ def a_documento(registro, lago, fuente):
     url = registro.get("url") or registro.get("enlace")
     metadatos = {k: registro[k] for k in ("fecha", "autores", "autor", "autor_respuesta", "etiquetas", "categorias")
                  if registro.get(k)}
-    if registro.get("documental", {}).get("modelo") == calidad.MODELO:
+    if registro.get("documental", {}).get("modelo") in calidad.MODELOS:
         modelo = registro["documental"]
         fragmentos = {f["fragmento_id"]: f for f in registro.get("fragmentos", [])}
         citas, partes = [], []
@@ -134,7 +134,7 @@ def a_documento(registro, lago, fuente):
             citas.append({k: e[k] for k in ("id", "fragmento", "bloque", "url", "destinos")})
             partes.append(f["titulo"] + "\n" + bloque["texto"])
         texto = "\n\n".join(partes)
-        metadatos.update({"modelo_documental": calidad.MODELO, "citas": citas,
+        metadatos.update({"modelo_documental": modelo["modelo"], "citas": citas,
                           "eventos": modelo["conteos"], "version": registro.get("version")})
     elif registro.get("duplicado_de"):  # la araña ya vio esta página en otra ruta: solo anota el alias
         texto = ""
@@ -219,9 +219,10 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print, solo_fuen
                 doc = a_documento(registro, lago, fuente)
                 r = evaluar(doc, fuente, taxonomia, indice)
                 meta = doc["metadatos"]
-                if meta.get("modelo_documental") == calidad.MODELO:
-                    habilitada = auditorias.get(id_fuente, {}).get("habilitada", False)
-                    calibradas[id_fuente] = habilitada
+                if meta.get("modelo_documental") in calidad.MODELOS:
+                    clave = calidad.clave(id_fuente, meta["modelo_documental"])
+                    habilitada = auditorias.get(clave, {}).get("habilitada", False)
+                    calibradas[clave] = habilitada
                     if r.etapa != "entrada":
                         if not meta["citas"] and any(meta["eventos"].get(k)
                                 for k in ("revision", "hipotesis", "conflicto")):

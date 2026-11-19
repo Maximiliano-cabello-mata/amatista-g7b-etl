@@ -33,6 +33,7 @@ class Candidato:
     orden: int
     puntuacion: float
     puente: bool
+    saltos_fuera: int = 0
 
 
 class Frontera:
@@ -48,16 +49,20 @@ class Frontera:
         self.turnos = 0
         self.orden = 0
 
-    def ofrecer(self, url, profundidad=0, puntuacion=0.0, puente=False):
+    def ofrecer(self, url, profundidad=0, puntuacion=0.0, puente=False, saltos_fuera=0):
         if url in self.visitadas:
             return
         anterior = self.pendientes.get(url)
         if anterior is None:
-            self.pendientes[url] = Candidato(url, profundidad, self.orden, puntuacion, puente)
+            self.pendientes[url] = Candidato(url, profundidad, self.orden, puntuacion, puente, saltos_fuera)
             self.orden += 1
         else:
-            anterior.profundidad = min(anterior.profundidad, profundidad)
-            anterior.puntuacion = max(anterior.puntuacion, puntuacion)
+            # Mantener los límites de una ruta real cuando dos padres alcanzan la misma URL.
+            if ((saltos_fuera, profundidad, -puntuacion)
+                    < (anterior.saltos_fuera, anterior.profundidad, -anterior.puntuacion)):
+                anterior.saltos_fuera = saltos_fuera
+                anterior.profundidad = profundidad
+                anterior.puntuacion = puntuacion
             anterior.puente |= puente
 
     def siguiente(self):

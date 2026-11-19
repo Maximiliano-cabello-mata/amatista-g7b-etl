@@ -161,9 +161,9 @@ class ZyteConTrabajos:
         zyte = self
 
         class Jobs:
-            def iter(self, spider, state):
+            def iter(self, state, meta):
                 assert state == ["pending", "running"]
-                return [{"key": k} for a, k in zyte.activos if a == spider]
+                return [{"key": k, "spider": a} for a, k in zyte.activos]
 
             def run(self, arana, job_args):
                 zyte.lanzados.append((arana, job_args))

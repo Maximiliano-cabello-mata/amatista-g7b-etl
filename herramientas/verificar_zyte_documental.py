@@ -7,13 +7,13 @@ import time
 
 from scrapinghub import ScrapinghubClient
 
-from motor_extraccion.documental import MODELO
+from g7b_ingesta import catalogo
+from g7b_ingesta.vigilar import argumentos_zyte
+from motor_extraccion.site import MODELO_SITE as MODELO
 
 NOMBRES = {"paginas", "blender_docs"}
-RETIRADAS = {"manual_sphinx", "paginas_laboratorio"}
-BASE = "https://docs.blender.org/manual/en/4.5/render/"
-SEMILLA = BASE + "cycles/render_settings/sampling.html"
-TAG = "g7b-documental-v3-piloto"
+FUENTE = "blender-compositor-45"
+TAG = "g7b-site-v4-piloto"
 
 
 def activos(proyecto):
@@ -26,7 +26,7 @@ def comprobar_trabajos(proyecto, esperar):
         trabajos = activos(proyecto)
         nombres = [j["spider"] for j in trabajos]
         print("Trabajos pendientes o en ejecución:", [(j["key"], j["spider"]) for j in trabajos], flush=True)
-        if (not (set(nombres) & (RETIRADAS | {"paginas"})) and len(nombres) < 2):
+        if len(nombres) < 2 and set(nombres) <= {"blender_docs"}:
             return
         if time.monotonic() >= fin:
             raise RuntimeError("El proyecto todavía tiene trabajos que se solaparían con el relevo")
@@ -44,20 +44,30 @@ def ejecutar(proyecto):
     previo = next(iter(proyecto.jobs.iter(spider="paginas", state="finished", has_tag=TAG,
                                          meta=["close_reason", "items"], count=1)), {})
     piloto = not (previo.get("close_reason") == "finished" and previo.get("items", 0))
-    limite = 32 if piloto else 1
-    args = {"fuente": "blender-manual", "programa": "blender", "version": "4.5",
-            "urls": json.dumps([SEMILLA]), "prefijo": BASE, "seguir": "1" if piloto else "0",
-            "temas": json.dumps(["render", "sampling", "noise", "memory", "performance"]),
-            "max_paginas": str(limite)}
-    job = proyecto.jobs.run("paginas", job_args=args, add_tag=[TAG] if piloto else ["g7b-documental-smoke"])
+    fuente = catalogo.por_id(catalogo.cargar())[FUENTE]
+    semilla = fuente["sensor"]["url"]
+    if not piloto:
+        anterior = proyecto.jobs.get(previo["key"])
+        semilla = next((i["url"] for i in anterior.items.iter()
+                        if i.get("documental", {}).get("conteos", {}).get("candidato")), semilla)
+    _, args = argumentos_zyte(fuente, [semilla])
+    limite = int(args["max_paginas"]) if piloto else 1
+    args.update(max_paginas=str(limite), seguir="1" if piloto else "0")
+    job = proyecto.jobs.run("paginas", job_args=args, add_tag=[TAG] if piloto else ["g7b-site-v4-smoke"])
     print("Prueba real en Zyte:", job.key, "máximo de páginas:", limite, flush=True)
     fin = time.monotonic() + 600
+    max_activos = 0
     while job.metadata.get("state") != "finished":
+        trabajos = activos(proyecto)
+        nombres = [j["spider"] for j in trabajos]
+        max_activos = max(max_activos, len(nombres))
+        if len(nombres) != len(set(nombres)) or not set(nombres) <= NOMBRES:
+            raise RuntimeError(f"Solapamiento en Zyte: {nombres}")
         if time.monotonic() >= fin:
             raise RuntimeError(f"Tiempo agotado esperando el trabajo {job.key}")
         time.sleep(8)
     razon = job.metadata.get("close_reason")
-    paginas, candidatos = 0, 0
+    paginas, candidatos, con_candidatos = 0, 0, 0
     for item in job.items.iter():
         if item.get("documental", {}).get("modelo") != MODELO:
             raise RuntimeError("Zyte devolvió una salida sin la firma del modelo desplegado")
@@ -65,13 +75,16 @@ def ejecutar(proyecto):
         eventos = [e for e in item["documental"]["eventos"] if e["decision"] == "candidato"]
         candidatos += len(eventos)
         if eventos:
+            con_candidatos += 1
             # Elegir un candidato reproducible por página antes de conocer su etiqueta.
-            e = min(eventos, key=lambda x: hashlib.sha256(("piloto-1/" + x["id"]).encode()).digest())
+            e = min(eventos, key=lambda x: hashlib.sha256(("piloto-site-4/" + x["id"]).encode()).digest())
             f = next(f for f in item["fragmentos"] if f["fragmento_id"] == e["fragmento"])
             bloque = f["bloques"][e["bloque"]]
             print("MUESTRA " + json.dumps({"url": e["url"], "id": e["id"], "titulo": f["titulo"],
-                  "destinos": e["destinos"], "texto": bloque["texto"][:1200]}, ensure_ascii=False), flush=True)
-    print(f"RESULTADO job={job.key} modelo={MODELO} cierre={razon} paginas={paginas} candidatos={candidatos}",
+                  "destinos": e["destinos"], "texto": bloque["texto"][:1800],
+                  "truncado": len(bloque["texto"]) > 1800}, ensure_ascii=False), flush=True)
+    print(f"RESULTADO job={job.key} modelo={MODELO} cierre={razon} paginas={paginas} candidatos={candidatos} "
+          f"paginas_con_candidatos={con_candidatos} max_activos_observados={max_activos}",
           flush=True)
     if razon != "finished" or not 0 < paginas <= limite or not candidatos:
         raise RuntimeError("El trabajo remoto no entregó evidencia clasificada")

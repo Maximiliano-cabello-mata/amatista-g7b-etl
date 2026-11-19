@@ -120,6 +120,30 @@ fuentes:
     alias: ["Blender Docs"]  # nombre con el que la araña antigua marcaba sus registros
     activa: true
 
+  # Capítulo oficial fuera de las secciones que ya recorre blender_docs.
+  - id: blender-compositor-45
+    nombre: Composición por nodos (Manual de Blender 4.5 LTS)
+    tipo: documentacion
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P1, P2, P6]
+    sensor: {tipo: pagina, url: "https://docs.blender.org/manual/en/4.5/compositing/index.html"}
+    extractor: zyte
+    zyte:
+      arana: paginas
+      seguir: true
+      version: "4.5"
+      prefijo: "https://docs.blender.org/manual/en/4.5/compositing/"
+      temas: [compositor, node, blur, denoise, sampling, mask, performance, filter, color, alpha, precision]
+      max_paginas: 64
+    frecuencia_horas: 168
+    dominios: [docs.blender.org]
+    activa: true
+
   - id: blender-noticias
     nombre: Noticias de blender.org
     tipo: noticias
