@@ -59,7 +59,7 @@ $F$ mide recuperación documental de extremo a extremo. En una auditoría real t
 | Enlaces descriptivos | 1/3 | 2/3 | 3/3 |
 | Enlaces ambiguos | 3/3 | 2/3 | 1/3 |
 
-El segundo comando imprime los resultados HTTP, las rutas efectivas, $U$, $Q$, $F$ y $Y_{100}$ para los cuatro recorridos. Las pruebas de integración comparan los tres modos experimentales con el orden previsto y verifican la estructura de sus tablas. Una última prueba de campo debe usar capturas fijas de fuentes reales, alguna fuente reservada para evaluación y resultados por sitio, versión y tipo de contenido antes de elegir nuevos pesos o promover una estrategia.
+El segundo comando imprime los resultados HTTP, las rutas efectivas, $U$, $Q$, $F$ y $Y_{100}$ para los cuatro recorridos. También devuelve `F_visitadas`, la fracción de relaciones correctas entre las anotadas en páginas que recibieron una solicitud en el servidor local. Las pruebas de integración comparan los tres modos experimentales con el orden previsto y verifican la estructura de sus tablas. Una última prueba de campo debe usar capturas fijas de fuentes reales, alguna fuente reservada para evaluación y resultados por sitio, versión y tipo de contenido antes de elegir nuevos pesos o promover una estrategia.
 
 ## Ejecución manual en Scrapy o Zyte
 

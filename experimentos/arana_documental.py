@@ -136,10 +136,13 @@ def ejecutar(escenario, estrategia):
             hilo.join()
     aciertos = recuperadas(items)
     q = len(peticiones)
+    objetivos_visitados = {ruta.removeprefix("/docs/") for ruta in peticiones} & VERDAD.keys()
     return {"escenario": escenario, "estrategia": estrategia, "Q": q,
             "paginas_solicitadas": sum(p != "/robots.txt" for p in peticiones),
             "orden_http": peticiones, "U": len(aciertos), "evidencia": sorted(aciertos),
-            "F": len(aciertos) / len(VERDAD), "Y100": round(100 * len(aciertos) / q, 2) if q else None}
+            "F": len(aciertos) / len(VERDAD),
+            "F_visitadas": len(aciertos) / len(objetivos_visitados) if objetivos_visitados else None,
+            "Y100": round(100 * len(aciertos) / q, 2) if q else None}
 
 
 if __name__ == "__main__":

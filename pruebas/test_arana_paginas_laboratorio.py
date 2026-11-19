@@ -80,11 +80,13 @@ def test_profundidad_y_seguir_cero():
 
 @pytest.mark.parametrize("escenario", ["descriptivo", "ambiguo"])
 @pytest.mark.parametrize("estrategia", ["paginas", *ESTRATEGIAS])
-def test_experimento_http(escenario, estrategia):
+def test_experimento_http(escenario, estrategia, capsys):
     medida = ejecutar(escenario, estrategia)
     assert "/robots.txt" in medida["orden_http"]
     assert medida["paginas_solicitadas"] >= 1
     assert 0 <= medida["U"] <= len(VERDAD)
+    if estrategia != "paginas":
+        assert medida["F_visitadas"] == 1.0
     assert medida["Y100"] == round(100 * medida["U"] / medida["Q"], 2)
     if estrategia != "paginas":
         orden = orden_grafo(escenario, estrategia)
@@ -94,6 +96,8 @@ def test_experimento_http(escenario, estrategia):
         esperadas = {"descriptivo": [1, 2, 3], "ambiguo": [3, 2, 1]}
         assert medida["U"] == esperadas[escenario][ESTRATEGIAS.index(estrategia)]
     if os.getenv("GITHUB_STEP_SUMMARY"):
+        with capsys.disabled():
+            print("G7B experimento HTTP", json.dumps(medida, ensure_ascii=False), flush=True)
         with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as archivo:
             archivo.write(f"- {escenario} / {estrategia}: {medida['U']} relaciones, "
                           f"{medida['Q']} peticiones HTTP, Y100={medida['Y100']}.\n")
