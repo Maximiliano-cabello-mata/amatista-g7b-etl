@@ -56,6 +56,9 @@ def argumentos_zyte(fuente, urls, extra=None):
                       "seguir": "1" if zyte.get("seguir") else "0", "prefijo": zyte.get("prefijo", ""),
                       "max_paginas": str(zyte.get("max_paginas", 200)), "programa": fuente.get("programa", ""),
                       "tipo_fuente": fuente.get("tipo", "")}
+        for k in ("version", "temas", "prefijos_puente"):
+            if k in zyte:
+                argumentos[k] = zyte[k] if isinstance(zyte[k], str) else json.dumps(zyte[k])
     else:  # araña especializada: sabe qué recorrer; el sensor solo avisó que hubo cambios
         # Lo que diga el sensor (por ejemplo, qué versiones del manual cambiaron) manda sobre el catálogo.
         combinados = {**(zyte.get("argumentos") or {}), **(extra or {})}
@@ -70,9 +73,11 @@ class TrabajoEnCurso(Exception):
 def en_curso(proyecto, arana):
     """Claves de los trabajos de la araña que siguen pendientes o corriendo en Zyte."""
     jobs = proyecto.jobs
-    if not hasattr(jobs, "iter"):
+    activos = list(jobs.iter(state=["pending", "running"], meta=["spider"]))
+    otra = {"blender_docs", "paginas"} - {arana}
+    if len(activos) < 2 and all(j.get("spider") in otra for j in activos):
         return []
-    return [j.get("key") for j in jobs.iter(spider=arana, state=["pending", "running"])]
+    return [j["key"] for j in activos]
 
 
 def lanzar_zyte(cliente, proyecto_id, fuente, urls, extra=None):

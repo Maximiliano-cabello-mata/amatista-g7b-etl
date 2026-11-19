@@ -1,0 +1,31 @@
+# Site 4.0 · selección de documentación técnica
+
+La araña ocupa el nombre `paginas` en Zyte. `blender_docs` recorre su inventario Sphinx. Site tiene asignado el capítulo de composición del manual de Blender 4.5, fuera de las secciones de esa otra araña. Geodar revisa el índice de composición cada 168 horas y, si observa un cambio, envía un trabajo de hasta 64 intentos. Una modificación exclusiva de una página interior puede pasar inadvertida al sensor del índice.
+
+## Eventos y gradiente
+
+Cada semilla, respuesta HTML, redirección y error consume o alimenta una sola frontera. Cada petición, incluidas las redirecciones, reserva su intento antes de salir. En metadatos se omite el cuerpo. En texto completo se conservan el original en bronce, la cita por apartado y las decisiones por bloque.
+
+Sea $D_l$ la fracción de palabras incluidas en enlaces. Un bloque con enlaces y $D_l\geq0.80$, o una lista de al menos tres enlaces con $D_l\geq0.55$, se marca como navegación antes de evaluar palabras técnicas. El índice sigue aportando destinos. El resto pasa por [las reglas de evidencia v3](README.md). Site reconoce también un parámetro de composición y una expresión de efecto con condición o versión explícita. Un foro aporta hipótesis. Las palabras coincidentes por sí solas pueden producir falsos positivos.
+
+Para la página $t$, $y_t$ es la fracción de candidatos entre los bloques nuevos evaluables. El gradiente de la pérdida $(m-y_t)^2/2$ respecto de $m$ es $m-y_t$. Después de cada respuesta evaluable se aplica $m_t=m_{t-1}+0.25(y_t-m_{t-1})$ desde $m_0=0.5$. Referencias y navegación se excluyen del denominador.
+
+## Prioridad de la frontera
+
+Para cada página padre se agrupan los enlaces elegibles y se consideran por separado ruta, ancla y contexto local (encabezado y hasta 400 caracteres del bloque). Cada campo usa BM25 sobre ese grupo. Con $N$ enlaces, $n_t$ campos que contienen el término y $f_t$ apariciones, la contribución de un término es
+
+$$\log(1+(N-n_t+0.5)/(n_t+0.5))\frac{2.2 f_t}{f_t+1.2(0.25+0.75 L/\bar L)}.$$
+
+Se suman las contribuciones de los términos del catálogo y se normaliza cada suma $B$ con $b=B/(1+B)$. La nota $S=0.25 b_{ruta}+0.40 b_{ancla}+0.20 b_{contexto}+0.15 m_t$ determina la prioridad $S\,0.85^{d-1}\,0.5^k$, con profundidad nueva $d$ y saltos consecutivos fuera de prefijo $k$. Solo se admiten puentes hacia prefijos HTTPS autorizados explícitamente en el catálogo, con $S\geq0.28$ y hasta dos saltos. Al regresar al prefijo principal se reinicia $k$. El piloto opera enteramente dentro del capítulo. Robots, versiones, presupuesto y dominios de la fuente siguen rigiendo.
+
+La frontera canoniza URLs, elimina fragmentos y reserva una única visita por URL. La deduplicación aproximada entre documentos continúa en el embudo de plata con SimHash. Los pesos y cortes iniciales son parámetros de diseño. El histórico conserva la versión anterior y permite reproducir una comparación.
+
+## Evaluación del 80 %
+
+La población operativa de este piloto son las páginas seleccionadas en el recorrido acotado de composición 4.5. Antes de conocer etiquetas, se toma un candidato por página con el menor SHA-256 de `piloto-site-4/` seguido del identificador de bloque. La rúbrica exige una acción o parámetro con un efecto o comprobación útil y correctamente atribuida. Un índice, una coincidencia léxica o un texto insuficiente cuentan como fallo. La traza registra la fracción de páginas que produjeron candidatos por separado.
+
+El auditor cuenta $k$ muestras útiles entre $n$ revisadas. Se informa $k/n$ y el [límite inferior unilateral de Wilson al 95 %](README.md). Con $n=0$ o límite inferior por debajo de 0.80, los candidatos quedan pendientes de calibración. Las etiquetas se aíslan por fuente y versión del modelo. Un resultado solo cubre las condiciones y la unidad de muestreo evaluadas.
+
+## Operación
+
+El radar y el despliegue comparten el grupo de concurrencia de ingesta. Antes del relevo se espera a que concluya cualquier trabajo de Site o histórico. El registro de la release admite exactamente `paginas` y `blender_docs`. El piloto comprueba la firma `site/4.0`, el número de páginas, las decisiones y la cola del proyecto. La muestra y la clave de trabajo están en el registro de GitHub Actions.

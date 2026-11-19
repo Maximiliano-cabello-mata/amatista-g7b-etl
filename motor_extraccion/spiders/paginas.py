@@ -6,9 +6,9 @@ from urllib.parse import unquote, urlsplit, urlunsplit
 
 import scrapy
 
-from ..frontera_documental import Frontera, calificar, palabras
+from ..frontera_documental import Frontera, palabras
 from .fragmentos_sphinx import extraer_fragmentos
-from ..documental import ModeloDocumental
+from ..site import ModeloSite, puntuar_enlaces
 
 
 def direccion(url):
@@ -36,13 +36,14 @@ class PaginasSpider(scrapy.Spider):
 
     def __init__(self, estrategia="foco", temas='["render", "memory", "memoria", "sampling", "muestras"]',
                  profundidad="8", seguir="0", programa="", version="", fuente="", urls="[]",
-                 modo="texto_completo", dominios="[]", prefijo="", max_paginas="200", tipo_fuente="", **kwargs):
+                 modo="texto_completo", dominios="[]", prefijo="", max_paginas="200", tipo_fuente="",
+                 prefijos_puente="[]", **kwargs):
         super().__init__(**kwargs)
         self.fuente, self.modo, self.prefijo = fuente, modo, prefijo
         self.start_urls = json.loads(urls)
         self.allowed_domains = json.loads(dominios) or sorted({urlsplit(u).hostname for u in self.start_urls})
         self.max_paginas = int(max_paginas)
-        self.modelo = ModeloDocumental()
+        self.modelo = ModeloSite()
         self.foro = tipo_fuente in {"foro", "comunidad"}
         if self.modo not in {"texto_completo", "solo_metadatos"} or seguir not in {"0", "1"}:
             raise ValueError("modo o seguir inválido")
@@ -63,6 +64,18 @@ class PaginasSpider(scrapy.Spider):
             if not prefijo or urlsplit(prefijo).query:
                 raise ValueError("prefijo debe ser una URL HTTP(S) sin consulta")
             self.limite = urlsplit(prefijo)
+        puentes = json.loads(prefijos_puente)
+        if not isinstance(puentes, list) or not all(isinstance(x, str) for x in puentes):
+            raise ValueError("prefijos_puente debe ser una lista de URLs")
+        self.puentes = []
+        for raw in puentes:
+            canonica = direccion(raw)
+            if not self.limite or not canonica:
+                raise ValueError("El túnel requiere un prefijo principal y URLs válidas")
+            parte = urlsplit(canonica)
+            if parte.query or parte.hostname not in self.dominios_permitidos or parte.scheme != "https":
+                raise ValueError("Prefijo de túnel fuera de los dominios configurados")
+            self.puentes.append(parte)
         if not self.start_urls:
             raise ValueError("Se requiere al menos una URL de inicio")
         for semilla in self.start_urls:
@@ -78,19 +91,27 @@ class PaginasSpider(scrapy.Spider):
         partes = urlsplit(url)
         if partes.hostname not in self.dominios_permitidos:
             return None
-        if self.limite:
-            if (partes.scheme, partes.netloc) != (self.limite.scheme, self.limite.netloc):
-                return None
-            base = posixpath.normpath(unquote(self.limite.path)).rstrip("/")
-            ruta = posixpath.normpath(unquote(partes.path).replace("\\", "/"))
-            if ruta != base and not ruta.startswith(base + "/"):
-                return None
-        return url
+        return url if not self.limite or self.bajo(partes, self.limite) else None
+
+    @staticmethod
+    def bajo(partes, prefijo):
+        if (partes.scheme, partes.netloc) != (prefijo.scheme, prefijo.netloc):
+            return False
+        base = posixpath.normpath(unquote(prefijo.path)).rstrip("/")
+        ruta = posixpath.normpath(unquote(partes.path).replace("\\", "/"))
+        return ruta == base or ruta.startswith(base + "/")
+
+    def destino(self, url, saltos):
+        if self.en_alcance(url):
+            return 0
+        if saltos < 2 and any(self.bajo(urlsplit(url), prefijo) for prefijo in self.puentes):
+            return saltos + 1
+        return None
 
     def resolver(self, response, href):
         try:
-            return self.en_alcance(response.urljoin(href))
-        except ValueError:  # Por ejemplo, un enlace malformado dentro de una página válida.
+            return direccion(response.urljoin(href))
+        except ValueError:
             return None
 
     def proxima(self):
@@ -101,6 +122,7 @@ class PaginasSpider(scrapy.Spider):
             yield scrapy.Request(
                 candidato.url, callback=self.parse, errback=self.fallo, dont_filter=True,
                 meta={"nivel_documental": candidato.profundidad, "prioridad_documental": candidato.puntuacion,
+                      "saltos_fuera": candidato.saltos_fuera,
                       "dont_redirect": True, "dont_retry": True, "handle_httpstatus_all": True})
 
     def start_requests(self):  # Scrapy 2.11–2.12
@@ -121,7 +143,10 @@ class PaginasSpider(scrapy.Spider):
             if destino:
                 url = self.resolver(response, destino.decode("latin-1"))
                 if url:
-                    self.frontera.ofrecer(url, nivel, response.meta["prioridad_documental"])
+                    k = self.destino(url, response.meta["saltos_fuera"])
+                    # Una redirección no puede abrir un túnel sin ancla evaluada.
+                    if k == 0 or (k is not None and response.meta["saltos_fuera"] > 0):
+                        self.frontera.ofrecer(url, nivel, response.meta["prioridad_documental"], saltos_fuera=k)
             self.crawler.stats.inc_value("g7b/documental/redirecciones")
         elif 200 <= response.status < 300 and "html" in response.headers.get(
                 "Content-Type", b"").decode("latin-1").lower():
@@ -136,6 +161,7 @@ class PaginasSpider(scrapy.Spider):
                 "tipo": response.headers.get("Content-Type", b"").decode("latin-1"),
                 "ultima_modificacion": response.headers.get("Last-Modified", b"").decode("latin-1") or None,
                 "extraido_en": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+                "programa": self.programa, "version": self.version,
                 "titulo": (response.css("title::text").get() or "").strip()}
         if self.modo == "solo_metadatos":
             item["descripcion"] = response.css('meta[name="description"]::attr(content)').get()
@@ -153,12 +179,23 @@ class PaginasSpider(scrapy.Spider):
                 self.crawler.stats.inc_value("g7b/documental/" + estado, n)
         yield item
         if self.explorar and nivel < self.profundidad_max:
-            for enlace in response.css("a[href]"):
+            raiz = response.css("main, [role=main]") or response.css("article") or response.css("body")
+            enlaces, destinos = [], {}
+            for enlace in raiz.xpath(".//a[@href][not(ancestor::nav or ancestor::footer or ancestor::header)]"):
                 url = self.resolver(response, enlace.attrib["href"])
-                if url:
-                    ancla = enlace.xpath("string(.)").get() or ""
-                    encabezado = enlace.xpath(
-                        "string(preceding::*[self::h1 or self::h2 or self::h3][1])").get() or ""
-                    nota, puente = calificar(url, ancla, encabezado, self.temas, nivel + 1)
-                    prioridad = 0.85 * nota + 0.15 * self.modelo.rendimiento
-                    self.frontera.ofrecer(url, nivel + 1, prioridad, puente)
+                if not url or "headerlink" in (enlace.attrib.get("class") or "").split():
+                    continue
+                k = self.destino(url, response.meta["saltos_fuera"])
+                if k is None or url in self.frontera.visitadas:
+                    continue
+                ancla = enlace.xpath("string(.)").get() or ""
+                bloque = enlace.xpath("string(ancestor::*[self::p or self::li or self::dt][1])").get() or ""
+                encabezado = enlace.xpath("string(preceding::*[self::h1 or self::h2 or self::h3][1])").get() or ""
+                enlaces.append((url, ancla, encabezado + " " + bloque[:400]))
+                destinos[url] = k
+            for url, nota, puente in puntuar_enlaces(enlaces, self.temas, self.modelo.rendimiento):
+                k = destinos[url]
+                if k and nota < 0.28:
+                    continue
+                prioridad = nota * 0.85 ** nivel * 0.5 ** k
+                self.frontera.ofrecer(url, nivel + 1, prioridad, puente, k)

@@ -59,6 +59,9 @@ class ZyteFalso:
         lanzados = self.lanzados
 
         class Jobs:
+            def iter(self, **_):
+                return []
+
             def run(self, arana, job_args):
                 lanzados.append((arana, job_args))
                 return type("Trabajo", (), {"key": f"883618/2/{len(lanzados)}"})()
