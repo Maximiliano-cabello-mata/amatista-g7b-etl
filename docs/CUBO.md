@@ -1,5 +1,7 @@
 # Cubo G7B: Parquet + DuckDB en Azure
 
+> Contrato actual: `g7b.cubo/2`. Consultar [modelo, compatibilidad y migracion v2](CUBO_V2.md) antes de publicar. `hechos_medicion` y `hechos_render` son vistas; sus Parquet separados ya no se generan. Se agregan `dim_metrica`, `repeticiones`, `linaje` y `v_geoda_mediciones`.
+
 ## Qué se integra
 
 Esta entrega continúa el diseño de hechos/dimensiones del [PR #4](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/pull/4)
@@ -133,3 +135,4 @@ reúne diez fuentes primarias de Microsoft, DuckDB, Apache Parquet, MongoDB e IE
 Distingue el comportamiento actual de las propuestas sobre identidad estable,
 redundancia y consumo analítico. Incluye prioridades y pruebas de aceptación para
 una futura versión; no cambia el contrato ni acredita una migración implementada.
+

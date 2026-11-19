@@ -14,15 +14,15 @@ def fila(i=1, **cambios):
          'sintetico': False, 'fuente': 'sonda', 'estado': 'aceptado', 'fecha': '2026-11-03T00:00:00Z',
          'version': '4.2.0', 'escena': 'ligera', 'perfil': 'ligero', 'sonda': '0.1.0',
          'metrica': 'tiempo_edicion', 'unidad': 's', 'valor': 1.0, 'motivos': [],
-         'variacion': .01, 'valores': [1, 1, 1], 'prueba': 'edicion',
+         'variacion': 0, 'valores': [1, 1, 1], 'prueba': 'edicion',
          'equipo': {'cpu': 'CPU', 'so': 'Linux'}, 'licencia': 'propia', 'sin_ventana': True}
     return {**f, **cambios}
 
 
 def test_estrella_dedup_calidad_y_versiones(tmp_path):
     a = fila()
-    b = fila(2, estado='revision', motivos=['variacion'], variacion=.5, valor=100)
-    c = fila(3, version='4.2.1', valor=4)
+    b = fila(2, estado='revision', motivos=['variacion'], variacion=.5, valor=100, valores=[75, 100, 125])
+    c = fila(3, version='4.2.1', valor=4, valores=[4, 4, 4])
     informe = construir([('lote1', a), ('lote2', a), ('lote1', b), ('lote1', c)], tmp_path)
     assert informe['duplicados_eliminados'] == 1
     assert informe['mediciones'] == 3
@@ -100,3 +100,4 @@ def test_cubo_azure_integracion(tmp_path):
         assert descargar(lago, tmp_path / 'azure.duckdb')['mediciones'] == 1
     finally:
         contenedor.delete_container()
+

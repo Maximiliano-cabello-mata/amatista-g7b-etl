@@ -5,18 +5,20 @@ from pathlib import Path
 
 import duckdb
 
-from .cubo import ACTUAL, CONTRATO, sha
+from .cubo import ACTUAL, CONTRATO, CONTRATOS_LECTURA, sha
 
 
 def descargar(lago, destino):
     destino = Path(destino)
     if destino.exists(): raise ValueError('elige un archivo nuevo para no sobrescribir una copia abierta')
     puntero = lago.leer_json(ACTUAL)
-    if not puntero or puntero.get('contrato') != CONTRATO:
+    if not puntero or puntero.get('contrato') not in CONTRATOS_LECTURA:
         raise ValueError('no hay cubo publicado compatible')
     contenido = lago.contenedor.download_blob(puntero['manifiesto']).readall()
     if sha(contenido) != puntero['sha256']: raise ValueError('manifiesto alterado')
     manifiesto = json.loads(contenido)
+    if manifiesto.get('contrato') != puntero['contrato']:
+        raise ValueError('contratos de manifiesto y puntero distintos')
     meta = manifiesto['archivos']['oro/cubo.duckdb']
     datos = lago.contenedor.download_blob(meta['ruta']).readall()
     if sha(datos) != meta['sha256'] or len(datos) != meta['bytes']:
@@ -40,3 +42,4 @@ def main():
 
 
 if __name__ == '__main__': main()
+
