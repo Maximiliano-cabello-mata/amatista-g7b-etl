@@ -1,0 +1,1232 @@
+{
+  "ejecucion": "https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44666052441",
+  "sha_prueba": "d9701d3534fd6f66636252aee5c6e0af952c31e2",
+  "versiones": {
+    "documental_v3": "7e70782b7313b56aff24d184d0ccf2c9459f7dda",
+    "site40": "00572a6884b2f99dfb57182f7df0774c2fa36002",
+    "site41": "f8c50ea4ccd7c8e1968a89b79750aae378842c6e",
+    "telemetria_anterior": "f8c50ea4ccd7c8e1968a89b79750aae378842c6e",
+    "telemetria_nueva": "227b8f5e538a5ea1d7497e6d94999d1e5d5235ce"
+  },
+  "unidad_documental": "bloque con su URL",
+  "etiquetas": [
+    {
+      "indice": 0,
+      "id": "04367682bb92e3b426275fe9173bb9b4c609478d467027efaa979ae0d83af13c",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_correct.html#properties",
+      "util": true
+    },
+    {
+      "indice": 1,
+      "id": "0822dde0a2e055e2671b2b1c49a8a62dce00fc424682f9fc6e0c5f4cdf4b1eae",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/despeckle.html#despeckle-node",
+      "util": true
+    },
+    {
+      "indice": 2,
+      "id": "0c152f8294c95c39c09ad0fdf470060a46058da85473c9edfafaee7b0bcb0e34",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#properties",
+      "util": true
+    },
+    {
+      "indice": 3,
+      "id": "0dc4722176fe2db5308a2a218291a5eb725e0a6b472d2b0d1b8185c37cf4b713",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/rgb_curves.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 4,
+      "id": "0de3fa457ac7bded267d12790b36f236a7f444ce8b03782e26e24cd4b7450ffe",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 5,
+      "id": "10be3c289a7f1cafa65048b75073ebe585f2167e58e2661778c1660981c5e5a9",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/kuwahara.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 6,
+      "id": "10e8b1e9211b2a882e5d2538a8e1663d37e99c5d9ae5f63479fed70ee40b6de2",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#edges",
+      "util": true
+    },
+    {
+      "indice": 7,
+      "id": "12dea255e4e373e010a63ab36a4327c0f3b9f6e83abacc5d8a5eb77dba5c9475",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/anti_aliasing.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 8,
+      "id": "1a9e0f83b48f85883164e1f74f2bc16595becf34da99f971d40d91d302b4d0b7",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/bright_contrast.html#notes",
+      "util": true
+    },
+    {
+      "indice": 9,
+      "id": "208836b87679c1c7c03351bbfe21b8fc1bc404187fe96ea4676ec9c71be9103e",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#hints",
+      "util": true
+    },
+    {
+      "indice": 10,
+      "id": "21007951ceafd876d4f12f36680498e9c10bb6fddefdd95cf17301cc820188fd",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/mask.html#example",
+      "util": true
+    },
+    {
+      "indice": 11,
+      "id": "213fddd8f8379357748f5426c51d382d3141085c38f6f3995575913418af4fa6",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/anti_aliasing.html#examples",
+      "util": true
+    },
+    {
+      "indice": 12,
+      "id": "231db15e613c534acedb8633734caacdecc8abda6d44ee16482e6957d99f1c75",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/math.html#properties",
+      "util": true
+    },
+    {
+      "indice": 13,
+      "id": "2338dafcedfb9e7de27cc610856a73b308952d0cf6609b1650eac92c919b3bf5",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/mask/ellipse_mask.html#usage",
+      "util": true
+    },
+    {
+      "indice": 14,
+      "id": "239897ba3867f52e14f2b59bbcba6ce9e0127926bcafd5aee84cae576472876a",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/difference_key.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 15,
+      "id": "2cbf515bea8f8c2dd36a3555cd28cb3032dfe603791bb645af9444df105b7454",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/rgb_curves.html#examples",
+      "util": false
+    },
+    {
+      "indice": 16,
+      "id": "2d0ede96309024ebec71c4a376cfd544f59eed74ec867c4832f985e7483d08d8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#properties",
+      "util": true
+    },
+    {
+      "indice": 17,
+      "id": "34d0421ce06758d0e499d518ba9408148010fc26a5b268087d61a25408e217ea",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/displace.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 18,
+      "id": "361953fdb6d60efb513b01fe767f7f77d4f755cd4b12e5526c2fe6c4faee45a0",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/filter.html#properties",
+      "util": true
+    },
+    {
+      "indice": 19,
+      "id": "38aacad94507579728cd2b0c752fb9aa2aae88fc6f4800ff7a988ec0e692b7fb",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/movie_clip.html#movie-clip-node",
+      "util": true
+    },
+    {
+      "indice": 20,
+      "id": "38e617fccd80788c89896615b5982149a1509b205c3a0e6341d9fb49be6130a4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/limitations.html#tdr-on-windows",
+      "util": true
+    },
+    {
+      "indice": 21,
+      "id": "38e90283a22a3f5cb8be2c36e4a39d547641337c17de7f24acff77db54bf2f76",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/color_balance.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 22,
+      "id": "3ad4ba3546b7ba203a2018625d39b7dfbcbac223233472dec761b4c882131a48",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/color_correction.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 23,
+      "id": "3e9c9b9bd470925f3a6623f349eeea790591123346628a51d5bf5ac3b5290be7",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/distance_key.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 24,
+      "id": "4093329b1d4474f98e03e7b03610dca9010719008ed59973847f0df8b5316075",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 25,
+      "id": "41439b3bb9b3c00721ae5320e6081989c80b045591f6b8e576c24f639d095d41",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/mix_vector.html#mix-vector-node",
+      "util": false
+    },
+    {
+      "indice": 26,
+      "id": "461ed90fbc5079eb02cdb72ad2f734621443c5f0e1170f62f13bccd32be902d8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/despeckle.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 27,
+      "id": "467bb7208d1656ff8f706563a500cdab58e6c80921a4991b2a112efda72bfb24",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#highlights",
+      "util": true
+    },
+    {
+      "indice": 28,
+      "id": "46e4d0a7d113adf12a51687d1c91b99b5ff4241d3b988402492106be228e6d67",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/alpha_over.html#fade-in",
+      "util": true
+    },
+    {
+      "indice": 29,
+      "id": "47e8087317973896e3de26feeb3f7674e7fe8643830a21d568635cafa59f84bb",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/bokeh_blur.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 30,
+      "id": "4828f1f7a881029dd5c0e33cbb40d5b0c1cfed27be1d2738142c6f28e096d9b4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#preprocess",
+      "util": true
+    },
+    {
+      "indice": 31,
+      "id": "501d036a7d3316dd529c0b92e491b2fa38914234407758544e37b2b967f3b300",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/noise.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 32,
+      "id": "556edeec6f858df0e1132a7a433dd9e70eec3be1feb1929e0c09462dabccd622",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/distance_key.html#distance-key-node",
+      "util": true
+    },
+    {
+      "indice": 33,
+      "id": "57b25aabcea4a8873813f694660543964a6c7d4788e112c07702f0b6ad387adc",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#no-z-buffer-examples",
+      "util": true
+    },
+    {
+      "indice": 34,
+      "id": "66aa9a3f34af9ce820e84d6873593c13b73117906f0007bc976043c86bf385c3",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_correct.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 35,
+      "id": "68f2f5979ec0f4d1e4e8c7e658e081c2f51b5832e9184e3e8be55df6cd8a3f75",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/kuwahara.html#kuwahara-node",
+      "util": true
+    },
+    {
+      "indice": 36,
+      "id": "749dc34d31d10dbe1c112332a2d35bd2b15af504ef186d243ea73a8e0e4cdcaa",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/compositor_system.html#type",
+      "util": true
+    },
+    {
+      "indice": 37,
+      "id": "7911498a34c54125f6e7b872edf38462f454e2e54aa88db75a245a075f7d7f27",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#denoise-node",
+      "util": true
+    },
+    {
+      "indice": 38,
+      "id": "7b096274f8532027c250de57de84bd852156d70cf34377c1915a0a1d49f4c46f",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/tone_map.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 39,
+      "id": "7e829c9840ad4ab7456918e15647fbd397a7a4488b54028f92e5802b4a106010",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#properties",
+      "util": true
+    },
+    {
+      "indice": 40,
+      "id": "8729d8285fb2bcca9af6c1767d02da507b0996284fc2b03859c3c91fb90858c9",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/math.html#brightening-scaling-a-channel",
+      "util": true
+    },
+    {
+      "indice": 41,
+      "id": "931008bb24d0a9075c279db81d8fc534f0a95da56b772f7b3eb4c62b6e2a1a91",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/brick.html#properties",
+      "util": true
+    },
+    {
+      "indice": 42,
+      "id": "978d933f9dd89e5539895b0541686e802e5db40c26d612807db0bcb19ca2d675",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#mix-color-node",
+      "util": false
+    },
+    {
+      "indice": 43,
+      "id": "9aaad891db285ba7a891fc0f4e75b600f6ea510e3a38bf478e6d7a2d15c912c2",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/exposure.html#examples",
+      "util": true
+    },
+    {
+      "indice": 44,
+      "id": "9cfe4e230277e2dbf6d7df1da7a887950eac82de5c9891bf6351371bc5a2a923",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/bright_contrast.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 45,
+      "id": "9f9632bc00c8ae9e154c01492202e802a502a8d388cbfe67db2367f5ffcedfb8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/mix_vector.html#properties",
+      "util": true
+    },
+    {
+      "indice": 46,
+      "id": "a14ca791d33bb4170f6d50cbc6a73a3784bfed66148a5b1d7925fd9d857c5366",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/gabor.html#examples",
+      "util": true
+    },
+    {
+      "indice": 47,
+      "id": "a1642deb0d16d24daeff4a1b11de5e0d9e39ef5ce875446dbf5866ec2b672d36",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/vector_curves.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 48,
+      "id": "a3b8e454ee69cef80c3bdcdb4c2869e20416fa5e0c470db9f737f101829ee361",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/mask/cryptomatte_legacy.html#usage",
+      "util": true
+    },
+    {
+      "indice": 49,
+      "id": "ad798652505b76835d54da39fa7a7bf6f20e219702b67b2fcf109490164660ac",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/scene/time_curve.html#properties",
+      "util": true
+    },
+    {
+      "indice": 50,
+      "id": "adf910fc76bb668a6e0e3fbc764324c248b989bdacf4618360e589199016e328",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/color_balance.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 51,
+      "id": "b1648283f3bfffa89eedda8dce3dbcddc14618e9a88e05bc09837c74b3031e40",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/map_uv.html#properties",
+      "util": true
+    },
+    {
+      "indice": 52,
+      "id": "b21ca509f0d10750adb705cf2c46ecbd32310f34562f440c194f3984c4a9bc36",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_saturation.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 53,
+      "id": "b37b3bd5d7745ec65f481044e5c4d9d05f852038632cc7a2326cc6d5d5f17221",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/blur.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 54,
+      "id": "b6facad76c9da461d8d10dff1ef426479d7d6b4df400104ee313b680095e1bc8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/dilate_erode.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 55,
+      "id": "b9980126bd98e2041a4ed72d0a0c1dea77ee3dd042c900a796ea6a3e579d32ad",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/sun_beams.html#example",
+      "util": false
+    },
+    {
+      "indice": 56,
+      "id": "ba2efc48595c989917f8290c841ab88594e51deb0a7a66f7cce0fdf09bc18d30",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/blur.html#properties",
+      "util": true
+    },
+    {
+      "indice": 57,
+      "id": "c00e6ffb095d315cedd9b6bc8bae895ba351bae241496fd8ecbcac9269233e92",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/filter.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 58,
+      "id": "c168c0c33288650aa1af8607453f3b46e2a76aca243696c46d19c2861a5fe19b",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/vector_blur.html#usage",
+      "util": true
+    },
+    {
+      "indice": 59,
+      "id": "c6aa97c2bb0a435825712c90701f18cc8bc24393e5626696d12b6ad7fa6c262d",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/defocus.html#no-z-buffer-examples",
+      "util": true
+    },
+    {
+      "indice": 60,
+      "id": "c759c5b1e0a7b006ccc2f7b6d282ef50c9b3d22ecf0794fc180993dc52bdaa68",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/dilate_erode.html#properties",
+      "util": true
+    },
+    {
+      "indice": 61,
+      "id": "c7f8026566687dd39399d51c233263e69c42a1ebd33045408135ef8c7c36216a",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/glare.html#clamp",
+      "util": false
+    },
+    {
+      "indice": 62,
+      "id": "c7fe539345209befc6581e1e17cfa06d952e70d9d75125f3ded826b31194cccf",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/wave.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 63,
+      "id": "cb9b9e6f970f5d6b16e5b2e4755e46bcfdb5c444c84bf4695cfb21fb59cca1be",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/input/mask.html#motion-blur",
+      "util": true
+    },
+    {
+      "indice": 64,
+      "id": "d1107f41f3f78e1e1f309883e357207b1d994b7e5933aebaef51c4c0a870a241",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#encoding-your-watermark-in-an-image",
+      "util": true
+    },
+    {
+      "indice": 65,
+      "id": "d1d51e485d4954a040133fd943b4742ab72883f678662f53dfc167f88a0d86cb",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/scale.html#properties",
+      "util": true
+    },
+    {
+      "indice": 66,
+      "id": "d2457400141bf1909a6e6d5c0ca844a915477db8ef9007dbd4d9629f5d530a27",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/rgb_curves.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 67,
+      "id": "d9d45c7d3569ad5222f501baee358506a74ee1e169cd6a3728d0741d0fee73a2",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying.html#postprocess",
+      "util": true
+    },
+    {
+      "indice": 68,
+      "id": "dbd6de75cb2f8e97387febc7a98bbc84747a5ed03776247b60f24652b2c11015",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/mix/mix_color.html#properties",
+      "util": true
+    },
+    {
+      "indice": 69,
+      "id": "dcb0a045a5e8f501afc4dc57e2e98646c64394f09b446cb22ca09857130046d4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/bokeh_blur.html#examples",
+      "util": true
+    },
+    {
+      "indice": 70,
+      "id": "ded95f0c0933bc002afc5c41227faab6dcacf0a3126aee4b6f1b8635aba86ca9",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/blur/directional_blur.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 71,
+      "id": "df693ab7a8a6121808fc5b14ea12680fcb94936d3aec625004dfa49ae3215799",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/filter/denoise.html#examples",
+      "util": true
+    },
+    {
+      "indice": 72,
+      "id": "e1c818b6fee14cd470183e1e70fd72d9ac83a6d6390f690458de5614624623f4",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/keying_screen.html#example",
+      "util": true
+    },
+    {
+      "indice": 73,
+      "id": "e1f8974e96d0d21ff75394a56327eecc32dce6283fa3a20b29000bfc759569e7",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/relative_to_pixel.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 74,
+      "id": "e2641257f65ca8c8a06bb2dc1964b25deba7fed054f957cfbee1e29195507b1c",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/corner_pin.html#properties",
+      "util": true
+    },
+    {
+      "indice": 75,
+      "id": "e5455363d964bbb1fc17a9195934e5567dafe863eb945b069fef61126fd0117c",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/rotate.html#properties",
+      "util": true
+    },
+    {
+      "indice": 76,
+      "id": "f2c5190870b97144c8dd314e2e67c8acdbef9287710d967885b3421fab9fd4a6",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/mix_vector.html#inputs",
+      "util": false
+    },
+    {
+      "indice": 77,
+      "id": "f4bd96cc6752b4133e455efeb4754428973de4c1294ee7ec911f76f0b2897e1d",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/transform/transform.html#properties",
+      "util": false
+    },
+    {
+      "indice": 78,
+      "id": "f92d05669cde62c27df0f2cb0cadee900bd1a12704a8fd8de65c4021e38969ed",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/keying/color_spill.html#inputs",
+      "util": true
+    },
+    {
+      "indice": 79,
+      "id": "f98c4333a6e068f905eb3c446d5c03c7adf6e0bca9388cb33ef1fd7d02c32a49",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/utilities/float_curve.html#inputs",
+      "util": false
+    }
+  ],
+  "cuatro_dictamenes_nuevos": [
+    {
+      "id": "66aa9a3f34af9ce820e84d6873593c13b73117906f0007bc976043c86bf385c3",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/color/adjust/hue_correct.html#inputs",
+      "util": false,
+      "motivo": "Describe las entradas estándar y la influencia del factor sin una condición o un ajuste reproducible."
+    },
+    {
+      "id": "9f9632bc00c8ae9e154c01492202e802a502a8d388cbfe67db2367f5ffcedfb8",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/mix_vector.html#properties",
+      "util": true,
+      "motivo": "Explica el control por eje y qué ocurre al desactivar Clamp Factor, con un rango numérico verificable."
+    },
+    {
+      "id": "c7fe539345209befc6581e1e17cfa06d952e70d9d75125f3ded826b31194cccf",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/texture/wave.html#inputs",
+      "util": true,
+      "motivo": "Da un procedimiento para reconstruir la distorsión de Wave con Noise y la relación Distortion/Scale."
+    },
+    {
+      "id": "f2c5190870b97144c8dd314e2e67c8acdbef9287710d967885b3421fab9fd4a6",
+      "url": "https://docs.blender.org/manual/en/4.5/compositing/types/vector/mix_vector.html#inputs",
+      "util": false,
+      "motivo": "Repite los nombres de las dos entradas y del factor sin explicar una decisión técnica."
+    }
+  ],
+  "series": [
+    {
+      "modo": "completo",
+      "modelo": "v3",
+      "paginas": 131,
+      "ausentes": 0,
+      "conteos": {
+        "g7b/documental/candidato": 21,
+        "g7b/documental/html": 131,
+        "g7b/documental/intentos": 131,
+        "g7b/documental/navegacion": 45,
+        "g7b/documental/revision": 1036
+      },
+      "candidatos": [
+        3,
+        7,
+        11,
+        70,
+        37,
+        39,
+        1,
+        26,
+        54,
+        27,
+        2,
+        63,
+        14,
+        48,
+        62,
+        74,
+        51,
+        75,
+        65,
+        77,
+        73
+      ],
+      "muestra": [
+        3,
+        11,
+        70,
+        39,
+        26,
+        54,
+        27,
+        63,
+        14,
+        48,
+        62,
+        74,
+        51,
+        75,
+        65,
+        77,
+        73
+      ]
+    },
+    {
+      "modo": "completo",
+      "modelo": "v40",
+      "paginas": 131,
+      "ausentes": 0,
+      "conteos": {
+        "g7b/documental/candidato": 80,
+        "g7b/documental/html": 131,
+        "g7b/documental/intentos": 131,
+        "g7b/documental/navegacion": 45,
+        "g7b/documental/revision": 977
+      },
+      "candidatos": [
+        36,
+        20,
+        44,
+        8,
+        50,
+        21,
+        22,
+        43,
+        34,
+        0,
+        52,
+        66,
+        3,
+        15,
+        38,
+        28,
+        42,
+        24,
+        68,
+        64,
+        7,
+        11,
+        53,
+        56,
+        29,
+        69,
+        16,
+        59,
+        33,
+        9,
+        70,
+        58,
+        37,
+        4,
+        39,
+        71,
+        1,
+        26,
+        54,
+        60,
+        57,
+        18,
+        27,
+        61,
+        2,
+        35,
+        5,
+        55,
+        63,
+        10,
+        19,
+        49,
+        78,
+        14,
+        32,
+        23,
+        30,
+        6,
+        67,
+        72,
+        48,
+        13,
+        41,
+        46,
+        31,
+        62,
+        74,
+        17,
+        51,
+        75,
+        65,
+        77,
+        79,
+        12,
+        40,
+        73,
+        25,
+        76,
+        45,
+        47
+      ],
+      "muestra": [
+        36,
+        20,
+        8,
+        21,
+        22,
+        43,
+        0,
+        52,
+        15,
+        38,
+        28,
+        24,
+        11,
+        56,
+        29,
+        59,
+        70,
+        58,
+        4,
+        26,
+        60,
+        57,
+        27,
+        35,
+        55,
+        10,
+        19,
+        49,
+        78,
+        14,
+        23,
+        6,
+        72,
+        48,
+        13,
+        41,
+        46,
+        31,
+        62,
+        74,
+        17,
+        51,
+        75,
+        65,
+        77,
+        79,
+        12,
+        73,
+        45,
+        47
+      ]
+    },
+    {
+      "modo": "completo",
+      "modelo": "v41",
+      "paginas": 131,
+      "ausentes": 0,
+      "conteos": {
+        "g7b/documental/candidato": 70,
+        "g7b/documental/html": 131,
+        "g7b/documental/intentos": 131,
+        "g7b/documental/navegacion": 45,
+        "g7b/documental/referencia": 2,
+        "g7b/documental/revision": 985
+      },
+      "candidatos": [
+        36,
+        20,
+        44,
+        8,
+        21,
+        43,
+        0,
+        52,
+        66,
+        3,
+        15,
+        38,
+        28,
+        42,
+        68,
+        64,
+        7,
+        11,
+        53,
+        56,
+        29,
+        69,
+        16,
+        59,
+        33,
+        9,
+        70,
+        58,
+        37,
+        4,
+        39,
+        71,
+        1,
+        26,
+        54,
+        60,
+        18,
+        27,
+        61,
+        2,
+        35,
+        5,
+        63,
+        10,
+        19,
+        49,
+        78,
+        14,
+        32,
+        23,
+        30,
+        6,
+        67,
+        72,
+        48,
+        13,
+        41,
+        46,
+        31,
+        74,
+        17,
+        51,
+        75,
+        65,
+        79,
+        12,
+        40,
+        73,
+        25,
+        47
+      ],
+      "muestra": [
+        36,
+        20,
+        8,
+        21,
+        43,
+        0,
+        52,
+        15,
+        38,
+        28,
+        64,
+        11,
+        56,
+        29,
+        59,
+        70,
+        58,
+        4,
+        26,
+        60,
+        18,
+        27,
+        35,
+        10,
+        19,
+        49,
+        78,
+        14,
+        23,
+        6,
+        72,
+        48,
+        13,
+        41,
+        46,
+        31,
+        74,
+        17,
+        51,
+        75,
+        65,
+        79,
+        12,
+        73,
+        25,
+        47
+      ]
+    },
+    {
+      "modo": "presupuesto64",
+      "modelo": "v3",
+      "paginas": 64,
+      "ausentes": 0,
+      "conteos": {
+        "g7b/documental/candidato": 15,
+        "g7b/documental/html": 64,
+        "g7b/documental/intentos": 64,
+        "g7b/documental/navegacion": 21,
+        "g7b/documental/revision": 543
+      },
+      "candidatos": [
+        37,
+        39,
+        63,
+        70,
+        1,
+        26,
+        27,
+        2,
+        7,
+        11,
+        54,
+        48,
+        75,
+        65,
+        77
+      ],
+      "muestra": [
+        39,
+        63,
+        70,
+        26,
+        27,
+        11,
+        54,
+        48,
+        75,
+        65,
+        77
+      ]
+    },
+    {
+      "modo": "presupuesto64",
+      "modelo": "v40",
+      "paginas": 64,
+      "ausentes": 0,
+      "conteos": {
+        "g7b/documental/candidato": 44,
+        "g7b/documental/html": 64,
+        "g7b/documental/intentos": 64,
+        "g7b/documental/navegacion": 26,
+        "g7b/documental/revision": 473
+      },
+      "candidatos": [
+        37,
+        4,
+        39,
+        71,
+        36,
+        57,
+        18,
+        63,
+        10,
+        13,
+        78,
+        28,
+        58,
+        42,
+        24,
+        68,
+        64,
+        1,
+        26,
+        27,
+        61,
+        2,
+        35,
+        5,
+        48,
+        7,
+        11,
+        54,
+        60,
+        55,
+        53,
+        56,
+        50,
+        21,
+        22,
+        30,
+        6,
+        67,
+        75,
+        65,
+        77,
+        17,
+        12,
+        40
+      ],
+      "muestra": [
+        4,
+        36,
+        57,
+        10,
+        13,
+        78,
+        28,
+        58,
+        24,
+        26,
+        27,
+        35,
+        48,
+        11,
+        60,
+        55,
+        56,
+        21,
+        22,
+        6,
+        75,
+        65,
+        77,
+        17,
+        12
+      ]
+    },
+    {
+      "modo": "presupuesto64",
+      "modelo": "v41",
+      "paginas": 64,
+      "ausentes": 0,
+      "conteos": {
+        "g7b/documental/candidato": 38,
+        "g7b/documental/html": 64,
+        "g7b/documental/intentos": 64,
+        "g7b/documental/navegacion": 26,
+        "g7b/documental/referencia": 1,
+        "g7b/documental/revision": 478
+      },
+      "candidatos": [
+        37,
+        4,
+        39,
+        71,
+        36,
+        18,
+        63,
+        10,
+        13,
+        78,
+        28,
+        58,
+        42,
+        68,
+        64,
+        1,
+        26,
+        27,
+        61,
+        2,
+        35,
+        5,
+        48,
+        7,
+        11,
+        54,
+        60,
+        53,
+        56,
+        21,
+        30,
+        6,
+        67,
+        75,
+        65,
+        17,
+        12,
+        40
+      ],
+      "muestra": [
+        4,
+        36,
+        18,
+        10,
+        13,
+        78,
+        28,
+        58,
+        64,
+        26,
+        27,
+        35,
+        48,
+        11,
+        60,
+        56,
+        21,
+        6,
+        75,
+        65,
+        17,
+        12
+      ]
+    }
+  ],
+  "resumen": [
+    {
+      "modo": "completo",
+      "modelo": "v3",
+      "paginas": 131,
+      "paginas_con_candidatos": 17,
+      "n": 21,
+      "k": 20,
+      "f": 1,
+      "p": 95.23809523809524,
+      "muestra": {
+        "n": 17,
+        "k": 16,
+        "f": 1,
+        "p": 94.11764705882354
+      },
+      "ausentes": 0
+    },
+    {
+      "modo": "completo",
+      "modelo": "v40",
+      "paginas": 131,
+      "paginas_con_candidatos": 50,
+      "n": 80,
+      "k": 66,
+      "f": 14,
+      "p": 82.5,
+      "muestra": {
+        "n": 50,
+        "k": 42,
+        "f": 8,
+        "p": 84
+      },
+      "ausentes": 0
+    },
+    {
+      "modo": "completo",
+      "modelo": "v41",
+      "paginas": 131,
+      "paginas_con_candidatos": 46,
+      "n": 70,
+      "k": 64,
+      "f": 6,
+      "p": 91.42857142857143,
+      "muestra": {
+        "n": 46,
+        "k": 42,
+        "f": 4,
+        "p": 91.30434782608695
+      },
+      "ausentes": 0
+    },
+    {
+      "modo": "presupuesto64",
+      "modelo": "v3",
+      "paginas": 64,
+      "paginas_con_candidatos": 11,
+      "n": 15,
+      "k": 14,
+      "f": 1,
+      "p": 93.33333333333333,
+      "muestra": {
+        "n": 11,
+        "k": 10,
+        "f": 1,
+        "p": 90.9090909090909
+      },
+      "ausentes": 0
+    },
+    {
+      "modo": "presupuesto64",
+      "modelo": "v40",
+      "paginas": 64,
+      "paginas_con_candidatos": 25,
+      "n": 44,
+      "k": 36,
+      "f": 8,
+      "p": 81.81818181818181,
+      "muestra": {
+        "n": 25,
+        "k": 20,
+        "f": 5,
+        "p": 80
+      },
+      "ausentes": 0
+    },
+    {
+      "modo": "presupuesto64",
+      "modelo": "v41",
+      "paginas": 64,
+      "paginas_con_candidatos": 22,
+      "n": 38,
+      "k": 36,
+      "f": 2,
+      "p": 94.73684210526316,
+      "muestra": {
+        "n": 22,
+        "k": 22,
+        "f": 0,
+        "p": 100
+      },
+      "ausentes": 0
+    }
+  ],
+  "telemetria": {
+    "sonda-g7b": {
+      "antes": 9,
+      "despues": 9,
+      "identicos_sin_entorno": 9,
+      "con_entorno_antes": 0,
+      "con_entorno_despues": 9,
+      "calidad": {
+        "aceptado": 9
+      }
+    },
+    "blender-open-data": {
+      "antes": 150,
+      "despues": 150,
+      "identicos_sin_entorno": 150,
+      "con_entorno_antes": 0,
+      "con_entorno_despues": 0,
+      "calidad": {
+        "revision": 150
+      }
+    },
+    "caniuse": {
+      "funciones": 6,
+      "celdas_iguales": 4296
+    },
+    "aframe": [
+      {
+        "intervalos": 301,
+        "duracion_ms": 5016.5,
+        "p50_ms": 16.7,
+        "p95_ms": 16.7,
+        "fps_observados": 60.00199342170836
+      },
+      {
+        "intervalos": 301,
+        "duracion_ms": 5016.4,
+        "p50_ms": 16.7,
+        "p95_ms": 16.8,
+        "fps_observados": 60.00318953831433
+      },
+      {
+        "intervalos": 301,
+        "duracion_ms": 5016.5,
+        "p50_ms": 16.7,
+        "p95_ms": 16.7,
+        "fps_observados": 60.00199342170836
+      }
+    ],
+    "estados": {
+      "pendiente": 7,
+      "recibida": 4
+    },
+    "entradas_sha256": {
+      "aframe/1.json": "c4c6f553e8e58bb0cf8524696a3343290a9d84bcc3752c4bc54822518a17ab92",
+      "aframe/2.json": "75692093d44a4d450d1dc98ba5551614ec73045d546fc04d30796f7c772c878e",
+      "aframe/3.json": "88efbd6a93043fa3b285be7bd29979b79b8010c1f218d7b3ddcd95b6800af795",
+      "caniuse.json": "74c7967e92a5c973676a7e29e36a7c1cb384f7bff2a93234c6641c1dcd93a5db",
+      "opendata.zip": "c940f874210d7909dbc1f9c3113f270d56a2390c33bfaf2ef1cceb4b921d3900",
+      "sondas/medicion_2026-11-20_c8e2c43b_1795144341.json": "91d4166bbe0f313ff380e54a41015ef9f3e70683e83dfe8f980a8593496a216b",
+      "sondas/medicion_2026-11-20_c8e2c43b_1795144350.json": "b93289119c7f19844afb8b960133adb3a85fb6fd1990029f667b47ef04a134bd",
+      "sondas/medicion_2026-11-20_c8e2c43b_1795144359.json": "aa738d9248dec4bf13e0f3f33e1c04d92428012e885cf06d4e3f10e868fcfe0b"
+    }
+  }
+}
