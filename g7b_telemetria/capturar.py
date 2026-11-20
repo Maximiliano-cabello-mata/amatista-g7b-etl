@@ -201,6 +201,8 @@ def seleccionar_opendata(registros, estado=None, limite=20000):
                 heapq.heapreplace(anteriores, entrada)
         else:
             conteos['ya_capturados'] += 1
+    if conteos['leidos'] == conteos['esquema_no_soportado'] + conteos['rechazados']:
+        raise ValueError('el snapshot no contiene registros v4 con fecha e identificador válidos')
     nuevos.sort(key=lambda x: (x[0], x[1]))
     tomados_nuevos = nuevos[:limite]
     conteos['pendientes_nuevos'] = len(nuevos) - len(tomados_nuevos)

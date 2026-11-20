@@ -195,3 +195,14 @@ def test_sonda_aframe_recalcula_metricas_y_rechaza_campos_ajenos(tmp_path):
         assert informe["conteos"]["recibida"] == 1
     assert len(lago.listar("plata/telemetria_web/")) == 1
     assert not lago.listar("plata/telemetria/")
+
+
+def test_snapshot_incompatible_y_carpeta_vacia_no_son_datos_al_dia(tmp_path):
+    from g7b_ingesta import catalogo
+    from g7b_telemetria.capturar import seleccionar_opendata
+    from g7b_telemetria.recopilar import recopilar
+
+    with pytest.raises(ValueError, match="registros v4"):
+        seleccionar_opendata([{"schema_version": "v5"}])
+    resultado = recopilar(catalogo.cargar(), tmp_path / "captura", carpeta=tmp_path, solo=["sonda-g7b"])
+    assert resultado["conteos"]["sin_entrada"] == 1

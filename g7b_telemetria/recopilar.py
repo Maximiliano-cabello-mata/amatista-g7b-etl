@@ -43,10 +43,12 @@ def sondas(carpeta, lago, salida, limite):
         conteos.update(informe["conteos"])
         return "recibido"
 
+    sin_archivos_locales = True
     if carpeta is not None:
         if not carpeta.is_dir():
             raise ValueError("carpeta de sonda inexistente")
         for ruta in sorted(carpeta.glob("*.json")):
+            sin_archivos_locales = False
             if ruta.stat().st_size > cap.MAX_LINEA:
                 conteos["rechazados"] += 1
                 continue
@@ -76,6 +78,8 @@ def sondas(carpeta, lago, salida, limite):
             estado = recibir(dato)
             lago.escribir_json(recibo, {"estado": estado})
             procesados += 1
+    if sin_archivos_locales and lago is None:
+        return {"fuente": "sonda-g7b", "sin_entrada": True, "conteos": dict(conteos)}
     return {"fuente": "sonda-g7b", "conteos": dict(conteos), "nada_nuevo": not lotes,
             "azure": "subida_y_lectura_verificadas" if lotes and lago is not None else
                      "sin_escritura_de_mediciones" if lago is not None else "no_solicitado"}
@@ -115,8 +119,8 @@ def recopilar(catalogo, salida, limite=1000, carpeta=None, snapshot=None, canius
                 fila["estado"] = "parcial" if not info["nada_nuevo"] else "error"
             if info.get("en_espera"):
                 fila.update(estado="en_espera", motivo=info["motivo"])
-            if ident == "sonda-g7b" and carpeta is None and lago is None:
-                fila.update(estado="sin_entrada", motivo="indica --sondas o usa el buzón con --azure")
+            if info.get("sin_entrada"):
+                fila.update(estado="sin_entrada", motivo="faltan JSON de la sonda de Blender en --sondas o en el buzón")
         except Exception as exc:
             # Las excepciones de red/SDK pueden incluir una URL firmada.
             fila.update(estado="error", tipo_error=type(exc).__name__)
@@ -158,4 +162,7 @@ def main(argv=None):
         info = fila.get("informe", {})
         print(fila["fuente"], fila["estado"], info.get("conteos", {}), "celdas", info.get("celdas", 0),
               fila.get("tipo_error", ""))
-    return int(any(k in resultado["conteos"] for k in ("error", "parcial", "sin_entrada")))
+    fallos = any(k in resultado["conteos"] for k in ("error", "parcial", "sin_entrada"))
+    sin_fuente_solicitada = any(f["estado"] in ("pendiente", "en_espera") for f in resultado["fuentes"]
+                                if o.fuente and f["fuente"] in o.fuente)
+    return int(fallos or sin_fuente_solicitada)
