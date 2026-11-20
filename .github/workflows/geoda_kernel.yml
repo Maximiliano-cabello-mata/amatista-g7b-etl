@@ -14,8 +14,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install duckdb==2.0.0
@@ -30,14 +30,14 @@ jobs:
           fi
           [[ "$id" =~ ^[0-9]+$ ]] || { echo 'No hay ejecución válida de Cubo G7B'; exit 1; }
           echo "id=$id" >> "$GITHUB_OUTPUT"
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           github-token: ${{ github.token }}
           run-id: ${{ steps.origen.outputs.id }}
           name: cubo-${{ steps.origen.outputs.id }}
           path: insumo
       - run: python -m geoda.ejecutar --entrada insumo --salida salida
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: geoda-${{ github.run_id }}-cubo-${{ steps.origen.outputs.id }}
           path: salida/

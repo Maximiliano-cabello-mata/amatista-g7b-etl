@@ -28,8 +28,8 @@ jobs:
     environment: amatista1
     timeout-minutes: 60   # el archivo completo de Open Data se recorre por tandas
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install -r requirements-lago.txt
@@ -61,7 +61,7 @@ jobs:
           fi
       - name: Conservar informes y mediciones (sin snapshot completo)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: telemetria-${{ github.run_id }}
           retention-days: 14
