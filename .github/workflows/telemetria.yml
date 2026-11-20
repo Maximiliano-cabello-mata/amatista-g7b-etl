@@ -58,3 +58,4 @@ jobs:
             captura/**/informe.json
             captura/**/mediciones.jsonl
             captura/**/compatibilidad.jsonl
+            captura/**/sonda-aframe/*.jsonl

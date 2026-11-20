@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 
 from g7b_ingesta import catalogo as cat
 from geodar.__main__ import COLECTORES
+from . import aframe
 from . import capturar as cap
 
 
@@ -80,7 +81,8 @@ def sondas(carpeta, lago, salida, limite):
                      "sin_escritura_de_mediciones" if lago is not None else "no_solicitado"}
 
 
-def recopilar(catalogo, salida, limite=1000, carpeta=None, snapshot=None, caniuse=None, lago=None, solo=None):
+def recopilar(catalogo, salida, limite=1000, carpeta=None, snapshot=None, caniuse=None, lago=None, solo=None,
+              entrada_aframe=None):
     if not 1 <= limite <= cap.MAX_LIMITE:
         raise ValueError("límite fuera del rango admitido")
     fuentes = cat.por_destino(catalogo, "telemetria")
@@ -101,14 +103,18 @@ def recopilar(catalogo, salida, limite=1000, carpeta=None, snapshot=None, canius
         try:
             if ident == "sonda-g7b":
                 info = sondas(carpeta, lago, destino, limite)
+            elif ident == "sonda-aframe":
+                info = aframe.capturar(entrada_aframe, lago, destino)
             else:
                 colector = COLECTORES[fuente["colector"]]
                 entrada = {"blender-open-data": snapshot, "caniuse-web3d": caniuse}.get(ident)
                 info = colector(fuente, lago, destino, limite, entrada=entrada, simulacro=lago is None)
             fila["informe"] = info
             fila["estado"] = "sin_novedad" if info.get("nada_nuevo") else "recibida"
-            if info.get("conteos", {}).get("rechazados") and ident == "sonda-g7b":
+            if info.get("conteos", {}).get("rechazados") and ident in ("sonda-g7b", "sonda-aframe"):
                 fila["estado"] = "parcial" if not info["nada_nuevo"] else "error"
+            if info.get("en_espera"):
+                fila.update(estado="en_espera", motivo=info["motivo"])
             if ident == "sonda-g7b" and carpeta is None and lago is None:
                 fila.update(estado="sin_entrada", motivo="indica --sondas o usa el buzón con --azure")
         except Exception as exc:
@@ -132,6 +138,7 @@ def recopilar(catalogo, salida, limite=1000, carpeta=None, snapshot=None, canius
 def main(argv=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--sondas", type=Path, help="carpeta de JSON generados por la sonda propia")
+    p.add_argument("--aframe", type=Path, help="archivo o carpeta de la sonda manual de A-Frame")
     p.add_argument("--snapshot", type=Path, help="ZIP oficial de Blender descargado previamente")
     p.add_argument("--caniuse", type=Path, help="data-2.0.json oficial descargado previamente")
     p.add_argument("--salida", type=Path, default=Path("captura/telemetria-amatista"))
@@ -145,7 +152,8 @@ def main(argv=None):
     if o.azure:
         from g7b_lago import Lago
         lago = Lago.desde_entorno()
-    resultado = recopilar(cat.cargar(), o.salida, o.limite, o.sondas, o.snapshot, o.caniuse, lago, o.fuente)
+    resultado = recopilar(cat.cargar(), o.salida, o.limite, o.sondas, o.snapshot, o.caniuse, lago, o.fuente,
+                          entrada_aframe=o.aframe)
     for fila in resultado["fuentes"]:
         info = fila.get("informe", {})
         print(fila["fuente"], fila["estado"], info.get("conteos", {}), "celdas", info.get("celdas", 0),

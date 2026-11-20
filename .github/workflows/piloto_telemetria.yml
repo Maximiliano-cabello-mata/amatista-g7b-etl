@@ -3,7 +3,8 @@ on:
   pull_request:
     paths:
       - 'g7b_telemetria/**'
-      - 'sonda/g7b_sonda.py'
+      - 'sonda/**'
+      - 'pruebas/piloto_aframe.py'
       - '.github/workflows/piloto_telemetria.yml'
 permissions:
   contents: read
@@ -20,8 +21,13 @@ jobs:
       - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends blender
       - name: Medir la escena ligera en el runner
         run: blender -b --factory-startup --python-exit-code 1 --python sonda/g7b_sonda.py -- --salida sonda-piloto --escena ligera --perfiles ligero --repeticiones 3 --sin-render --entorno github_actions
-      - name: Recibir las tres fuentes con datos reales
-        run: python -m g7b_telemetria --sondas sonda-piloto --limite 5 --salida piloto
+      - name: Medir una escena A-Frame en Chromium con WebGL por software
+        run: |
+          pip install 'selenium>=4.24,<5'
+          curl --fail --location --retry 2 https://aframe.io/releases/1.7.0/aframe.min.js -o "$RUNNER_TEMP/aframe.min.js"
+          python pruebas/piloto_aframe.py "$RUNNER_TEMP/aframe.min.js" "$RUNNER_TEMP/medicion-aframe.json"
+      - name: Recibir las cuatro fuentes con datos reales
+        run: python -m g7b_telemetria --sondas sonda-piloto --aframe "$RUNNER_TEMP/medicion-aframe.json" --limite 5 --salida piloto
       - name: Comprobar procedencia, unidades y cobertura
         shell: python
         run: |
@@ -30,7 +36,7 @@ jobs:
           raiz = Path('piloto')
           informe = json.loads((raiz / 'informe.json').read_text())
           fuentes = {r['fuente']: r for r in informe['fuentes'] if r['activa']}
-          assert set(fuentes) == {'sonda-g7b', 'blender-open-data', 'caniuse-web3d'}
+          assert set(fuentes) == {'sonda-g7b', 'blender-open-data', 'caniuse-web3d', 'sonda-aframe'}
           assert all(r['estado'] == 'recibida' for r in fuentes.values())
           assert informe['destino'] == 'local'
           for clave, fila in fuentes.items():
@@ -40,6 +46,10 @@ jobs:
           publicos = [json.loads(s) for s in (raiz / 'blender-open-data/mediciones.jsonl').read_text().splitlines()]
           assert publicos and all(d['unidad'] == 'samples/min' and d['estado'] == 'revision' for d in publicos)
           assert fuentes['caniuse-web3d']['informe']['funciones'] == 6
+          web = json.loads(next((raiz / 'sonda-aframe').glob('*.jsonl')).read_text())
+          assert web['entorno'] == 'github_actions' and web['max_triangulos'] >= 12
+          assert web['intervalos'] > 0 and web['fps_observados'] > 0
+          print('A-Frame en CI', json.dumps(web))
       - uses: actions/upload-artifact@v6
         if: always()
         with:
