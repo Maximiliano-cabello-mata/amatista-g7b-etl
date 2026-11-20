@@ -1,0 +1,98 @@
+name: Comparación de Site y telemetría
+on:
+  push:
+    branches: [pruebas/comparacion-site-telemetria-20261119]
+    paths: ['.github/workflows/comparar_aranas.yml', 'herramientas/comparacion_aranas/**']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  site:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: amatista1
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-dev.txt
+      - name: Recuperar las páginas públicas archivadas (solo lectura)
+        env:
+          AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
+          PYTHONPATH: .
+        run: python herramientas/comparacion_aranas/site.py preparar
+      - name: Ejecutar una araña por vez sobre el mismo corpus
+        run: |
+          for revision in 7e70782b7313b56aff24d184d0ccf2c9459f7dda 00572a6884b2f99dfb57182f7df0774c2fa36002; do
+            git cat-file -e "$revision^{commit}" || git fetch --no-tags origin "$revision"
+          done
+          git worktree add --detach "$RUNNER_TEMP/doc-v3" 7e70782b7313b56aff24d184d0ccf2c9459f7dda
+          git worktree add --detach "$RUNNER_TEMP/doc-v40" 00572a6884b2f99dfb57182f7df0774c2fa36002
+          for modelo in v3 v40 v41; do
+            raiz="$RUNNER_TEMP/doc-$modelo"
+            if [ "$modelo" = v41 ]; then raiz="$GITHUB_WORKSPACE"; fi
+            PYTHONPATH="$raiz" python herramientas/comparacion_aranas/site.py "$modelo"
+          done
+          python herramientas/comparacion_aranas/site.py consolidar
+      - uses: actions/upload-artifact@v6
+        with:
+          name: comparacion-site
+          path: resultados-comparacion/site
+          retention-days: 14
+
+  telemetria:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-lago.txt
+      - name: Preparar Blender 4.2.20 LTS con el checksum de la distribución
+        working-directory: ${{ runner.temp }}
+        run: |
+          version=4.2.20
+          base=https://download.blender.org/release/Blender4.2
+          archivo="blender-$version-linux-x64.tar.xz"
+          curl --fail --location --retry 2 --max-time 60 "$base/blender-$version.sha256" -o blender.sha256
+          curl --fail --location --retry 2 --max-time 180 "$base/$archivo" -o "$archivo"
+          sha256sum --check --ignore-missing blender.sha256
+          tar -xf "$archivo"
+          echo "$RUNNER_TEMP/blender-$version-linux-x64" >> "$GITHUB_PATH"
+      - name: Fijar los datos públicos y medir tres sesiones reales de cada sonda
+        run: |
+          base="$RUNNER_TEMP/entradas-amatista"
+          mkdir -p "$base/sondas" "$base/aframe"
+          curl -fsSL --retry 2 https://raw.githubusercontent.com/Fyrd/caniuse/HEAD/fulldata-json/data-2.0.json -o "$base/caniuse.json"
+          python -c 'from g7b_telemetria.capturar import descargar; import sys; from pathlib import Path; descargar(Path(sys.argv[1]))' "$base/opendata.zip"
+          pip install 'selenium>=4.24,<5'
+          curl -fsSL --retry 2 https://aframe.io/releases/1.7.0/aframe.min.js -o "$RUNNER_TEMP/aframe.min.js"
+          for i in 1 2 3; do
+            blender -b --factory-startup --python-exit-code 1 --python sonda/g7b_sonda.py -- --salida "$base/sondas" --escena ligera --perfiles ligero --repeticiones 3 --sin-render --entorno github_actions
+            python pruebas/piloto_aframe.py "$RUNNER_TEMP/aframe.min.js" "$base/aframe/$i.json"
+          done
+      - name: Ejecutar el recorrido anterior y su sensor web por separado
+        run: |
+          git worktree add --detach "$RUNNER_TEMP/antes" f8c50ea4ccd7c8e1968a89b79750aae378842c6e
+          base="$RUNNER_TEMP/entradas-amatista"
+          salida="$GITHUB_WORKSPACE/resultados-comparacion/telemetria/antes"
+          cd "$RUNNER_TEMP/antes"
+          python -m g7b_telemetria.capturar sonda --entrada "$base/sondas" --salida "$salida/sonda"
+          python -m geodar telemetria --simulacro --limite 50 --entrada "$base/opendata.zip" --salida "$salida/radar"
+          PYTHONPATH="$PWD" python "$GITHUB_WORKSPACE/herramientas/comparacion_aranas/telemetria.py" caniuse-anterior
+      - name: Ejecutar el recolector nuevo y contrastar sus salidas
+        run: |
+          base="$RUNNER_TEMP/entradas-amatista"
+          python -m g7b_telemetria --sondas "$base/sondas" --aframe "$base/aframe" --snapshot "$base/opendata.zip" --caniuse "$base/caniuse.json" --limite 50 --salida resultados-comparacion/telemetria/despues
+          python herramientas/comparacion_aranas/telemetria.py comparar
+      - uses: actions/upload-artifact@v6
+        with:
+          name: comparacion-telemetria
+          path: resultados-comparacion/telemetria
+          retention-days: 14
