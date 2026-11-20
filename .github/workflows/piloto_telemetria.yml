@@ -8,6 +8,9 @@ on:
       - '.github/workflows/piloto_telemetria.yml'
 permissions:
   contents: read
+concurrency:
+  group: piloto-telemetria-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   piloto:
     runs-on: ubuntu-24.04
@@ -18,7 +21,17 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements-lago.txt
-      - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends blender
+      - name: Preparar Blender 4.2.20 LTS con el checksum de la distribución
+        working-directory: ${{ runner.temp }}
+        run: |
+          version=4.2.20
+          base=https://download.blender.org/release/Blender4.2
+          archivo="blender-$version-linux-x64.tar.xz"
+          curl --fail --location --retry 2 --max-time 60 "$base/blender-$version.sha256" -o blender.sha256
+          curl --fail --location --retry 2 --max-time 180 "$base/$archivo" -o "$archivo"
+          sha256sum --check --ignore-missing blender.sha256
+          tar -xf "$archivo"
+          echo "$RUNNER_TEMP/blender-$version-linux-x64" >> "$GITHUB_PATH"
       - name: Medir la escena ligera en el runner
         run: blender -b --factory-startup --python-exit-code 1 --python sonda/g7b_sonda.py -- --salida sonda-piloto --escena ligera --perfiles ligero --repeticiones 3 --sin-render --entorno github_actions
       - name: Medir una escena A-Frame en Chromium con WebGL por software

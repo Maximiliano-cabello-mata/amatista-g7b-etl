@@ -20,6 +20,8 @@ AmatistaTelemetria.descargar(medicion);
 
 Pasa el nombre real de la descarga a `--aframe`. También admite una carpeta de ventanas JSON. Para una corrida totalmente local, agrega `--snapshot opendata-latest.zip --caniuse data-2.0.json`. Para medir solamente A-Frame usa `--fuente sonda-aframe --aframe carpeta-o-archivo`. Para persistir agrega `--azure`, con las credenciales ya configuradas en el entorno. El modo local deja los resultados en el directorio indicado. Conviene usar una carpeta por corrida para conservar cada informe. [Sonda de Blender](../../sonda/g7b_sonda.py) · [Sonda de A-Frame](../../sonda/amatista_aframe.js) · [Recolector](../../g7b_telemetria/recopilar.py)
 
+Para repetir el piloto con una versión fija, el workflow descarga Blender 4.2.20 LTS desde el archivo oficial y contrasta su SHA-256 antes de ejecutarlo. La primera corrida documentada al final usó Blender 4.0.2 de Ubuntu. [Archivo oficial de Blender 4.2](https://download.blender.org/release/Blender4.2/)
+
 La raíz de la salida contiene `informe.json`. Cada fuente indica si tuvo datos, si terminó sin novedades, si espera una medición manual o si falló. Una captura parcial conserva las mediciones válidas y hace que la orden termine con error. El registro de Can I Use distingue cada función incluso cuando cambia una nota vinculada al código. El workflow de producción conserva la ejecución manual y el ciclo semanal existentes. El piloto del PR escribe en el disco del runner. [Flujo de telemetría](../../.github/workflows/telemetria.yml) · [Piloto reproducible](../../.github/workflows/piloto_telemetria.yml)
 
 ## Origen y resolución de la evidencia
