@@ -441,6 +441,8 @@ def correr(opciones, ruta=None):
         "calentamiento_descartado": calentar,
         "resultados": resultados,
     }
+    if getattr(opciones, "entorno", None):
+        medicion["entorno"] = opciones.entorno
     if ruta is None:
         os.makedirs(opciones.salida, exist_ok=True)
         nombre = f"medicion_{medicion['fecha'][:10]}_{medicion['equipo']['huella'][:8]}_{int(time.time())}.json"
@@ -491,6 +493,8 @@ def leer_opciones(argv):
     p.add_argument("--perfiles", type=lambda s: [x for x in s.split(",") if x], default=list(PERFILES))
     p.add_argument("--repeticiones", type=int, default=3)
     p.add_argument("--nivel", choices=["N0", "N1", "N2", "N3", "N4"])
+    p.add_argument("--entorno", choices=["github_actions", "laboratorio", "equipo_voluntario"],
+                   help="procedencia declarada de esta medición")
     p.add_argument("--sin-render", action="store_true")
     p.add_argument("--rapida", action="store_true")
     p.add_argument("--salir", action="store_true")

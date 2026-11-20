@@ -1,0 +1,50 @@
+name: Piloto de telemetría de Amatista
+on:
+  pull_request:
+    paths:
+      - 'g7b_telemetria/**'
+      - 'sonda/g7b_sonda.py'
+      - '.github/workflows/piloto_telemetria.yml'
+permissions:
+  contents: read
+jobs:
+  piloto:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements-lago.txt
+      - run: sudo apt-get update -qq && sudo apt-get install -y --no-install-recommends blender
+      - name: Medir la escena ligera en el runner
+        run: blender -b --factory-startup --python-exit-code 1 --python sonda/g7b_sonda.py -- --salida sonda-piloto --escena ligera --perfiles ligero --repeticiones 3 --sin-render --entorno github_actions
+      - name: Recibir las tres fuentes con datos reales
+        run: python -m g7b_telemetria --sondas sonda-piloto --limite 5 --salida piloto
+      - name: Comprobar procedencia, unidades y cobertura
+        shell: python
+        run: |
+          import json
+          from pathlib import Path
+          raiz = Path('piloto')
+          informe = json.loads((raiz / 'informe.json').read_text())
+          fuentes = {r['fuente']: r for r in informe['fuentes'] if r['activa']}
+          assert set(fuentes) == {'sonda-g7b', 'blender-open-data', 'caniuse-web3d'}
+          assert all(r['estado'] == 'recibida' for r in fuentes.values())
+          assert informe['destino'] == 'local'
+          for clave, fila in fuentes.items():
+              print(clave, json.dumps(fila['informe'], ensure_ascii=False))
+          datos = [json.loads(s) for f in (raiz / 'sonda-g7b').rglob('mediciones.jsonl') for s in f.read_text().splitlines()]
+          assert datos and all(d['entorno'] == 'github_actions' for d in datos)
+          publicos = [json.loads(s) for s in (raiz / 'blender-open-data/mediciones.jsonl').read_text().splitlines()]
+          assert publicos and all(d['unidad'] == 'samples/min' and d['estado'] == 'revision' for d in publicos)
+          assert fuentes['caniuse-web3d']['informe']['funciones'] == 6
+      - uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: piloto-telemetria-amatista
+          path: |
+            piloto/**/informe.json
+            piloto/**/*.jsonl
+          retention-days: 14

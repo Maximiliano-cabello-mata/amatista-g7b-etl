@@ -66,6 +66,10 @@ def sonda(dato):
                                                          'nivel', 'nivel_estimado', 'gpu_vista', 'gpu_cycles')},
             'sonda': texto(dato['sonda']), 'sin_ventana': dato['blender']['sin_ventana'],
             'licencia': 'propia; publicación agregada', 'preguntas': ['P1', 'P2']}
+    if 'entorno' in dato:
+        if dato['entorno'] not in ('github_actions', 'laboratorio', 'equipo_voluntario'):
+            raise ValueError('entorno de sonda desconocido')
+        base['entorno'] = dato['entorno']
     filas = []
     for r in dato['resultados']:
         if 'no_disponible' in r:
@@ -284,7 +288,11 @@ def capturar_incremental(registros, lago, salida, limite=20000):
     """La siguiente tanda de Open Data, con su estado en el lago. El estado se guarda al final."""
     estado = lago.leer_json(ESTADO_OPENDATA, por_omision={}) or {}
     seleccion, nuevo, conteos = seleccionar_opendata(registros, estado, limite)
+    nuevo.pop('ultimo_error', None)
+    nuevo.pop('ultimo_error_en', None)
     if not seleccion:
+        nuevo['ultima_captura'] = datetime.now(timezone.utc).isoformat()
+        lago.escribir_json(ESTADO_OPENDATA, nuevo)
         informe = {'fuente': 'blender-open-data', 'nada_nuevo': True, 'seleccion': dict(conteos),
                    'completo_hacia_atras': nuevo.get('completo_hacia_atras')}
         Path(salida).mkdir(parents=True, exist_ok=True)

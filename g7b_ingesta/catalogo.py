@@ -15,7 +15,7 @@ SENSORES = {"sphinx", "gitea_issues", "atom", "rss", "pagina", "sitemap", "stack
 EXTRACTORES = {"directo", "zyte", "descarga", "externo", "telemetria"}
 # Colectores del radar de telemetría (geodar telemetria). «pendiente»: la fuente existe pero aún no
 # tiene colector (falta confirmar su licencia); no puede estar activa.
-COLECTORES = {"blender_open_data", "pendiente"}
+COLECTORES = {"blender_open_data", "caniuse_web3d", "pendiente"}
 PREGUNTAS = {"P1", "P2", "P3", "P4", "P5", "P6", "P7"}
 
 # Las siete familias de datos del plan maestro (docs/PLAN_MAESTRO.md, sección 2).
