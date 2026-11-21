@@ -1,62 +1,78 @@
-# Site 4.1 · selección de documentación técnica
+<a id="site-41--selección-de-documentación-técnica"></a>
 
-La araña ocupa el nombre `paginas` en Zyte. `blender_docs` recorre su inventario Sphinx. Site tiene asignado el capítulo de composición del manual de Blender 4.5, fuera de las secciones de esa otra araña. Geodar revisa el índice de composición cada 168 horas y, si observa un cambio, envía un trabajo de hasta 64 intentos. Una modificación exclusiva de una página interior puede pasar inadvertida al sensor del índice.
+# Site 4.1 · Selecting technical documentation
 
-## Eventos y gradiente
+Site runs on Zyte under the spider name `paginas`. The other spider, `blender_docs`, follows its Sphinx inventory. Site covers the compositing chapter of the Blender 4.5 manual, which falls outside the sections assigned to `blender_docs`. Geodar checks the compositing index every 168 hours. When the index changes, Geodar schedules a crawl with a budget of 64 request attempts. An edit to an individual page can go undetected if the index stays the same.
 
-Cada semilla, respuesta HTML, redirección y error consume o alimenta una sola frontera. Cada petición, incluidas las redirecciones, reserva su intento antes de salir. En metadatos se omite el cuerpo. En texto completo se conservan el original en bronce, la cita por apartado y las decisiones por bloque.
+<a id="eventos-y-gradiente"></a>
 
-Sea $D_l$ la fracción de palabras incluidas en enlaces. Un bloque con enlaces y $D_l\geq0.80$, o una lista de al menos tres enlaces con $D_l\geq0.55$, se marca como navegación antes de evaluar palabras técnicas. El índice sigue aportando destinos. El resto pasa por [las reglas de evidencia v3](README.md). Site reconoce también un parámetro de composición y una expresión de efecto con condición o versión explícita. Un foro aporta hipótesis. Las palabras coincidentes por sí solas pueden producir falsos positivos.
+## Events and gradient update
 
-Para la página $t$, $y_t$ es la fracción de candidatos entre los bloques nuevos evaluables. El gradiente de la pérdida $(m-y_t)^2/2$ respecto de $m$ es $m-y_t$. Después de cada respuesta evaluable se aplica $m_t=m_{t-1}+0.25(y_t-m_{t-1})$ desde $m_0=0.5$. Referencias y navegación se excluyen del denominador.
+All seeds, HTML responses, redirects and errors use the same crawl frontier, the queue of URLs waiting to be visited. Each request reserves an attempt before it is sent, including requests that follow a redirect. Metadata-only mode omits the response body. Full-text mode keeps the original in the bronze layer, a citation for each section and a decision for each block.
 
-## Prioridad de la frontera
+Let $D_l$ be the fraction of words in a block that appear inside links. Site labels a block as navigation before checking technical terms if it contains links and $D_l\geq0.80$, or if it is a list with at least three links and $D_l\geq0.55$. Index pages can still supply URLs to visit. Site applies the v3 evidence rules to the remaining blocks. It also recognizes a compositing parameter paired with wording that describes an effect and an explicit condition or version. Forum posts can supply hypotheses. Matching keywords alone can produce false positives. [v3 evidence rules](README.md)
 
-Para cada página padre se agrupan los enlaces elegibles y se consideran por separado ruta, ancla y contexto local (encabezado y hasta 400 caracteres del bloque). Cada campo usa BM25 sobre ese grupo. Con $N$ enlaces, $n_t$ campos que contienen el término y $f_t$ apariciones, la contribución de un término es
+For page $t$, $y_t$ is the fraction of newly evaluated blocks that qualify as candidates. The gradient of the loss $(m-y_t)^2/2$ with respect to $m$ is $m-y_t$. Starting from $m_0=0.5$, Site updates $m_t=m_{t-1}+0.25(y_t-m_{t-1})$ after each response with evaluable blocks. It excludes references and navigation from the denominator.
+
+<a id="prioridad-de-la-frontera"></a>
+
+## Crawl priority
+
+For each parent page, Site groups the eligible outbound links. It scores three fields separately with BM25 over that group. The fields are the URL path, anchor text and local context (the heading and up to 400 characters of the surrounding block). Given $N$ links, $n_t$ fields containing a term and $f_t$ occurrences of the term in the field being scored, its contribution is
 
 $$\log(1+(N-n_t+0.5)/(n_t+0.5))\frac{2.2 f_t}{f_t+1.2(0.25+0.75 L/\bar L)}.$$
 
-Se suman las contribuciones de los términos del catálogo y se normaliza cada suma $B$ con $b=B/(1+B)$. La nota $S=0.25 b_{ruta}+0.40 b_{ancla}+0.20 b_{contexto}+0.15 m_t$ determina la prioridad $S\,0.85^{d-1}\,0.5^k$, con profundidad nueva $d$ y saltos consecutivos fuera de prefijo $k$. Solo se admiten puentes hacia prefijos HTTPS autorizados explícitamente en el catálogo, con $S\geq0.28$ y hasta dos saltos. Al regresar al prefijo principal se reinicia $k$. El piloto opera enteramente dentro del capítulo. Robots, versiones, presupuesto y dominios de la fuente siguen rigiendo.
+For each field, Site sums the contributions of the catalog terms and normalizes the sum $B$ as $b=B/(1+B)$. The score $S=0.25 b_{ruta}+0.40 b_{ancla}+0.20 b_{contexto}+0.15 m_t$ weights the path, anchor text, context and recent candidate yield. The resulting priority is $S\,0.85^{d-1}\,0.5^k$, where $d$ is the depth of the next page and $k$ counts consecutive hops outside the main URL prefix. Site can follow a link outside that prefix only if the catalog explicitly allows its HTTPS prefix, $S\geq0.28$, and the route stays within two such hops. Returning to the main prefix resets $k$. The pilot stayed inside the chapter. The source’s robots rules, versions, request budget and domain restrictions apply throughout.
 
-La frontera canoniza URLs, elimina fragmentos y reserva una única visita por URL. La deduplicación aproximada entre documentos continúa en el embudo de plata con SimHash. Los pesos y cortes iniciales son parámetros de diseño. El histórico conserva la versión anterior y permite reproducir una comparación.
+The frontier canonicalizes URLs, strips fragments and reserves one visit per URL. The silver layer uses SimHash to detect near-duplicates across documents. The initial weights and cutoffs are design parameters. The previous model is archived so comparisons can be reproduced.
 
-## Evaluación del 80 %
+<a id="evaluación-del-80-"></a>
 
-La población operativa de este piloto son las páginas seleccionadas en el recorrido acotado de composición 4.5. Antes de conocer etiquetas, se toma un candidato por página con el menor SHA-256 de `piloto-site-41/` seguido del identificador de bloque. La rúbrica exige una acción o parámetro con un efecto o comprobación útil y correctamente atribuida. Un índice, una coincidencia léxica o un texto insuficiente cuentan como fallo. La traza registra la fracción de páginas que produjeron candidatos por separado.
+## Evaluating the 80% target
 
-El auditor cuenta $k$ muestras útiles entre $n$ revisadas. Se informa $k/n$ y el [límite inferior unilateral de Wilson al 95 %](README.md). Con $n=0$ o límite inferior por debajo de 0.80, los candidatos quedan pendientes de calibración. Las etiquetas se aíslan por fuente y versión del modelo. Un resultado solo cubre las condiciones y la unidad de muestreo evaluadas.
+The pilot evaluates pages selected by the bounded crawl of the Blender 4.5 compositing chapter. Before reviewers see any labels, the auditor selects one candidate from each page that produced candidates. It chooses the block with the lowest SHA-256 hash of `piloto-site-41/` followed by the block ID. A block qualifies as useful when it describes an action or parameter with a useful, correctly attributed effect or check. An index, a keyword match on its own or a passage with insufficient detail counts as a failure. The crawl records separately the fraction of visited pages that produced candidates.
 
-## Operación
+Of $n$ reviewed samples, the auditor counts $k$ as useful. It reports $k/n$ and the one-sided 95% Wilson lower confidence bound. If $n=0$ or the lower bound is below 0.80, the candidates remain pending calibration. Labels are kept separately for each source and model version. Each result applies to the sampling unit and conditions evaluated. [Wilson bound and calibration](README.md)
 
-El radar y el despliegue comparten el grupo de concurrencia de ingesta. Antes del relevo se espera a que concluya cualquier trabajo de Site o histórico. El registro de la release admite exactamente `paginas` y `blender_docs`. El piloto comprueba la firma `site/4.1`, el número de páginas, las decisiones y la cola del proyecto. La muestra y la clave de trabajo están en el registro de GitHub Actions.
+<a id="operación"></a>
 
-## Ajuste después del primer piloto
+## Operations
 
-Site 4.0 produjo 44 candidatos en 25 de 64 páginas. La revisión previa al ajuste valoró como útiles 19 de 25 (76 %). Quedaron identificados cuatro bloques de interfaz genérica, un ejemplo impreciso y un pasaje repetido entre nodos. [Despliegue 4.0](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44616678446).
+The radar and deployment workflow share the ingestion concurrency group. A switchover waits for any active Site or legacy job to finish. The release registers exactly two spiders, `paginas` and `blender_docs`. The pilot verifies the `site/4.1` model identifier, page count, block decisions and project queue. The GitHub Actions log records the sample and job key.
 
-Site 4.1 envía a revisión las descripciones de interfaz estandarizadas que carecen de explicación adicional y los usos nominales de «control» que antes simulaban una relación de efecto. Para bloques de prosa candidatos de al menos 30 palabras, conserva como referencia la repetición del mismo texto normalizado dentro de la misma fuente, programa y versión. Un cambio de valor, operador o contenido conserva su propia evidencia. En bronce se mantiene cada aparición con su cita.
+<a id="ajuste-después-del-primer-piloto"></a>
 
-El segundo piloto duplica el presupuesto solo para esta evaluación (hasta 128 intentos en un mismo trabajo). El radar ordinario conserva 64. Se contrasta cada URL con todas las páginas del trabajo 4.0 antes de seleccionar etiquetas. Se reportan por separado el recorrido operativo y las páginas nunca descargadas por 4.0. La habilitación utiliza únicamente muestras de páginas inéditas, revisadas con la rúbrica fijada antes de la corrida. El resultado también se contrasta con los primeros 64 intentos. Esta prueba valida la precisión de una muestra por página con candidatos en este capítulo. El rendimiento de captura y la cobertura de otras fuentes requieren mediciones propias.
+## Changes after the first pilot
 
-[Compendio de modelos matemáticos del proyecto](compendio-2026-11-19.txt) · [Etiquetas por versión](auditoria.json). El compendio conserva las alternativas de investigación; esta ficha delimita las ecuaciones que ejecuta el código.
+Site 4.0 produced 44 candidates across 25 of the 64 pages visited. Before tuning, the review marked 19 of 25 samples as useful (76%). The six failures were four generic interface descriptions, one imprecise example and one passage repeated across nodes. [Site 4.0 deployment](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44616678446)
 
-## Comprobación del inventario con el modelo congelado
+Site 4.1 sends standard interface descriptions to review when they lack further explanation. It also sends passages in which the noun “control” previously counted as evidence of an effect. For candidate prose blocks of at least 30 words, repeated normalized text within the same source, program and version becomes a reference to its first occurrence. A change in a value, operator or content retains its own evidence. The bronze layer preserves every occurrence with its citation.
 
-El trabajo `883618/3/3` entregó 67 candidatos en 43 de 128 páginas. La primera reserva aportó 17 útiles de 21 muestras. Antes de extraer más páginas se fijó el segundo conjunto: todas las páginas `std:doc` del capítulo oficial ausentes de ambos trabajos anteriores, ordenadas por URL, hasta un máximo de 128. El auditor reutiliza el trabajo ya terminado al repetir la operación. El recorrido ordinario mantiene su presupuesto. [Dictámenes del piloto](revision-piloto-4.1.json) · [Plan de validación](validacion-site.json).
+The second pilot doubled the evaluation budget to 128 attempts in one job. The normal radar budget remains 64. Before choosing samples for labeling, the auditor checks each URL against every page visited by the 4.0 job. It reports the operational crawl and the pages 4.0 had never downloaded separately. Only samples from previously unseen pages count toward enabling automatic publication. Reviewers use the rubric set before the run. The evaluation also checks the results at the first 64 attempts. It measures precision for one sample per candidate-producing page in this chapter. Crawl yield and coverage of other sources require their own measurements.
 
-## Resultado verificado el 19 de noviembre de 2026
+The model compendium records alternatives considered during research. This guide describes the equations that the code executes. [Model compendium](compendio-2026-11-19.txt) · [Labels by version](auditoria.json)
 
-| Medición | Resultado |
+<a id="comprobación-del-inventario-con-el-modelo-congelado"></a>
+
+## Checking the inventory with the model held fixed
+
+Job `883618/3/3` returned 67 candidates across 43 of 128 pages. In the first holdout, 17 of 21 samples were useful. Before crawling more pages, the team defined a second holdout comprising every `std:doc` page in the official chapter absent from both earlier jobs, sorted by URL and capped at 128. When the audit is repeated, it reuses the completed job. The operational crawl keeps its usual budget. [Pilot reviews](revision-piloto-4.1.json) · [Validation plan](validacion-site.json)
+
+<a id="resultado-verificado-el-19-de-noviembre-de-2026"></a>
+
+## Results verified on November 19, 2026
+
+| Measure | Result |
 |---|---:|
-| Páginas del inventario de composición 4.5 visitadas con Site 4.1 | 131 de 131 |
-| Páginas que produjeron candidatos | 46 de 131 (35,1 %) |
-| Bloques útiles tras revisar todos los candidatos del lote | 64 de 70 (91,4 %) |
-| Muestras útiles en páginas inéditas para el ajuste, una por página con candidatos | 20 de 24 (83,3 %) |
-| Límite inferior unilateral de Wilson al 95 % sobre esas 24 páginas | 67,6 % |
-| Umbral de habilitación automática de la fuente y el modelo | 80,0 % |
+| Pages in the Blender 4.5 compositing inventory visited by Site 4.1 | 131 of 131 |
+| Visited pages that produced candidates | 46 of 131 (35.1%) |
+| Useful blocks after reviewing every candidate in the batch | 64 of 70 (91.4%) |
+| Useful samples from pages unseen during tuning, one sample per candidate-producing page | 20 of 24 (83.3%) |
+| One-sided 95% Wilson lower bound for those 24 pages | 67.6% |
+| Threshold for automatic publication for this source and model | 80.0% |
 
-El piloto entregó 67 candidatos y la reserva final aportó otros 3. Codex revisó cada bloque con la rúbrica de utilidad técnica. La evaluación carece de segunda lectura humana. Los seis fallos fueron descripciones genéricas de mezcla o influencia, un parámetro que reformulaba su nombre y un pie de figura sin ajustes reproducibles. El censo mide este lote completo. **La publicación automática de candidatos de esta fuente y modelo queda pendiente de calibración.** Se agotó la reserva de páginas inéditas de esta edición.
+The pilot produced 67 candidates and the final holdout added three. Codex reviewed each block against the technical usefulness rubric. There was no second human review. The six failures comprised generic descriptions of mixing or influence, a parameter description that restated its name, and a figure caption lacking reproducible settings. The 91.4% figure describes the entire reviewed batch. **Automatic publication for this source and model remains pending calibration.** The evaluation used all previously unseen pages available in this edition.
 
-El máximo observado en las verificaciones de Zyte fue un trabajo a la vez. La cola estaba vacía al cierre. En Azure quedaron `883618-3-3.jsonl.gz` (128 registros) y `883618-3-4.jsonl.gz` (3 registros), bajo `bronce/zyte/paginas/2026-11-19/`.
+Zyte checks observed at most one active job at a time, and the queue was empty at the end. Azure stored `883618-3-3.jsonl.gz` (128 records) and `883618-3-4.jsonl.gz` (three records) under `bronce/zyte/paginas/2026-11-19/`.
 
-[Censo y dictamen por bloque](resultados-site-4.1.json) · [Despliegue y piloto](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44617738668) · [Inventario](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44619074242) · [Copia de las 128 páginas](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44585217011/attempts/3) · [Copia de las 3 restantes](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44585217011/attempts/4).
+[Block-by-block results](resultados-site-4.1.json) · [Deployment and pilot](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44617738668) · [Inventory check](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44619074242) · [Archive of the first 128 pages](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44585217011/attempts/3) · [Archive of the remaining three pages](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44585217011/attempts/4)
