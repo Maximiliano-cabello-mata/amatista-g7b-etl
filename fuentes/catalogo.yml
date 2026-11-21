@@ -599,6 +599,23 @@ fuentes:
     dominios: []
     activa: true
 
+  - id: sonda-aframe
+    nombre: Sonda manual de Amatista para escenas A-Frame en primer plano
+    tipo: mediciones
+    programa: web
+    familia: F1
+    destino: telemetria
+    licencia: propia
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P1, P3]
+    sensor: {tipo: externo}
+    extractor: externo
+    gestor: "python -m g7b_telemetria --aframe (entrada voluntaria por archivo)"
+    frecuencia_horas: 168
+    dominios: []
+    activa: true
+
   - id: caniuse-web3d
     nombre: Soporte de 3D en navegadores (caniuse)
     tipo: mediciones
@@ -617,8 +634,9 @@ fuentes:
       titulo: title
       url_item: "https://caniuse.com/{id}"
       solo_ids: [webgl, webgl2, webgpu, webxr, wasm, offscreencanvas]
-      campos: [title, usage_perc_y, usage_perc_a, stats]
-    extractor: directo
+      campos: [title, usage_perc_y, usage_perc_a, stats, notes_by_num]
+    extractor: telemetria
+    colector: caniuse_web3d
     frecuencia_horas: 168
     dominios: [raw.githubusercontent.com]
     activa: true
