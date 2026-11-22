@@ -30,6 +30,7 @@ The guides are grouped by task. If two documents disagree, the master plan takes
 | [Data cube](CUBO.md) | The Parquet and DuckDB data model, publication and queries |
 | [Official sources and cube review](investigacion/2026-11-17_cubo_documentacion_oficial.md) | Manuals, findings on record identity and redundancy, and proposed priorities and tests awaiting implementation |
 | [Geoda](GEODA.md) | Kernel structure, contracts and implemented features |
+| [Performance theory and measurement criterion](investigacion/2026-11-22_teoria_rendimiento_y_criterio.md) (in Spanish) | A validated model that predicts samples/min for unmeasured device × version × scene combinations (13 % median error), an automatic measurement criterion (1 M measurements in 9 s), the Power BI project, and how to reproduce them. Research code in `analisis/teoria_rendimiento/`; not part of the pipeline |
 | [Developer Pack offers and GitHub](OFERTAS_Y_GITHUB.md) | What each offer and GitHub feature provides |
 | [Performance probe](../sonda/LEEME.md) | How to run a measurement on a computer |
 | [Infrastructure](../infra/LEEME.md) · [Azure setup](../infra/azure/LEEME.md) | Cloud environments and Azure configuration |
