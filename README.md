@@ -11,6 +11,10 @@ G7B is the sister project of **Amatista**, the platform for learning 3D with Ble
 
 After each successful cube build, the Geoda lab planner processes the verified cube in GitHub Actions. The workflow stores its results as artifacts separate from Amatista’s public status data. [Geoda on GitHub Actions](docs/GEODA_KERNEL.md)
 
+## Place in the Amatista base
+
+G7B is the data flow and warehouse of the Amatista project, and `geoda/` holds **Geoda**, the adaptive kernel. Approved data enters the cube through **Amatista IA**, the auditor, and Geoda reads only from the cube. Components, workflow and priorities: [official base](https://github.com/Maximiliano-cabello-mata/amatista-recuperada-20261106/blob/recuperacion/BASE.md) (in Spanish). Instructions for agents: [`AGENTS.md`](AGENTS.md).
+
 ## Hack4Edu
 
 G7B and Amatista participate in Hack4Edu together. The `hack4edu` Git tag marks the starting point. To see what the team built during the event, run the command below. [Hack4Edu evidence and verification commands](docs/hack4edu/README.md)
