@@ -204,29 +204,35 @@ def test_arana_paginas_sigue_prefijo_y_respeta_modo():
     respuesta = HtmlResponse(url=url, body=html, headers={"Content-Type": "text/html"}, request=Request(url))
     arana = PaginasSpider(fuente="blender-manual", urls=json.dumps([url]), seguir="1",
                           prefijo="https://docs.blender.org/manual/en/latest/")
-    salida = list(arana.parse(respuesta))
+    from unittest.mock import Mock
+    ctx = Mock()
+    arana.crawler = ctx
+    inicial, = arana.start_requests()
+    salida = list(arana.parse(respuesta.replace(request=inicial)))
     item, peticiones = salida[0], salida[1:]
     assert item["fuente"] == "blender-manual" and "html" in item and item["titulo"] == "Manual"
     assert [p.url for p in peticiones] == ["https://docs.blender.org/manual/en/latest/a.html"]
     solo = PaginasSpider(urls=json.dumps([url]), modo="solo_metadatos")
-    item2 = next(iter(solo.parse(respuesta)))
+    solo.crawler = ctx
+    inicial, = solo.start_requests()
+    item2 = next(iter(solo.parse(respuesta.replace(request=inicial))))
     assert "html" not in item2 and item2["descripcion"] == "desc"
     assert PaginasSpider.guardar_en_mongo is False
 
 
-def test_arana_paginas_cierra_al_llegar_al_tope():
-    from scrapy.exceptions import CloseSpider
-    from scrapy.http import HtmlResponse, Request
-
+def test_arana_paginas_presupuesta_antes_de_descargar():
+    from unittest.mock import Mock
+    from scrapy.http import HtmlResponse
     from motor_extraccion.spiders.paginas import PaginasSpider
 
     url = "https://docs.blender.org/manual/en/latest/index.html"
-    r = HtmlResponse(url=url, body=b"<html><title>x</title></html>", headers={"Content-Type": "text/html"},
-                     request=Request(url))
-    arana = PaginasSpider(urls=json.dumps([url]), max_paginas="1")
-    assert list(arana.parse(r))
-    with pytest.raises(CloseSpider):
-        list(arana.parse(r))
+    arana = PaginasSpider(urls=json.dumps([url]), max_paginas="1", seguir="1")
+    arana.crawler = Mock()
+    req, = arana.start_requests()
+    r = HtmlResponse(url, body=b"<html><a href='otra.html'>siguiente</a></html>",
+                     headers={"Content-Type": "text/html"}, request=req)
+    item, = arana.parse(r)
+    assert item["url"] == url and list(arana.proxima()) == []
 
 
 def test_rechaza_pagina_indice():

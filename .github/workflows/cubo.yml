@@ -24,10 +24,10 @@ jobs:
     environment: amatista1
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install -r requirements-cubo.txt
@@ -38,7 +38,7 @@ jobs:
           test -n "$AZURE_LAGO_URL" || { echo 'Falta AZURE_LAGO_URL en amatista1'; exit 1; }
           python -m g7b_almacen.cubo --azure --salida resultado-cubo
           python -m g7b_almacen.descargar verificacion/cubo.duckdb
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: cubo-${{ github.run_id }}
           path: resultado-cubo/

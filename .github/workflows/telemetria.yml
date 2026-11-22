@@ -7,6 +7,7 @@ on:
       - '.github/workflows/telemetria.yml'
       - 'g7b_telemetria/**'
       - 'fuentes/hardware.yml'
+      - 'sonda/g7b_sonda.py'
   workflow_dispatch:
     inputs:
       publicar_azure:
@@ -28,43 +29,33 @@ jobs:
     environment: amatista1
     timeout-minutes: 60   # el archivo completo de Open Data se recorre por tandas
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install -r requirements-lago.txt
       - name: Instalar Blender de Ubuntu
         run: sudo apt-get update && sudo apt-get install -y blender
       - name: Medir CPU en el runner (no representa computadoras personales)
-        run: blender -b --factory-startup --python sonda/g7b_sonda.py -- --salida resultados-sonda --escena ligera --perfiles ligero --repeticiones 3 --sin-render
-      - name: Capturar y verificar las dos fuentes
+        run: blender -b --factory-startup --python-exit-code 1 --python sonda/g7b_sonda.py -- --salida resultados-sonda --escena ligera --perfiles ligero --repeticiones 3 --sin-render --entorno github_actions
+      - name: Recopilar las fuentes de telemetría de Amatista
         env:
           AZURE_LAGO_URL: ${{ secrets.AZURE_LAGO_URL }}
           PUBLICAR: ${{ github.event_name != 'workflow_dispatch' || inputs.publicar_azure }}
         run: |
-          args=()
-          if [ "$PUBLICAR" = "true" ] && [ -n "$AZURE_LAGO_URL" ]; then
-            args+=(--azure)
+          args=(--limite 2000)
+          if [ "$PUBLICAR" = "true" ]; then
+            args=(--azure --limite 20000)
           fi
-          python -m g7b_telemetria.capturar sonda --entrada resultados-sonda --salida captura/sonda "${args[@]}" || {
-            echo "Aviso: la subida a Azure no pudo completarse (SAS expirada o credenciales pendientes de rotacion)."
-            echo "Ejecutando captura local sin persistir en el lago remoto..."
-            python -m g7b_telemetria.capturar sonda --entrada resultados-sonda --salida captura/sonda
-          }
-          # Radar de telemetría: la siguiente tanda del archivo completo de Open Data (lo nuevo y, con lo
-          # que sobre del límite, hacia atrás desde donde se quedó), con el estándar g7b.hardware/1.
-          if [ ${#args[@]} -gt 0 ]; then
-            python -m geodar telemetria --limite 20000 --salida captura/telemetria
-          else
-            echo "Sin Azure: simulacro del radar (no lee ni escribe el lago)."
-            python -m geodar telemetria --limite 2000 --salida captura/telemetria --simulacro
-          fi
+          python -m g7b_telemetria --sondas resultados-sonda --salida captura/telemetria-amatista "${args[@]}"
       - name: Conservar informes y mediciones (sin snapshot completo)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: telemetria-${{ github.run_id }}
           retention-days: 14
           path: |
             captura/**/informe.json
             captura/**/mediciones.jsonl
+            captura/**/compatibilidad.jsonl
+            captura/**/sonda-aframe/*.jsonl

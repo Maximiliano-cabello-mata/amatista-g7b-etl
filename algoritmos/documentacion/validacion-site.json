@@ -1,0 +1,9 @@
+{
+  "fuente": "blender-compositor-45",
+  "modelo": "site/4.1",
+  "previo": "883618/3/2",
+  "piloto": "883618/3/3",
+  "inventario": "https://docs.blender.org/manual/en/4.5/objects.inv",
+  "limite": 128,
+  "etiqueta": "g7b-site-v41-inventario-4-5"
+}

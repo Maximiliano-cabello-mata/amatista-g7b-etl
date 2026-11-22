@@ -120,6 +120,30 @@ fuentes:
     alias: ["Blender Docs"]  # nombre con el que la araña antigua marcaba sus registros
     activa: true
 
+  # Capítulo oficial fuera de las secciones que ya recorre blender_docs.
+  - id: blender-compositor-45
+    nombre: Composición por nodos (Manual de Blender 4.5 LTS)
+    tipo: documentacion
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P1, P2, P6]
+    sensor: {tipo: pagina, url: "https://docs.blender.org/manual/en/4.5/compositing/index.html"}
+    extractor: zyte
+    zyte:
+      arana: paginas
+      seguir: true
+      version: "4.5"
+      prefijo: "https://docs.blender.org/manual/en/4.5/compositing/"
+      temas: [compositor, node, blur, denoise, sampling, mask, performance, filter, color, alpha, precision]
+      max_paginas: 64
+    frecuencia_horas: 168
+    dominios: [docs.blender.org]
+    activa: true
+
   - id: blender-noticias
     nombre: Noticias de blender.org
     tipo: noticias
@@ -575,6 +599,23 @@ fuentes:
     dominios: []
     activa: true
 
+  - id: sonda-aframe
+    nombre: Sonda manual de Amatista para escenas A-Frame en primer plano
+    tipo: mediciones
+    programa: web
+    familia: F1
+    destino: telemetria
+    licencia: propia
+    licencia_verificada: true
+    modo: agregados
+    preguntas: [P1, P3]
+    sensor: {tipo: externo}
+    extractor: externo
+    gestor: "python -m g7b_telemetria --aframe (entrada voluntaria por archivo)"
+    frecuencia_horas: 168
+    dominios: []
+    activa: true
+
   - id: caniuse-web3d
     nombre: Soporte de 3D en navegadores (caniuse)
     tipo: mediciones
@@ -593,8 +634,9 @@ fuentes:
       titulo: title
       url_item: "https://caniuse.com/{id}"
       solo_ids: [webgl, webgl2, webgpu, webxr, wasm, offscreencanvas]
-      campos: [title, usage_perc_y, usage_perc_a, stats]
-    extractor: directo
+      campos: [title, usage_perc_y, usage_perc_a, stats, notes_by_num]
+    extractor: telemetria
+    colector: caniuse_web3d
     frecuencia_horas: 168
     dominios: [raw.githubusercontent.com]
     activa: true
