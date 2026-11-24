@@ -22,6 +22,7 @@ The guides are grouped by task. If two documents disagree, the master plan takes
 
 | Document | What it covers |
 |---|---|
+| [Agent skills](habilidades-de-agente.md) | How to use and test repository skills for Site calibration and telemetry batches |
 | [Geodar Radar](GEODAR_RADAR.md) · [Sensor map](GEODAR_RADAR_MAPA.md) | Online sources, sensors, licenses and data destinations |
 | [Ingestion](INGESTA.md) | Sensors, triggers and document quality checks |
 | [Site 4.1](../algoritmos/documentacion/site-4.md) | How the documentation spider chooses pages and measures the usefulness of the blocks it extracts |
