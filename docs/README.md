@@ -29,6 +29,7 @@ The guides are grouped by task. If two documents disagree, the master plan takes
 | [Telemetry capture](TELEMETRIA.md) | How G7B collects and validates measurements from the probe and Blender Open Data |
 | [Data cube](CUBO.md) | The Parquet and DuckDB data model, publication and queries |
 | [Official sources and cube review](investigacion/2026-11-17_cubo_documentacion_oficial.md) | Manuals, findings on record identity and redundancy, and proposed priorities and tests awaiting implementation |
+| [Geoda responsibilities](GEODA_RESPONSABILIDADES.md) | The agreed approach: AI knowledge and the adaptive engine as independent lines, with agents as consumers |
 | [Geoda](GEODA.md) | Kernel structure, contracts and implemented features |
 | [Developer Pack offers and GitHub](OFERTAS_Y_GITHUB.md) | What each offer and GitHub feature provides |
 | [Performance probe](../sonda/LEEME.md) | How to run a measurement on a computer |
