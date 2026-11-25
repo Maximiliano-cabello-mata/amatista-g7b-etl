@@ -44,7 +44,7 @@ class LagoMemoria:
         crudo = self.archivos[ruta]
         if crudo[:2] == b"\x1f\x8b":
             crudo = gzip.decompress(crudo)
-        return [json.loads(linea) for linea in crudo.decode("utf-8").splitlines() if linea.strip()]
+        return [json.loads(linea) for linea in crudo.decode("utf-8").split("\n") if linea.strip()]
 
     def leer_json(self, ruta, por_omision=None):
         if ruta not in self.archivos:

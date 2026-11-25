@@ -251,3 +251,10 @@ def test_ordenes_delegadas_salen_con_cero(monkeypatch):
 
     monkeypatch.setattr(procesar, "main", lambda argv: {"aceptado": 3})  # devuelve un total, no un código
     assert geodar.main(["procesar", "--simulacro"]) == 0
+
+
+def test_lago_memoria_jsonl_no_parte_separadores_unicode():
+    lago = LagoMemoria()
+    registro = {"id": "so-u2028", "texto_html": "shader\u2028code\u2029here\x85fin"}
+    lago.subir_jsonl_gz("bronce/stackoverflow-web3d/2026-11-25/x.jsonl.gz", [registro])
+    assert lago.leer_jsonl_gz("bronce/stackoverflow-web3d/2026-11-25/x.jsonl.gz") == [registro]
