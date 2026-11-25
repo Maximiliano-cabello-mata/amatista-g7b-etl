@@ -127,8 +127,10 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
     comunes = {"site": cfg.get("sitio", "blender"), "filter": "withbody", "pagesize": 100}
     if os.environ.get("STACKEXCHANGE_KEY"):
         comunes["key"] = os.environ["STACKEXCHANGE_KEY"]
+    dias_desde = int(cfg.get("dias_desde", 30))
+    dias_hasta = int(cfg.get("dias_hasta", 7))
     consulta = {**comunes, "sort": "votes", "order": "desc", "min": cfg.get("puntaje_minimo", 3),
-                "fromdate": ahora - 30 * 86400, "todate": ahora - 7 * 86400}
+                "fromdate": ahora - dias_desde * 86400, "todate": ahora - dias_hasta * 86400}
     respuesta = obtener(f"{base}/questions?{urlencode(consulta)}", {})
     if respuesta.estado != 200:
         raise RuntimeError(f"HTTP {respuesta.estado}")
@@ -354,6 +356,14 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
     base = cfg["base"].rstrip("/") + "/"
     refresco = timedelta(days=int(cfg.get("refresco_dias", 30)))
     anteriores = estado.get("versiones", {})
+    zyte_cfg = fuente.get("zyte")
+    alcance = None
+    if zyte_cfg:
+        extra_secciones = []
+        if zyte_cfg.get("arana") == "blender_docs":
+            from motor_extraccion.spiders.blender_docs import BlenderDocsSpider
+            extra_secciones = list(BlenderDocsSpider.secciones)
+        alcance = _huella_corta({"zyte": zyte_cfg, "secciones": extra_secciones})
     versiones, tocan, notas = {}, [], []
     for version in cfg["versiones"]:
         previo = dict(anteriores.get(version, {}))
@@ -365,9 +375,13 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
             actual = {**_recordar(previo, respuesta), "huella": datos["huella"], "paginas": len(datos["paginas"])}
         else:
             raise RuntimeError(f"HTTP {respuesta.estado} en el inventario de {version}")
+        if alcance is not None:
+            actual["alcance"] = alcance
         recorrido = actual.get("recorrido")
         if actual.get("huella") != previo.get("huella") or not recorrido:
             motivo = "primera vez" if not previo.get("huella") else "inventario cambió"
+        elif alcance is not None and previo.get("alcance") != alcance:
+            motivo = "alcance ampliado"
         elif ahora - datetime.fromisoformat(recorrido) >= refresco:
             motivo = f"refresco de {refresco.days} días"
         else:

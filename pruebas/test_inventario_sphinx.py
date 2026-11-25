@@ -209,7 +209,7 @@ def test_vigilar_pasa_las_versiones_y_no_lanza_dos_recorridos():
     assert bitacora[0]["accion"] == "zyte: trabajo 883618/2/1"
     arana, argumentos = zyte.lanzados[0]
     assert arana == "blender_docs" and json.loads(argumentos["versiones"]) == ["5.2", "4.5", "3.6"]
-    assert argumentos["max_por_version"] == "1200"
+    assert argumentos["max_por_version"] == "2500"
     # Y al otro día, sin cambios, nada.
     assert vigilar(_catalogo(), lago, obtener=servidor(inventarios), zyte=zyte, proyecto_id="883618",
                    ahora=HOY + timedelta(days=2), salida=lambda *_: None)[0]["accion"] == "nada nuevo"

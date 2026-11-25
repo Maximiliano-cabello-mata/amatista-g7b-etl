@@ -21,17 +21,25 @@ class BlenderDocsSpider(ManualSphinxSpider):
     base = "https://docs.blender.org/manual/en/"
     versiones = ["5.2", "4.5", "3.6"]
     secciones = [
-        # Rendimiento y ajustes según el equipo (P1, P2)
-        "render/cycles/index.html",
-        "render/eevee/index.html",
-        "editors/preferences/system.html",
+        # Inicio, interfaz, editores y organización de escena (P1, P2, P4, P6)
+        "getting_started/index.html",
+        "interface/index.html",
+        "editors/index.html",
+        "scene_layout/index.html",
+        # Modelado completo, escultura/pintura y Grease Pencil (P1, P4, P6)
+        "modeling/index.html",
+        "sculpt_paint/index.html",
+        "grease_pencil/index.html",
+        # Animación, física y simulación (P1, P5, P6)
+        "animation/index.html",
+        "physics/index.html",
+        # Renderizado completo (Cycles, EEVEE, Workbench, materiales, nodos) y composición (P1, P2, P5, P6)
+        "render/index.html",
+        "compositing/index.html",
+        # Archivos/importación-exportación (glTF 2.0), complementos, línea de comandos/scripting y fallos
+        "files/index.html",
+        "addons/index.html",
+        "advanced/index.html",
         "troubleshooting/index.html",
-        # Equivalencias para quien viene de Maya o 3ds Max (P4)
-        "interface/keymap/index.html",
-        # Cómo se hace (P6)
-        "advanced/scripting/index.html",
-        "modeling/meshes/index.html",
-        "modeling/modifiers/index.html",
-        "modeling/geometry_nodes/index.html",
-        "render/shader_nodes/index.html",
+        "glossary/index.html",
     ]

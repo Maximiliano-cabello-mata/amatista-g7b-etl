@@ -70,7 +70,7 @@ def test_manual_semillas_por_version_y_seccion():
     assert semilla.url == "https://docs.godotengine.org/en/stable/tutorials/3d/index.html"
     assert semilla.cb_kwargs["prefijo"] == "https://docs.godotengine.org/en/stable/tutorials/3d/"
     blender = list(BlenderDocsSpider(modo="enlaces").start_requests())
-    assert len(blender) == 3 * 10 and blender[0].url.startswith("https://docs.blender.org/manual/en/5.2/")
+    assert len(blender) == 3 * len(BlenderDocsSpider.secciones) and blender[0].url.startswith("https://docs.blender.org/manual/en/5.2/")
     # Modo por omisión: un inventario por versión, en el orden pedido.
     inventarios = list(BlenderDocsSpider().start_requests())
     assert [r.url.rsplit("/", 2)[1] for r in inventarios] == ["5.2", "4.5", "3.6"]

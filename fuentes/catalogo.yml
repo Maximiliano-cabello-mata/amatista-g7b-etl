@@ -69,7 +69,23 @@ fuentes:
     licencia_verificada: true
     modo: texto_completo
     preguntas: [P1, P2, P4, P6]
-    sensor: {tipo: stackexchange, sitio: blender, puntaje_minimo: 3}
+    sensor: {tipo: stackexchange, sitio: blender, puntaje_minimo: 2}
+    extractor: directo
+    frecuencia_horas: 6
+    dominios: [api.stackexchange.com, blender.stackexchange.com]
+    activa: true
+
+  - id: blender-stackexchange-clasicos
+    nombre: Blender Stack Exchange (clásicos más votados)
+    tipo: foro
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P1, P2, P4, P6]
+    sensor: {tipo: stackexchange, sitio: blender, puntaje_minimo: 15, dias_desde: 3650, dias_hasta: 30}
     extractor: directo
     frecuencia_horas: 24
     dominios: [api.stackexchange.com, blender.stackexchange.com]
@@ -87,7 +103,23 @@ fuentes:
     preguntas: [P5, P6]
     sensor: {tipo: stackexchange, sitio: computergraphics, puntaje_minimo: 2}
     extractor: directo
-    frecuencia_horas: 72
+    frecuencia_horas: 12
+    dominios: [api.stackexchange.com, computergraphics.stackexchange.com]
+    activa: true
+
+  - id: computergraphics-stackexchange-clasicos
+    nombre: Computer Graphics Stack Exchange (clásicos más votados)
+    tipo: foro
+    programa: general
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P5, P6]
+    sensor: {tipo: stackexchange, sitio: computergraphics, puntaje_minimo: 10, dias_desde: 3650, dias_hasta: 30}
+    extractor: directo
+    frecuencia_horas: 24
     dominios: [api.stackexchange.com, computergraphics.stackexchange.com]
     activa: true
 
@@ -100,7 +132,7 @@ fuentes:
     licencia: CC-BY-SA-4.0
     licencia_verificada: true
     modo: texto_completo
-    preguntas: [P1, P2, P6]
+    preguntas: [P1, P2, P4, P5, P6]
     # Mira el inventario de Sphinx (objects.inv) de cada versión: la araña vuelve a recorrer una
     # versión solo si su inventario cambió o si pasaron refresco_dias. Antes se miraba la portada,
     # que se reconstruye a diario, y cada revisión relanzaba el manual entero.
@@ -114,8 +146,8 @@ fuentes:
     umbrales: {valor_min: 0, valor_revision: 0}   # documentación oficial: vale por ser la fuente primaria
     zyte:
       arana: blender_docs      # secciones completas, propiedades y código, guiada por objects.inv
-      argumentos: {max_paginas: 3000, max_por_version: 1200}
-    frecuencia_horas: 24       # revisar el inventario cuesta tres archivos pequeños
+      argumentos: {max_paginas: 7500, max_por_version: 2500}
+    frecuencia_horas: 12       # revisar el inventario cuesta tres archivos pequeños
     dominios: [docs.blender.org]
     alias: ["Blender Docs"]  # nombre con el que la araña antigua marcaba sus registros
     activa: true
