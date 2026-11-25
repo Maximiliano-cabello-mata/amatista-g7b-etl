@@ -349,7 +349,7 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
 
     Devuelve en «argumentos» las versiones que tocan, para que la araña recorra solo esas.
     """
-    from motor_extraccion.inventario_sphinx import leer
+    from motor_extraccion.inventario_sphinx import SECCIONES_BLENDER, leer
 
     cfg = fuente["sensor"]
     ahora = ahora or datetime.now(timezone.utc)
@@ -359,10 +359,7 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
     zyte_cfg = fuente.get("zyte")
     alcance = None
     if zyte_cfg:
-        extra_secciones = []
-        if zyte_cfg.get("arana") == "blender_docs":
-            from motor_extraccion.spiders.blender_docs import BlenderDocsSpider
-            extra_secciones = list(BlenderDocsSpider.secciones)
+        extra_secciones = list(SECCIONES_BLENDER) if zyte_cfg.get("arana") == "blender_docs" else []
         alcance = _huella_corta({"zyte": zyte_cfg, "secciones": extra_secciones})
     versiones, tocan, notas = {}, [], []
     for version in cfg["versiones"]:

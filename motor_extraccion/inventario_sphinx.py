@@ -16,6 +16,25 @@ import zlib
 
 ENCABEZADO = b"# Sphinx inventory version 2"
 
+SECCIONES_BLENDER = (
+    "getting_started/index.html",
+    "interface/index.html",
+    "editors/index.html",
+    "scene_layout/index.html",
+    "modeling/index.html",
+    "sculpt_paint/index.html",
+    "grease_pencil/index.html",
+    "animation/index.html",
+    "physics/index.html",
+    "render/index.html",
+    "compositing/index.html",
+    "files/index.html",
+    "addons/index.html",
+    "advanced/index.html",
+    "troubleshooting/index.html",
+    "glossary/index.html",
+)
+
 
 def leer(contenido):
     """{"proyecto", "version", "paginas": [uri ordenadas], "huella"} de un objects.inv v2."""
