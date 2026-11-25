@@ -1,0 +1,25 @@
+{
+  "lote_vm": 7,
+  "tipo": "blender-open-data",
+  "licencia": "CC0-1.0",
+  "estandar_hardware": "g7b.hardware/1",
+  "generado_en": "2026-11-25T08:20:26+00:00",
+  "archivo": "lote_vm_0007_opendata.jsonl.gz",
+  "bytes_gz": 1498965,
+  "sha256_gz": "4fd9658f88dbc9817c2b60d78ace0a902fb081491b002339dd33672f7de718bc",
+  "filas_mediciones": 14988,
+  "benchmarks_validos": 5000,
+  "seleccion": {
+    "leidos": 438671,
+    "esquema_no_soportado": 87848,
+    "candidatos_anteriores": 325823,
+    "ya_capturados": 25000,
+    "pendientes_nuevos": 0,
+    "seleccionados": 5000
+  },
+  "tramo": {
+    "desde": "2026-04-11T02:39:32.907823+00:00",
+    "hasta": "2026-11-24T23:53:35.924065+00:00",
+    "completo_hacia_atras": false
+  }
+}
