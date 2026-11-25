@@ -338,7 +338,7 @@ def sensor_json_api(fuente, estado, obtener):
             "nota": f"{len(registros)} nuevos o cambiados de {len(pares)}"}, nuevo
 
 
-def sensor_sphinx(fuente, estado, obtener, ahora=None):
+def sensor_sphinx(fuente, estado, obtener, ahora=None, forzar_recorrido=False):
     """Un manual hecho con Sphinx, versión por versión, mirando su inventario (objects.inv).
 
     Las páginas del manual de Blender se reconstruyen a diario («Last updated on ...»), así que la
@@ -379,6 +379,8 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
             motivo = "primera vez" if not previo.get("huella") else "inventario cambió"
         elif alcance is not None and previo.get("alcance") != alcance:
             motivo = "alcance ampliado"
+        elif forzar_recorrido:
+            motivo = "recorrido forzado"
         elif ahora - datetime.fromisoformat(recorrido) >= refresco:
             motivo = f"refresco de {refresco.days} días"
         else:
