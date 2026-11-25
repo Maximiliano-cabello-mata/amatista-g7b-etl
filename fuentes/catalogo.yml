@@ -85,9 +85,9 @@ fuentes:
     licencia_verificada: true
     modo: texto_completo
     preguntas: [P1, P2, P4, P6]
-    sensor: {tipo: stackexchange, sitio: blender, puntaje_minimo: 15, dias_desde: 3650, dias_hasta: 30}
+    sensor: {tipo: stackexchange, sitio: blender, puntaje_minimo: 3, dias_desde: 5000, dias_hasta: 30, paginas: 5, recorrer: true}
     extractor: directo
-    frecuencia_horas: 24
+    frecuencia_horas: 6
     dominios: [api.stackexchange.com, blender.stackexchange.com]
     activa: true
 
@@ -117,11 +117,83 @@ fuentes:
     licencia_verificada: true
     modo: texto_completo
     preguntas: [P5, P6]
-    sensor: {tipo: stackexchange, sitio: computergraphics, puntaje_minimo: 10, dias_desde: 3650, dias_hasta: 30}
+    sensor: {tipo: stackexchange, sitio: computergraphics, puntaje_minimo: 2, dias_desde: 5000, dias_hasta: 30, paginas: 5, recorrer: true}
     extractor: directo
-    frecuencia_horas: 24
+    frecuencia_horas: 6
     dominios: [api.stackexchange.com, computergraphics.stackexchange.com]
     activa: true
+
+  # Stack Overflow y Game Development SE: contenido CC BY-SA 4.0. Más ruidoso que el manual (código,
+  # preguntas mal hechas, respuestas viejas): justamente lo que el embudo y los auditores deben probar.
+  - id: stackoverflow-blender
+    nombre: Stack Overflow (blender, bpy)
+    tipo: foro
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P1, P2, P6]
+    sensor: {tipo: stackexchange, sitio: stackoverflow, etiquetas: [blender, bpy], puntaje_minimo: 2,
+             dias_desde: 5000, dias_hasta: 14, paginas: 5, recorrer: true}
+    extractor: directo
+    frecuencia_horas: 6
+    dominios: [api.stackexchange.com, stackoverflow.com]
+    activa: true
+
+  - id: stackoverflow-web3d
+    nombre: Stack Overflow (glTF, three.js, A-Frame, WebGL, WebGPU)
+    tipo: foro
+    programa: web
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P3, P5, P6]
+    sensor: {tipo: stackexchange, sitio: stackoverflow, etiquetas: [gltf, three.js, aframe, webgl, webgl2, webgpu],
+             puntaje_minimo: 3, dias_desde: 5000, dias_hasta: 14, paginas: 4, recorrer: true}
+    extractor: directo
+    frecuencia_horas: 6
+    dominios: [api.stackexchange.com, stackoverflow.com]
+    activa: true
+
+  - id: gamedev-stackexchange
+    nombre: Game Development Stack Exchange (3D, optimización)
+    tipo: foro
+    programa: general
+    familia: F5
+    destino: documentos
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
+    modo: texto_completo
+    preguntas: [P3, P5, P6]
+    sensor: {tipo: stackexchange, sitio: gamedev, etiquetas: [3d, blender, optimization, performance, shaders, mesh],
+             puntaje_minimo: 3, dias_desde: 5000, dias_hasta: 14, paginas: 4, recorrer: true}
+    extractor: directo
+    frecuencia_horas: 6
+    dominios: [api.stackexchange.com, gamedev.stackexchange.com]
+    activa: true
+
+  # Issues del exportador glTF de Blender: valiosos (fallas reales con causa y arreglo), pero el texto
+  # lo escriben los usuarios y su licencia no está confirmada. Regla 4: sin licencia, no entra.
+  - id: gltf-blender-io-issues
+    nombre: Issues de KhronosGroup/glTF-Blender-IO
+    tipo: foro
+    programa: blender
+    familia: F5
+    destino: documentos
+    licencia: por_confirmar
+    licencia_verificada: false
+    revisar: "El código es Apache-2.0; el texto de los issues es de sus autores. Confirmar términos antes de guardar texto completo (si no, solo_metadatos)."
+    modo: texto_completo
+    preguntas: [P2, P6]
+    sensor: {tipo: pagina, url: "https://github.com/KhronosGroup/glTF-Blender-IO/issues"}
+    extractor: directo
+    frecuencia_horas: 24
+    dominios: [github.com, api.github.com]
+    activa: false
 
   - id: blender-manual
     nombre: Manual de Blender (LTS vigente)

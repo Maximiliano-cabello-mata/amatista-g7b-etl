@@ -12,7 +12,7 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 
-VISTOS_MAX = 5000
+VISTOS_MAX = 40000
 
 
 def _condicionales(estado):
@@ -131,15 +131,40 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
     dias_hasta = int(cfg.get("dias_hasta", 7))
     consulta = {**comunes, "sort": "votes", "order": "desc", "min": cfg.get("puntaje_minimo", 3),
                 "fromdate": ahora - dias_desde * 86400, "todate": ahora - dias_hasta * 86400}
-    respuesta = obtener(f"{base}/questions?{urlencode(consulta)}", {})
-    if respuesta.estado != 200:
-        raise RuntimeError(f"HTTP {respuesta.estado}")
-    datos = json.loads(respuesta.contenido)
+    # Modo masivo: varias etiquetas (cada una por separado), varias páginas por vuelta y, con
+    # «recorrer», un cursor por etiqueta que avanza hacia lo menos votado en cada vuelta.
+    etiquetas = cfg.get("etiquetas") or [None]
+    paginas = max(int(cfg.get("paginas", 1)), 1)
+    recorrer = bool(cfg.get("recorrer"))
+    cursores = dict(estado.get("cursores", {}))
     vistos = set(estado.get("vistos", []))
-    preguntas = [p for p in datos.get("items", []) if str(p["question_id"]) not in vistos]
+    preguntas, ids_vuelta, cuota = [], set(), None
+    for etiqueta in etiquetas:
+        clave = etiqueta or "*"
+        inicio = int(cursores.get(clave, 1)) if recorrer else 1
+        for pagina in range(inicio, inicio + paginas):
+            q = {**consulta, "page": pagina}
+            if etiqueta:
+                q["tagged"] = etiqueta
+            respuesta = obtener(f"{base}/questions?{urlencode(q)}", {})
+            if respuesta.estado != 200:
+                raise RuntimeError(f"HTTP {respuesta.estado}")
+            datos = json.loads(respuesta.contenido)
+            cuota = datos.get("quota_remaining", cuota)
+            for p in datos.get("items", []):
+                ident = str(p["question_id"])
+                if ident not in vistos and ident not in ids_vuelta:
+                    ids_vuelta.add(ident)
+                    preguntas.append(p)
+            if recorrer:
+                cursores[clave] = pagina + 1 if datos.get("has_more") else 1
+            if datos.get("backoff"):
+                time.sleep(min(int(datos["backoff"]), 30))
+            if not datos.get("has_more"):
+                break
     mejores = {}
-    if preguntas:
-        ids = ";".join(str(p["question_id"]) for p in preguntas)
+    for i in range(0, len(preguntas), 100):
+        ids = ";".join(str(p["question_id"]) for p in preguntas[i:i + 100])
         r2 = obtener(f"{base}/questions/{ids}/answers?{urlencode({**comunes, 'sort': 'votes', 'order': 'desc'})}", {})
         if r2.estado == 200:
             for a in json.loads(r2.contenido).get("items", []):
@@ -164,9 +189,11 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
         })
     nuevo = dict(estado)
     nuevo["vistos"] = _vistos(estado, [r["id"] for r in registros])
-    nuevo["cuota_restante"] = datos.get("quota_remaining")
+    nuevo["cuota_restante"] = cuota
+    if recorrer:
+        nuevo["cursores"] = cursores
     return {"urls": [r["url"] for r in registros], "registros": registros,
-            "nota": f"{len(registros)} preguntas nuevas (cuota restante {datos.get('quota_remaining')})"}, nuevo
+            "nota": f"{len(registros)} preguntas nuevas (cuota restante {cuota})"}, nuevo
 
 
 # ---------------------------------------------------------------- Geodar Radar: sensores nuevos

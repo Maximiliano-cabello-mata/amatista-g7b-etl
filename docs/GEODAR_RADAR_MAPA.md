@@ -2,7 +2,7 @@
 
 Generado con `python -m geodar mapa --markdown` el 2026-11-25, desde [`fuentes/catalogo.yml`](../fuentes/catalogo.yml). No se edita a mano: se cambia el catálogo y se vuelve a generar. Cómo funciona: [GEODAR_RADAR.md](GEODAR_RADAR.md).
 
-**38 fuentes:** 23 ✅ activa, 7 🔒 licencia por confirmar, 6 ⏸️ inactiva, 2 🔗 la trae otra tarea.
+**42 fuentes:** 26 ✅ activa, 8 🔒 licencia por confirmar, 6 ⏸️ inactiva, 2 🔗 la trae otra tarea.
 
 ## Quién hace qué
 
@@ -10,7 +10,7 @@ Generado con `python -m geodar mapa --markdown` el 2026-11-25, desde [`fuentes/c
 |---|---|---|
 | radar de telemetría | Cifras de equipos y rendimiento, con el estándar `g7b.hardware/1` → cubo (`geodar telemetria`) | 7 |
 | araña de documentación (Zyte) | Documentación: manuales y notas de versión → embudo → MongoDB | 6 |
-| sensor directo | Feeds, APIs y foros: el sensor ya trae el dato → bronce (`geodar vigilar`) | 21 |
+| sensor directo | Feeds, APIs y foros: el sensor ya trae el dato → bronce (`geodar vigilar`) | 25 |
 | descarga directa | Archivos (PDF) → bronce | 0 |
 | gestor externo | Lo trae otra tarea (la sonda, Amatista) | 4 |
 
@@ -66,9 +66,13 @@ Todo entra primero crudo a Azure (`bronce/<fuente>/<fecha>/`), así nada se pier
 |---|---|---|---|---|---|---|---|
 | **arxiv-cs-gr**<br>arXiv, gráficos por computadora (cs.GR) | rss.arxiv.org, arxiv.org | sensor directo | `atom` | `documentos` | CC0-1.0 (solo_metadatos) | ✅ activa | 24 h |
 | **blender-stackexchange**<br>Blender Stack Exchange | blender.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 6 h |
-| **blender-stackexchange-clasicos**<br>Blender Stack Exchange (clásicos más votados) | blender.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 24 h |
+| **blender-stackexchange-clasicos**<br>Blender Stack Exchange (clásicos más votados) | blender.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 6 h |
 | **computergraphics-stackexchange**<br>Computer Graphics Stack Exchange | computergraphics.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 12 h |
-| **computergraphics-stackexchange-clasicos**<br>Computer Graphics Stack Exchange (clásicos más votados) | computergraphics.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 24 h |
+| **computergraphics-stackexchange-clasicos**<br>Computer Graphics Stack Exchange (clásicos más votados) | computergraphics.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 6 h |
+| **stackoverflow-blender**<br>Stack Overflow (blender, bpy) | stackoverflow.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 6 h |
+| **stackoverflow-web3d**<br>Stack Overflow (glTF, three.js, A-Frame, WebGL, WebGPU) | stackoverflow.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 6 h |
+| **gamedev-stackexchange**<br>Game Development Stack Exchange (3D, optimización) | gamedev.stackexchange.com | sensor directo | `stackexchange` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 6 h |
+| **gltf-blender-io-issues**<br>Issues de KhronosGroup/glTF-Blender-IO | github.com, api.github.com | sensor directo | `pagina` | `documentos` | por_confirmar (texto_completo) | 🔒 licencia por confirmar | 24 h |
 | **blender-manual**<br>Manual de Blender (LTS vigente) | docs.blender.org | araña de documentación (Zyte) | `sphinx` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 12 h |
 | **blender-compositor-45**<br>Composición por nodos (Manual de Blender 4.5 LTS) | docs.blender.org | araña de documentación (Zyte) | `pagina` | `documentos` | CC-BY-SA-4.0 (texto_completo) | ✅ activa | 168 h |
 | **blender-noticias**<br>Noticias de blender.org | www.blender.org | sensor directo | `rss` | `documentos` | derechos_reservados (solo_metadatos) | ✅ activa | 24 h |
