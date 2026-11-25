@@ -366,7 +366,7 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
         previo = dict(anteriores.get(version, {}))
         respuesta = obtener(f"{base}{version}/objects.inv", _condicionales(previo))
         if respuesta.estado == 304:
-            actual = previo
+            actual = dict(previo)
         elif respuesta.estado == 200:
             datos = leer(respuesta.contenido)
             actual = {**_recordar(previo, respuesta), "huella": datos["huella"], "paginas": len(datos["paginas"])}

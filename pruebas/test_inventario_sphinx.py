@@ -213,6 +213,12 @@ def test_vigilar_pasa_las_versiones_y_no_lanza_dos_recorridos():
     # Y al otro día, sin cambios, nada.
     assert vigilar(_catalogo(), lago, obtener=servidor(inventarios), zyte=zyte, proyecto_id="883618",
                    ahora=HOY + timedelta(days=2), salida=lambda *_: None)[0]["accion"] == "nada nuevo"
+    # Si se amplía el alcance (con inventario en 304), relanza las versiones con alcance nuevo.
+    for v in lago.json[ESTADO]["blender-manual"]["versiones"].values():
+        v.pop("alcance", None)
+    relanzado = vigilar(_catalogo(), lago, obtener=servidor(inventarios), zyte=zyte, proyecto_id="883618",
+                        ahora=HOY + timedelta(days=3), salida=lambda *_: None)
+    assert relanzado[0]["accion"] == "zyte: trabajo 883618/2/2" and "alcance ampliado" in relanzado[0]["nota"]
 
 
 def test_el_embudo_anota_el_alias_sin_evaluar_texto():
