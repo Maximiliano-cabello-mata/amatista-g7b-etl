@@ -15,4 +15,4 @@ Pide un ejemplo del error solo si la petición y el repositorio carecen de uno. 
 
 [Guía y casos del equipo](../../../docs/habilidades-de-agente.md) · [Método original de obra/superpowers](https://github.com/obra/superpowers/blob/22f0b463e7a5e579904dd6211a520321035526f7/skills/writing-skills/SKILL.md)
 
-[Pruebas de comportamiento del agente](references/testing-skills-with-subagents.md) · [Licencia de la referencia](references/LICENSE)
+[Pruebas de comportamiento del agente](../../../docs/referencias-habilidades/writing-skills/testing-skills-with-subagents.md) · [Licencia de la referencia](../../../docs/referencias-habilidades/writing-skills/LICENSE)

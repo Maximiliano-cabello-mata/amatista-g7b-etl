@@ -13,4 +13,4 @@ description: Examina si la evidencia de dos pilotos o versiones permite sostener
 
 [Modelo, estudio y etiquetas de Site](../../../algoritmos/documentacion/site-4.md) · [Guía original de K-Dense](https://github.com/K-Dense-AI/scientific-agent-skills/blob/c21d13b3cc2894680229ba9959a53281acb9200e/skills/scientific-critical-thinking/SKILL.md)
 
-[Lista de comprobación para el diseño experimental](references/experimental_design.md) · [Licencia de la referencia](references/LICENSE)
+[Lista de comprobación para el diseño experimental](../../../docs/referencias-habilidades/scientific-critical-thinking/experimental_design.md) · [Licencia de la referencia](../../../docs/referencias-habilidades/scientific-critical-thinking/LICENSE)

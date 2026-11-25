@@ -20,4 +20,4 @@ Identifica el productor, el contrato versionado, la unidad de observación y el 
 
 [Patrones originales de wshobson/agents](https://github.com/wshobson/agents/blob/c96b5f6552dba32e4492307493ee613581430715/plugins/data-engineering/skills/data-quality-frameworks/SKILL.md)
 
-[Patrones de validación y ejemplos de contratos](references/details.md) · [Licencia de la referencia](references/LICENSE)
+[Patrones de validación y ejemplos de contratos](../../../docs/referencias-habilidades/data-quality-frameworks/details.md) · [Licencia de la referencia](../../../docs/referencias-habilidades/data-quality-frameworks/LICENSE)

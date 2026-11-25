@@ -11,7 +11,7 @@ Un agente que abra este repositorio puede invocar una habilidad por su nombre. E
 
 ## Habilidades de la comunidad integradas en G7B
 
-Estas cuatro adaptaciones se descubren en el repositorio junto a las dos revisiones originales. Cada una enlaza la revisión exacta de su fuente. Las tres primeras incluyen referencias originales y su licencia MIT para consultarlas en local. Los agentes pueden invocarlas por nombre o seleccionarlas por la descripción.
+Estas cuatro adaptaciones se descubren en el repositorio junto a las dos revisiones originales. Cada una enlaza la revisión exacta de su fuente. Las tres primeras incluyen referencias originales y su licencia MIT en `docs/referencias-habilidades/` para consultarlas en local. Los agentes las abren solo si necesitan profundizar en una técnica. Los agentes pueden invocarlas por nombre o seleccionarlas por la descripción.
 
 | Petición | Habilidad | Cómo reconocer el resultado |
 |---|---|---|
