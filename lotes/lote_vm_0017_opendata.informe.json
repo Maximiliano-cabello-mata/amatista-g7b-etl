@@ -1,0 +1,30 @@
+{
+  "lote_vm": 17,
+  "tipo": "blender-open-data",
+  "modo_motor": "multinucleo_ram_3c",
+  "segundos_procesamiento": 51.5,
+  "licencia": "CC0-1.0",
+  "estandar_hardware": "g7b.hardware/1",
+  "generado_en": "2026-11-25T21:13:14+00:00",
+  "archivo": "lote_vm_0017_opendata.jsonl.gz",
+  "bytes_gz": 15054430,
+  "sha256_gz": "2a902d15a029d4ac087e6eb3fadf19c20649246731f53151da75b9f71c40043a",
+  "archivo_matriz": "lote_vm_0017_opendata.matriz.json.gz",
+  "sha256_matriz": "e87a24d8d67774c821d96ba8c600eed7874051a5da1d704b28ea760fff67eb2a",
+  "grupos_matriz_gpu": 9245,
+  "filas_mediciones": 149790,
+  "benchmarks_validos": 49993,
+  "seleccion": {
+    "leidos": 438671,
+    "esquema_no_soportado": 87848,
+    "candidatos_anteriores": 100823,
+    "ya_capturados": 250000,
+    "pendientes_nuevos": 0,
+    "seleccionados": 50000
+  },
+  "tramo": {
+    "desde": "2022-11-18T20:50:03.116245+00:00",
+    "hasta": "2026-11-24T23:53:35.924065+00:00",
+    "completo_hacia_atras": false
+  }
+}
