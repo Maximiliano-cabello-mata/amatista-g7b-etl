@@ -12,6 +12,7 @@ The guides are grouped by task. If two documents disagree, the master plan takes
 |---|---|
 | [Project vision](VISION.md) | The project’s goals and how Amatista, G7B and Geoda work together |
 | [Master plan](PLAN_MAESTRO.md) | The roadmap for cloud offers, Azure setup, the dashboard, the API and integration with Amatista |
+| [Distributed 24/7 architecture](ESTRUCTURA_POTENCIA_DISTRIBUIDA.md) (in Spanish) | How the 5 active engines (massive spiders, Azure, MongoDB Flex hybrid search/analytics, stateless 3-core ARM64 Oracle VM, local `qwen3:8b`, and low-frequency Gemini API) work together |
 | [Original plan](PLAN.md) | Quality rules, research questions P1–P7 and project phases |
 | [Technical definitions](FICHAS_TECNICAS.md) | Hardware tiers N0–N4, profiles, interactive performance, the cube and Geoda |
 | [Hack4Edu](hack4edu/README.md) | Work completed before and during the event, with instructions for verifying it |
