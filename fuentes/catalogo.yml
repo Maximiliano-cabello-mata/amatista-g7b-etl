@@ -878,5 +878,5 @@ fuentes:
     extractor: externo
     gestor: "traer_amatista.yml (plan maestro B8) desde /api/g7b/v1/agregados"
     frecuencia_horas: 24
-    dominios: [api.amatista-3d.tech]
+    dominios: [api.amatista-3dt.tech, api.amatista-3d.tech]
     activa: false              # se enciende cuando Amatista exponga la ruta
