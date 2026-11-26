@@ -159,7 +159,7 @@ def test_de_punta_a_punta_con_el_cubo_real(tmp_path):
         return {'id': f'{i:064x}', 'huella_origen': 'a' * 64, 'contrato': 'g7b.telemetria/1', 'sintetico': False,
                 'fuente': 'sonda', 'estado': 'aceptado', 'fecha': '2026-11-03T00:00:00Z', 'version': '4.5.3',
                 'escena': 'media', 'perfil': 'ligero', 'sonda': '0.2.0', 'metrica': 'cuadros_por_segundo_vista3d',
-                'unidad': 'fps', 'valor': fps, 'motivos': [], 'variacion': .01, 'valores': [fps] * 3,
+                'unidad': 'fps', 'valor': fps, 'motivos': [], 'variacion': 0, 'valores': [fps] * 3,
                 'prueba': 'vista3d', 'licencia': 'propia', 'sin_ventana': False,
                 'equipo': {'cpu': 'CPU', 'so': 'Linux', 'huella': equipo, 'nivel': nivel}}
 
