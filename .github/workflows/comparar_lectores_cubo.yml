@@ -1,0 +1,41 @@
+name: Comparar lectores de cubos
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'g7b_almacen/**'
+      - '.github/scripts/probar_lectores_cubo.py'
+      - '.github/workflows/comparar_lectores_cubo.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  compatibilidad:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          path: corregido
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          path: vigente
+          ref: 52d9961d012cfb8be9d65c302ea66640e4ab510f
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          path: pr26
+          ref: 5843caa127c900a319df829d2ceabbed4cfd28d3
+          persist-credentials: false
+      - uses: actions/checkout@v5
+        with:
+          path: pr27
+          ref: 3c8ef1549c91dcc75fa24f5f26dd74e749ad6d31
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r corregido/requirements-dev.txt
+      - run: python corregido/.github/scripts/probar_lectores_cubo.py
