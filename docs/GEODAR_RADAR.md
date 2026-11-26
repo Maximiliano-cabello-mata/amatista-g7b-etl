@@ -115,6 +115,8 @@ En GitHub, todo corre solo con el interruptor `G7B_INGESTA_ACTIVA=true`:
 
 ## 5. Agregar una fuente
 
+Para una **fuente de telemetría**, aplicar la [sección 6 del estándar de telemetría](ESTANDAR_TELEMETRIA.md#6-adding-a-telemetry-source). Los pasos siguientes configuran el catálogo general del radar.
+
 1. Agregar el bloque a `fuentes/catalogo.yml`. Necesita: `id`, `nombre`, `familia`, `destino` (y `coleccion` si es catálogo), `licencia` y `licencia_verificada`, `modo`, `sensor`, `extractor`, `frecuencia_horas`, `dominios` y `activa`.
 2. `python -m geodar probar --fuente <id>` (o la tarea de Actions).
 3. `python -m pytest pruebas -q`: el catálogo se valida en las pruebas.

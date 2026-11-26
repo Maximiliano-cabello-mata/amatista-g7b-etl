@@ -17,6 +17,8 @@ Cómo llega un dato de internet al warehouse, y por qué casi nada llega. Aplica
 
 ## 1. Catálogo de fuentes (`fuentes/catalogo.yml`)
 
+Para incorporar **telemetría**, seguir la [sección 6 del estándar](ESTANDAR_TELEMETRIA.md#6-adding-a-telemetry-source). Esta sección describe el catálogo común a las fuentes.
+
 Cada fuente declara qué es y cómo se trata:
 
 | Campo | Para qué |

@@ -92,7 +92,9 @@ ausente, datos vacíos o discrepancia fallan la ejecución. Las rutas son determ
 y permiten reintentar una subida parcial. Los informes distinguen captura local de
 `subida_y_lectura_verificadas`. No se habilitan máquinas de pago de Camber/Deepnote.
 
-## Criterios pendientes antes del cubo
+## Criterios registrados el 3 de noviembre
+
+El punto 4 ya tiene implementación. [CUBO.md](CUBO.md) describe las tablas, la deduplicación y las salidas que se publican. La lista conserva los criterios de aquella primera captura.
 
 1. Comprobar recurrencia y continuidad de autenticación; primera ejecución cloud completa verificada abajo.
 2. Reducir variación local; ampliar equipos y versiones con consentimiento.

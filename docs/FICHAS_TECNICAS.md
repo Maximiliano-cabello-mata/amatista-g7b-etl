@@ -1,6 +1,6 @@
 # Fichas técnicas de G7B y Amatista
 
-Fecha: 2026-11-01. Definición exacta de cada concepto interno, para que cada palabra signifique una sola cosa. Si un documento usa un término de otra forma, manda esta ficha. Los umbrales numéricos son **iniciales**: se ajustan con mediciones, y cada cambio se anota aquí con fecha.
+Fecha: 2026-11-01. Definición exacta de cada concepto interno, para que cada palabra signifique una sola cosa. Para el contrato vigente del cubo y sus vistas, consultar [CUBO.md](CUBO.md). Los umbrales numéricos son **iniciales**: se ajustan con mediciones, y cada cambio se anota aquí con fecha.
 
 **Estado:** ✅ hecho y probado con datos reales · 🟡 hecho, sin datos o sin probar en real · ⬜ planteado.
 
@@ -175,13 +175,9 @@ Contenedor `lago` en Azure (West US 2), organizado por zonas:
 ### 5.2 Embudo ✅
 Cinco etapas en orden: entrada, calidad, duplicados, relevancia y valor. Cada rechazo lleva su motivo. Se aplica al **texto**; las mediciones tienen su propia validación (4.1). Detalle: `docs/INGESTA.md`.
 
-### 5.3 Cubo ⬜
-- **Es:** el resumen de **todas** las mediciones por cada combinación de dimensiones, calculado de una vez (DuckDB, `GROUP BY CUBE`) y guardado en oro.
-- **Hechos:** `hechos_medicion` (sonda) y `hechos_render` (Blender Open Data).
-- **Dimensiones:** dispositivo, versión, escena, perfil, tiempo y origen.
-- **Medidas por celda:** mediana, p10, p90 y número de muestras.
-- **Una celda es confiable si:** tiene 5 muestras o más, de 3 equipos distintos o más. Si no, se muestra marcada como "poca evidencia".
-- **Salidas:** Parquet en oro, rebanadas en MongoDB (`cubo_*`) y un CSV para Excel.
+### 5.3 Cubo
+
+Una medición representa una prueba o escena. G7B conserva su procedencia y su estado, y permite consultarla por hardware, versión, escena y origen. El contrato publicado, las vistas de exploración y de mediciones aceptadas, y las salidas DuckDB y Parquet se describen en [CUBO.md](CUBO.md). Los documentos de conocimiento siguen su propio recorrido en MongoDB.
 
 ### 5.4 Conocimiento (texto) ✅
 Documentos aceptados por el embudo, en `conocimiento_3d.documentos`. **No alimenta al kernel:** sirve para que una IA consulte la documentación (MCP) y para Goliat. Hoy hay 5.
