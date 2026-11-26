@@ -1,9 +1,0 @@
-name: Coordinación de Amatista
-description: Lee las ramas, versiones y propuestas de los repositorios oficiales.
-runs:
-  using: composite
-  steps:
-    - shell: bash
-      env:
-        GH_TOKEN: ${{ github.token }}
-      run: python3 "$GITHUB_ACTION_PATH/coordinar.py"
