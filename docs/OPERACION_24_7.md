@@ -10,7 +10,7 @@ Cómo corre solo el flujo, cómo avisa cuando no corre y cómo se reevalúa lo q
 |---|---|---|
 | Extracción | `vigilar.yml` (Geodar Radar) → `zyte_a_lago.yml` | Cada vuelta |
 | Análisis | `procesar.yml`: el embudo con lo nuevo y con lo que cambió de reglas, y la publicación en MongoDB | Cada vuelta |
-| Semanal | `telemetria.yml` → `cubo.yml` → `geoda_kernel.yml` | Martes, primera vuelta del día (UTC), o con `completo` |
+| Semanal | `telemetria.yml` → `cubo.yml` (ejecuta Geoda antes de publicar) | Primera vuelta pendiente desde el martes a las 00:00 UTC, o con `completo` |
 | Entrega | `geoda_publicar.yml` → API de Amatista | Cada vuelta |
 
 Una falla no detiene la vuelta: lo siguiente se intenta igual (publicar lo que el embudo ya aceptó). Solo se salta lo que depende de algo que falló: sin cubo nuevo no corre el kernel.
