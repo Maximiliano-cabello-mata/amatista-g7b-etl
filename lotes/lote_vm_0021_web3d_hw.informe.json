@@ -1,0 +1,12 @@
+{
+  "lote_vm": 21,
+  "tipo": "web3d_y_fallas_hw",
+  "generado_en": "2026-11-26T03:22:25+00:00",
+  "archivo": "lote_vm_0021_web3d_hw.jsonl.gz",
+  "bytes_gz": 18276,
+  "sha256_gz": "44cd180db021fa86f747fe81b53d04be59cc27e7d05167cfe61af5921e52ee17",
+  "filas": 4314,
+  "caniuse_celdas": 4314,
+  "reportes_hw": 0,
+  "nota_reportes": "0 reportes nuevos o cambiados de 0 (0 con GPU); 2 ventanas completas, al día hasta 2026-11-26T03:22:25Z"
+}
