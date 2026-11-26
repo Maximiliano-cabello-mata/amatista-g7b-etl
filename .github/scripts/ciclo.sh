@@ -17,21 +17,11 @@ echo "|---|---|---|" >> "$RESUMEN"
 
 lanzar() {
   local wf="$1"; shift
-  local antes id=""
-  antes="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  if ! gh workflow run "$wf" --ref "$REF" "$@"; then
-    echo "| $wf | ❌ no se pudo lanzar | |" >> "$RESUMEN"
-    fallas+=("$wf (no se pudo lanzar)")
-    return 1
-  fi
-  # La ejecución tarda unos segundos en aparecer en la lista.
-  for _ in $(seq 1 36); do
-    sleep 5
-    id="$(gh run list --workflow "$wf" --event workflow_dispatch --limit 10 --json databaseId,createdAt \
-          --jq "[.[] | select(.createdAt >= \"$antes\")] | sort_by(.createdAt) | .[0].databaseId // empty")"
-    [ -n "$id" ] && break
-  done
-  if [ -z "$id" ]; then
+  local id
+  # La respuesta pertenece a este despacho, incluso si hay dos operadores.
+  id="$(gh api -X POST -H 'X-GitHub-Api-Version: 2026-03-10' \
+    "repos/$GH_REPO/actions/workflows/$wf/dispatches" -f ref="$REF" "$@" --jq '.workflow_run_id')" || id=""
+  if ! [[ "$id" =~ ^[0-9]+$ ]]; then
     echo "| $wf | ❌ no apareció la ejecución | |" >> "$RESUMEN"
     fallas+=("$wf (no apareció la ejecución)")
     return 1
@@ -52,32 +42,29 @@ saltar() {
 }
 
 # 1. Extracción
-lanzar vigilar.yml -f simulacro=false
-lanzar zyte_a_lago.yml -f simulacro=false
+lanzar vigilar.yml -F 'inputs[simulacro]=false'
+lanzar zyte_a_lago.yml -F 'inputs[simulacro]=false'
 
 # 2. Análisis: lo nuevo y lo que se evaluó con reglas distintas.
-lanzar procesar.yml -f simulacro=false
+lanzar procesar.yml -F 'inputs[simulacro]=false'
 
-# 3. Semanal: telemetría, cubo y kernel de Geoda.
-semanal=false
-if [ "${COMPLETO:-false}" = "true" ]; then
-  semanal=true
-elif [ "$(date -u +%u)" = "2" ] && [ "$(date -u +%H)" -lt 6 ]; then
-  semanal=true  # martes, primera vuelta del día (UTC)
-fi
-if [ "$semanal" = "true" ]; then
-  if lanzar telemetria.yml -f publicar_azure=true; then
-    if lanzar cubo.yml; then
-      lanzar geoda_kernel.yml
-    else
-      saltar geoda_kernel.yml "sin cubo nuevo"
-    fi
+# 3. Cada período empieza el martes a medianoche UTC. Una vuelta tardía recupera el pendiente.
+hoy=$(date -u +%F)
+dia=$(date -u -d "$hoy" +%u)
+semana=$(date -u -d "$hoy -$(((dia + 5) % 7)) days" +%F)
+titulo="Cubo semanal G7B $semana"
+if ! completadas=$(gh run list --repo "$GH_REPO" --branch "$REF" --workflow cubo.yml \
+    --event workflow_dispatch --status success --created ">=$semana" --limit 1000 --json displayTitle \
+    --jq '.[].displayTitle'); then
+  fallas+=("no se pudo consultar el cierre semanal")
+elif [ "${COMPLETO:-false}" = true ] || ! grep -Fxq "$titulo" <<<"$completadas"; then
+  if lanzar telemetria.yml -F 'inputs[publicar_azure]=true'; then
+    lanzar cubo.yml -f "inputs[semana]=$semana"
   else
-    saltar cubo.yml "sin telemetría"
-    saltar geoda_kernel.yml "sin telemetría"
+    saltar cubo.yml "sin telemetría; se reintenta la siguiente vuelta"
   fi
 else
-  saltar "telemetria.yml, cubo.yml, geoda_kernel.yml" "no es la vuelta semanal"
+  saltar "telemetria.yml y cubo.yml (con Geoda)" "semana $semana ya completada"
 fi
 
 # 4. Entrega a Geoda y a la API de Amatista.

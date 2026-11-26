@@ -219,6 +219,11 @@ def leer_lago(lago):
 
 def publicar(lago, destino, manifiesto):
     destino = Path(destino)
+    # El mismo DuckDB entra al planificador y al manifiesto que se entrega a Amatista.
+    from geoda.ejecutar import ejecutar
+    kernel = ejecutar(destino, destino / 'geoda')
+    if kernel['cubo_sha256'] != manifiesto['archivos']['oro/cubo.duckdb']['sha256']:
+        raise ValueError('Geoda procesó otra revisión del cubo')
     version = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ') + '-' + uuid4().hex[:12]
     rutas = {}
     for nombre, meta in manifiesto['archivos'].items():
@@ -230,7 +235,8 @@ def publicar(lago, destino, manifiesto):
         if sha(lago.contenedor.download_blob(ruta).readall()) != meta['sha256']:
             raise ValueError('falló verificación de artefacto en Azure')
         rutas[nombre] = {**meta, 'ruta': ruta}
-    publicado = {**manifiesto, 'version': version, 'archivos': rutas, 'estado': 'verificado'}
+    publicado = {**manifiesto, 'version': version, 'archivos': rutas, 'estado': 'verificado', 'kernel': kernel}
+    (destino / 'publicacion.json').write_bytes(serializar({'version': version, 'kernel': kernel}))
     ruta_manifiesto = f'oro/cubos/{version}/manifiesto.json'
     contenido = serializar(publicado)
     lago.subir_bytes(ruta_manifiesto, contenido, tipo='application/json')

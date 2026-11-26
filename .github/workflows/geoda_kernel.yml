@@ -1,10 +1,11 @@
 name: Geoda kernel
 on:
-  push:
-    branches: [main]
-    paths: ['geoda/**', '.github/workflows/geoda_kernel.yml']
   workflow_dispatch:
-  # Sin workflow_run: el ciclo (ciclo.yml) lo lanza después del cubo.
+    inputs:
+      cubo_run_id:
+        type: string
+        required: true
+        description: Ejecución de Cubo G7B cuya entrega se quiere reproducir
 permissions:
   contents: read
   actions: read
@@ -19,26 +20,23 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install duckdb==2.0.0
-      - id: origen
+      - name: Verificar el origen de la reproducción
         env:
           GH_TOKEN: ${{ github.token }}
-          RUN_CUBO: ${{ github.event.workflow_run.id }}
+          RUN_CUBO: ${{ inputs.cubo_run_id }}
         run: |
-          id="$RUN_CUBO"
-          if [ -z "$id" ]; then
-            id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/cubo.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
-          fi
-          [[ "$id" =~ ^[0-9]+$ ]] || { echo 'No hay ejecución válida de Cubo G7B'; exit 1; }
-          echo "id=$id" >> "$GITHUB_OUTPUT"
+          [[ "$RUN_CUBO" =~ ^[0-9]+$ ]]
+          origen=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_CUBO" --jq '[.path,.head_branch,.conclusion] | join(" ")')
+          test "$origen" = ".github/workflows/cubo.yml main success"
       - uses: actions/download-artifact@v7
         with:
           github-token: ${{ github.token }}
-          run-id: ${{ steps.origen.outputs.id }}
-          name: cubo-${{ steps.origen.outputs.id }}
+          run-id: ${{ inputs.cubo_run_id }}
+          name: cubo-${{ inputs.cubo_run_id }}
           path: insumo
       - run: python -m geoda.ejecutar --entrada insumo --salida salida
       - uses: actions/upload-artifact@v6
         with:
-          name: geoda-${{ github.run_id }}-cubo-${{ steps.origen.outputs.id }}
+          name: geoda-${{ github.run_id }}-cubo-${{ inputs.cubo_run_id }}
           path: salida/
           retention-days: 14

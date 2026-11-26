@@ -6,7 +6,7 @@ name: Ciclo G7B (24/7)
 #
 #   extracción ── vigilar (Geodar Radar) → Zyte al lago
 #   análisis   ── procesar (embudo; reevalúa lo que cambió de reglas) → MongoDB
-#   semanal    ── telemetría → cubo → kernel de Geoda      (martes, primera vuelta del día, o «completo»)
+#   semanal    ── telemetría → cubo con kernel de Geoda (primera vuelta pendiente desde el martes UTC)
 #   entrega    ── publicar estado para Geoda → API de Amatista
 #
 # Disparadores (docs/OPERACION_24_7.md):
