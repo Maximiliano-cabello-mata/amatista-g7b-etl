@@ -111,6 +111,22 @@ def sensor_sitemap(fuente, estado, obtener):
     return {"urls": cambiadas, "registros": [], "nota": f"{len(cambiadas)} URLs nuevas o cambiadas"}, nuevo
 
 
+PAGINA_MAXIMA_SIN_CLAVE = 25
+
+
+def _motivo_stackexchange(contenido):
+    """«: access_denied (page above 25 …)» a partir del cuerpo de error de la API, o «» si no lo hay."""
+    import json
+
+    try:
+        cuerpo = json.loads(contenido or b"{}")
+    except (ValueError, TypeError):
+        return ""
+    if not isinstance(cuerpo, dict) or not cuerpo.get("error_name"):
+        return ""
+    return f": {cuerpo['error_name']} ({str(cuerpo.get('error_message', ''))[:120]})"
+
+
 def sensor_stackexchange(fuente, estado, obtener, ahora=None):
     """Preguntas con votos de un sitio de Stack Exchange, con su mejor respuesta.
 
@@ -133,6 +149,9 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
                 "fromdate": ahora - dias_desde * 86400, "todate": ahora - dias_hasta * 86400}
     # Modo masivo: varias etiquetas (cada una por separado), varias páginas por vuelta y, con
     # «recorrer», un cursor por etiqueta que avanza hacia lo menos votado en cada vuelta.
+    # Sin clave de aplicación la API rechaza las páginas después de la 25 (400 access_denied):
+    # el cursor vuelve a la 1 al llegar ahí, igual que cuando se acaban los resultados.
+    tope = None if "key" in comunes else PAGINA_MAXIMA_SIN_CLAVE
     etiquetas = cfg.get("etiquetas") or [None]
     paginas = max(int(cfg.get("paginas", 1)), 1)
     recorrer = bool(cfg.get("recorrer"))
@@ -142,13 +161,17 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
     for etiqueta in etiquetas:
         clave = etiqueta or "*"
         inicio = int(cursores.get(clave, 1)) if recorrer else 1
+        if tope and inicio > tope:
+            inicio = 1
         for pagina in range(inicio, inicio + paginas):
+            if tope and pagina > tope:
+                break
             q = {**consulta, "page": pagina}
             if etiqueta:
                 q["tagged"] = etiqueta
             respuesta = obtener(f"{base}/questions?{urlencode(q)}", {})
             if respuesta.estado != 200:
-                raise RuntimeError(f"HTTP {respuesta.estado}")
+                raise RuntimeError(f"HTTP {respuesta.estado}" + _motivo_stackexchange(respuesta.contenido))
             datos = json.loads(respuesta.contenido)
             cuota = datos.get("quota_remaining", cuota)
             for p in datos.get("items", []):
@@ -157,7 +180,8 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
                     ids_vuelta.add(ident)
                     preguntas.append(p)
             if recorrer:
-                cursores[clave] = pagina + 1 if datos.get("has_more") else 1
+                siguiente = pagina + 1 if datos.get("has_more") else 1
+                cursores[clave] = 1 if tope and siguiente > tope else siguiente
             if datos.get("backoff"):
                 time.sleep(min(int(datos["backoff"]), 30))
             if not datos.get("has_more"):

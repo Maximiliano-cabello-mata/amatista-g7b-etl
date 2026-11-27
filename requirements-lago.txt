@@ -1,6 +1,7 @@
 # Lo que necesitan g7b_lago, g7b_ingesta y sus tareas programadas (Zyte usa requirements.txt).
 azure-storage-blob>=12.20,<13
 scrapinghub>=2.4,<3
+msgpack>=1.0,<2            # el cliente de Zyte lee los items en msgpack; sin él usa JSON, más lento
 requests>=2.31,<3
 feedparser>=6.0,<7
 PyYAML>=6.0,<7

@@ -1,5 +1,6 @@
 """Pruebas del catálogo, los sensores, el embudo y la araña genérica. Sin red ni nube."""
 import json
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 
@@ -189,6 +190,45 @@ def test_sensor_stackexchange_con_mejor_respuesta():
     r = salida["registros"][0]
     assert "Use Simplify" in r["texto_html"] and r["respuesta_aceptada"] and r["autor_respuesta"] == "Eva"
     assert sensor_stackexchange(fuente, estado, obtener, ahora=1790900000)[0]["registros"] == []
+
+
+def _api_paginada(pedidas):
+    """Stack Exchange falso: siempre hay más páginas; anota cuáles se pidieron."""
+    def obtener(url, _c):
+        if "/answers" in url:
+            return Respuesta(200, {}, b'{"items": []}')
+        pagina = int(parse_qs(urlparse(url).query)["page"][0])
+        pedidas.append(pagina)
+        item = {"question_id": pagina, "link": f"https://x/q/{pagina}", "score": 5, "creation_date": 1790000000}
+        return Respuesta(200, {}, json.dumps({"items": [item], "has_more": True}).encode())
+    return obtener
+
+
+def test_stackexchange_sin_clave_no_pasa_de_la_pagina_25(monkeypatch):
+    monkeypatch.delenv("STACKEXCHANGE_KEY", raising=False)
+    fuente = {"sensor": {"tipo": "stackexchange", "paginas": 4, "recorrer": True}}
+    pedidas = []
+    _, estado = sensor_stackexchange(fuente, {"cursores": {"*": 24}}, _api_paginada(pedidas), ahora=1790900000)
+    assert pedidas == [24, 25] and estado["cursores"]["*"] == 1
+    # Un cursor que ya quedó más allá (estado anterior a este cambio) vuelve a empezar.
+    pedidas.clear()
+    _, estado = sensor_stackexchange(fuente, {"cursores": {"*": 27}}, _api_paginada(pedidas), ahora=1790900000)
+    assert pedidas == [1, 2, 3, 4] and estado["cursores"]["*"] == 5
+
+
+def test_stackexchange_con_clave_sigue_despues_de_la_25(monkeypatch):
+    monkeypatch.setenv("STACKEXCHANGE_KEY", "clave-de-prueba")
+    fuente = {"sensor": {"tipo": "stackexchange", "paginas": 2, "recorrer": True}}
+    pedidas = []
+    _, estado = sensor_stackexchange(fuente, {"cursores": {"*": 26}}, _api_paginada(pedidas), ahora=1790900000)
+    assert pedidas == [26, 27] and estado["cursores"]["*"] == 28
+
+
+def test_stackexchange_error_dice_el_motivo(monkeypatch):
+    monkeypatch.delenv("STACKEXCHANGE_KEY", raising=False)
+    cuerpo = b'{"error_id": 400, "error_name": "bad_parameter", "error_message": "max must be a number"}'
+    with pytest.raises(RuntimeError, match=r"^HTTP 400: bad_parameter \(max must be a number\)$"):
+        sensor_stackexchange({"sensor": {"tipo": "stackexchange"}}, {}, lambda u, c: Respuesta(400, {}, cuerpo))
 
 
 # ---------------------------------------------------------------- araña
