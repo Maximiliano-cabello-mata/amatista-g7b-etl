@@ -9,7 +9,7 @@ import json
 import os
 from pathlib import Path
 
-from .cubo import ACTUAL, CONTRATO, sha
+from .cubo import ACTUAL, CONTRATO, CONTRATOS_LECTURA, sha
 
 CONTRATO_GEODA = "g7b.geoda.estado/1"
 LIMITE_MANIFIESTO = 256_000
@@ -21,7 +21,7 @@ def entero(valor):
 
 def estado_del_cubo(lago):
     puntero = lago.leer_json(ACTUAL)
-    if not isinstance(puntero, dict) or puntero.get("contrato") != CONTRATO:
+    if not isinstance(puntero, dict) or puntero.get("contrato") not in CONTRATOS_LECTURA:
         raise ValueError("G7B: no hay cubo vigente verificado")
     version = puntero.get("version")
     if not isinstance(version, str) or not version or len(version) > 100:
@@ -33,7 +33,7 @@ def estado_del_cubo(lago):
     if len(contenido) > LIMITE_MANIFIESTO or sha(contenido) != puntero.get("sha256"):
         raise ValueError("G7B: integridad del manifiesto fallida")
     manifiesto = json.loads(contenido)
-    if (manifiesto.get("contrato") != CONTRATO or manifiesto.get("estado") != "verificado"
+    if (manifiesto.get("contrato") != puntero["contrato"] or manifiesto.get("estado") != "verificado"
             or manifiesto.get("version") != version):
         raise ValueError("G7B: versión del manifiesto no verificada")
     cubo = manifiesto.get("archivos", {}).get("oro/cubo.duckdb", {})
@@ -92,3 +92,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
