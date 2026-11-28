@@ -28,7 +28,7 @@ def extraer_fragmentos(contenedor, response, fuente, programa, version, titulo):
         if not isinstance(etiqueta, str):
             return
         clases = (nodo.get("class") or "").split()
-        if etiqueta in ("nav", "script", "style") or "headerlink" in clases:
+        if etiqueta in ("nav", "aside", "script", "style") or "headerlink" in clases or "md-sidebar" in clases:
             return
         if etiqueta in ("h1", "h2", "h3", "h4", "h5", "h6"):
             nivel = int(etiqueta[1])

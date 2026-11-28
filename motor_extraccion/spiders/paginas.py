@@ -150,7 +150,10 @@ class PaginasSpider(scrapy.Spider):
             self.crawler.stats.inc_value("g7b/documental/redirecciones")
         elif 200 <= response.status < 300 and "html" in response.headers.get(
                 "Content-Type", b"").decode("latin-1").lower():
-            yield from self.procesar_html(response, nivel)
+            try:
+                yield from self.procesar_html(response, nivel)
+            except Exception:
+                self.crawler.stats.inc_value("g7b/documental/errores_html")
         else:
             self.crawler.stats.inc_value("g7b/documental/http_o_tipo_descartado")
         yield from self.proxima()

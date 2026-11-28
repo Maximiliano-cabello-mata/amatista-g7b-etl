@@ -20,5 +20,5 @@ class BlenderDocsSpider(ManualSphinxSpider):
     fuente_por_omision = "blender-manual"
     programa = "blender"
     base = "https://docs.blender.org/manual/en/"
-    versiones = ["5.2", "4.5", "3.6"]
+    versiones = ["5.3", "5.2", "4.5", "3.6"]
     secciones = list(SECCIONES_BLENDER)

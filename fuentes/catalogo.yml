@@ -357,22 +357,26 @@ fuentes:
     activa: true
 
   - id: blender-notas-version
-    nombre: Notas de versión de Blender
+    nombre: Notas de versión de Blender (3.x a 5.3)
     tipo: documentacion
     programa: blender
     familia: F5
     destino: documentos
-    licencia: por_confirmar
-    licencia_verificada: false
-    revisar: "Licencia del contenido de developer.blender.org/docs"
+    licencia: CC-BY-SA-4.0
+    licencia_verificada: true
     modo: texto_completo
-    preguntas: [P1, P2]
+    preguntas: [P1, P2, P6]
     sensor: {tipo: pagina, url: "https://developer.blender.org/docs/release_notes/"}
     extractor: zyte
-    zyte: {seguir: true, prefijo: "https://developer.blender.org/docs/release_notes/", max_paginas: 500}
+    zyte:
+      seguir: true
+      prefijo: "https://developer.blender.org/docs/release_notes/"
+      max_paginas: 320
+      version: "5.3"
+      temas: ["geometry", "nodes", "shader", "eevee", "cycles", "bmesh", "python", "bpy", "modifier", "bevel", "boolean", "uv", "animation", "compositor", "render", "sampling", "memory"]
     frecuencia_horas: 168
     dominios: [developer.blender.org]
-    activa: false
+    activa: true
 
   - id: blender-api-python
     nombre: Referencia de la API de Python de Blender
