@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 BOT_NAME = "motor_extraccion"
-SPIDER_MODULES = ["motor_extraccion.spiders"]
+SPIDER_MODULES = ["motor_extraccion.spiders.paginas", "motor_extraccion.spiders.blender_docs"]
 NEWSPIDER_MODULE = "motor_extraccion.spiders"
 
 USER_AGENT = "G7B-bot/0.1 (+https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl)"

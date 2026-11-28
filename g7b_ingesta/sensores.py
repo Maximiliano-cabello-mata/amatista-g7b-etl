@@ -12,7 +12,7 @@ import time
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
 
-VISTOS_MAX = 5000
+VISTOS_MAX = 40000
 
 
 def _condicionales(estado):
@@ -127,17 +127,44 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
     comunes = {"site": cfg.get("sitio", "blender"), "filter": "withbody", "pagesize": 100}
     if os.environ.get("STACKEXCHANGE_KEY"):
         comunes["key"] = os.environ["STACKEXCHANGE_KEY"]
+    dias_desde = int(cfg.get("dias_desde", 30))
+    dias_hasta = int(cfg.get("dias_hasta", 7))
     consulta = {**comunes, "sort": "votes", "order": "desc", "min": cfg.get("puntaje_minimo", 3),
-                "fromdate": ahora - 30 * 86400, "todate": ahora - 7 * 86400}
-    respuesta = obtener(f"{base}/questions?{urlencode(consulta)}", {})
-    if respuesta.estado != 200:
-        raise RuntimeError(f"HTTP {respuesta.estado}")
-    datos = json.loads(respuesta.contenido)
+                "fromdate": ahora - dias_desde * 86400, "todate": ahora - dias_hasta * 86400}
+    # Modo masivo: varias etiquetas (cada una por separado), varias páginas por vuelta y, con
+    # «recorrer», un cursor por etiqueta que avanza hacia lo menos votado en cada vuelta.
+    etiquetas = cfg.get("etiquetas") or [None]
+    paginas = max(int(cfg.get("paginas", 1)), 1)
+    recorrer = bool(cfg.get("recorrer"))
+    cursores = dict(estado.get("cursores", {}))
     vistos = set(estado.get("vistos", []))
-    preguntas = [p for p in datos.get("items", []) if str(p["question_id"]) not in vistos]
+    preguntas, ids_vuelta, cuota = [], set(), None
+    for etiqueta in etiquetas:
+        clave = etiqueta or "*"
+        inicio = int(cursores.get(clave, 1)) if recorrer else 1
+        for pagina in range(inicio, inicio + paginas):
+            q = {**consulta, "page": pagina}
+            if etiqueta:
+                q["tagged"] = etiqueta
+            respuesta = obtener(f"{base}/questions?{urlencode(q)}", {})
+            if respuesta.estado != 200:
+                raise RuntimeError(f"HTTP {respuesta.estado}")
+            datos = json.loads(respuesta.contenido)
+            cuota = datos.get("quota_remaining", cuota)
+            for p in datos.get("items", []):
+                ident = str(p["question_id"])
+                if ident not in vistos and ident not in ids_vuelta:
+                    ids_vuelta.add(ident)
+                    preguntas.append(p)
+            if recorrer:
+                cursores[clave] = pagina + 1 if datos.get("has_more") else 1
+            if datos.get("backoff"):
+                time.sleep(min(int(datos["backoff"]), 30))
+            if not datos.get("has_more"):
+                break
     mejores = {}
-    if preguntas:
-        ids = ";".join(str(p["question_id"]) for p in preguntas)
+    for i in range(0, len(preguntas), 100):
+        ids = ";".join(str(p["question_id"]) for p in preguntas[i:i + 100])
         r2 = obtener(f"{base}/questions/{ids}/answers?{urlencode({**comunes, 'sort': 'votes', 'order': 'desc'})}", {})
         if r2.estado == 200:
             for a in json.loads(r2.contenido).get("items", []):
@@ -162,9 +189,11 @@ def sensor_stackexchange(fuente, estado, obtener, ahora=None):
         })
     nuevo = dict(estado)
     nuevo["vistos"] = _vistos(estado, [r["id"] for r in registros])
-    nuevo["cuota_restante"] = datos.get("quota_remaining")
+    nuevo["cuota_restante"] = cuota
+    if recorrer:
+        nuevo["cursores"] = cursores
     return {"urls": [r["url"] for r in registros], "registros": registros,
-            "nota": f"{len(registros)} preguntas nuevas (cuota restante {datos.get('quota_remaining')})"}, nuevo
+            "nota": f"{len(registros)} preguntas nuevas (cuota restante {cuota})"}, nuevo
 
 
 # ---------------------------------------------------------------- Geodar Radar: sensores nuevos
@@ -336,7 +365,7 @@ def sensor_json_api(fuente, estado, obtener):
             "nota": f"{len(registros)} nuevos o cambiados de {len(pares)}"}, nuevo
 
 
-def sensor_sphinx(fuente, estado, obtener, ahora=None):
+def sensor_sphinx(fuente, estado, obtener, ahora=None, forzar_recorrido=False):
     """Un manual hecho con Sphinx, versión por versión, mirando su inventario (objects.inv).
 
     Las páginas del manual de Blender se reconstruyen a diario («Last updated on ...»), así que la
@@ -347,27 +376,38 @@ def sensor_sphinx(fuente, estado, obtener, ahora=None):
 
     Devuelve en «argumentos» las versiones que tocan, para que la araña recorra solo esas.
     """
-    from motor_extraccion.inventario_sphinx import leer
+    from motor_extraccion.inventario_sphinx import SECCIONES_BLENDER, leer
 
     cfg = fuente["sensor"]
     ahora = ahora or datetime.now(timezone.utc)
     base = cfg["base"].rstrip("/") + "/"
     refresco = timedelta(days=int(cfg.get("refresco_dias", 30)))
     anteriores = estado.get("versiones", {})
+    zyte_cfg = fuente.get("zyte")
+    alcance = None
+    if zyte_cfg:
+        extra_secciones = list(SECCIONES_BLENDER) if zyte_cfg.get("arana") == "blender_docs" else []
+        alcance = _huella_corta({"zyte": zyte_cfg, "secciones": extra_secciones})
     versiones, tocan, notas = {}, [], []
     for version in cfg["versiones"]:
         previo = dict(anteriores.get(version, {}))
         respuesta = obtener(f"{base}{version}/objects.inv", _condicionales(previo))
         if respuesta.estado == 304:
-            actual = previo
+            actual = dict(previo)
         elif respuesta.estado == 200:
             datos = leer(respuesta.contenido)
             actual = {**_recordar(previo, respuesta), "huella": datos["huella"], "paginas": len(datos["paginas"])}
         else:
             raise RuntimeError(f"HTTP {respuesta.estado} en el inventario de {version}")
+        if alcance is not None:
+            actual["alcance"] = alcance
         recorrido = actual.get("recorrido")
         if actual.get("huella") != previo.get("huella") or not recorrido:
             motivo = "primera vez" if not previo.get("huella") else "inventario cambió"
+        elif alcance is not None and previo.get("alcance") != alcance:
+            motivo = "alcance ampliado"
+        elif forzar_recorrido:
+            motivo = "recorrido forzado"
         elif ahora - datetime.fromisoformat(recorrido) >= refresco:
             motivo = f"refresco de {refresco.days} días"
         else:

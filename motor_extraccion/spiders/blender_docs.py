@@ -11,6 +11,7 @@ Secciones: rendimiento y ajustes (P1, P2), equivalencias de teclas (P4) y cómo 
 páginas de cada sección salen del inventario (objects.inv) de su versión, así que una sección que no
 existe en una versión simplemente no aporta páginas.
 """
+from ..inventario_sphinx import SECCIONES_BLENDER
 from .manual_sphinx import ManualSphinxSpider
 
 
@@ -20,18 +21,4 @@ class BlenderDocsSpider(ManualSphinxSpider):
     programa = "blender"
     base = "https://docs.blender.org/manual/en/"
     versiones = ["5.2", "4.5", "3.6"]
-    secciones = [
-        # Rendimiento y ajustes según el equipo (P1, P2)
-        "render/cycles/index.html",
-        "render/eevee/index.html",
-        "editors/preferences/system.html",
-        "troubleshooting/index.html",
-        # Equivalencias para quien viene de Maya o 3ds Max (P4)
-        "interface/keymap/index.html",
-        # Cómo se hace (P6)
-        "advanced/scripting/index.html",
-        "modeling/meshes/index.html",
-        "modeling/modifiers/index.html",
-        "modeling/geometry_nodes/index.html",
-        "render/shader_nodes/index.html",
-    ]
+    secciones = list(SECCIONES_BLENDER)

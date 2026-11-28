@@ -24,10 +24,10 @@ jobs:
     environment: amatista1
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           ref: main
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
       - run: pip install -r requirements-cubo.txt
@@ -50,7 +50,7 @@ jobs:
           git commit -m "data(geoda): publicar paquete de conocimiento del kernel [skip ci]"
           git pull --rebase origin main
           git push origin HEAD:main
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: ${{ always() }}
         with:
           name: geoda-paquete-${{ github.run_id }}

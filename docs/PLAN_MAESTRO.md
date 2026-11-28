@@ -1,6 +1,12 @@
 # Plan maestro: el camino a seguir
 
-> **Actualización del 17 de noviembre de 2026:** el cubo ahora es `g7b.cubo/2`. Separa las mediciones **directas** (estudiantes y laboratorios escolares, con consentimiento) de las **relativas** (Open Data, la sonda en servidores) en `hechos_directos` y `hechos_relativos`, con dimensiones normalizadas. Las tablas `hechos_medicion`, `hechos_render` y `dim_dispositivo` ya no existen. Ver [CUBO.md](CUBO.md).
+## Actualización de enfoque — 17 de noviembre de 2026
+
+La [decisión de responsabilidades de Geoda](GEODA_RESPONSABILIDADES.md) rige la separación entre **conocimiento y alimentación de IA** y **motor adaptativo**. G7B prepara documentos y telemetría por recorridos separados; Amatista integra sus resultados. Los agentes que generen escenas serán consumidores con ejecutor y validación propios. El motor debe funcionar con reglas locales sin depender de consultas documentales, entrenamiento o IA generativa durante la interacción.
+
+Esta actualización reemplaza la lectura de un único ciclo obligatorio para ambos frentes en las secciones 1 y 2: pueden desarrollarse y evaluarse independientemente, intercambiando solamente artefactos aprobados y evidencia trazable. Conserva las reglas operativas, no activa servicios ni acredita capacidades nuevas en producción.
+
+La propuesta del PR #26 implementa `g7b.cubo/3` con mediciones directas y relativas en tablas separadas. El contrato publicado en `main` sigue siendo `g7b.cubo/1` mientras se decide la migración. [Modelo y consultas de la propuesta](CUBO.md).
 
 Fecha: 2026-11-02. Un solo camino, de principio a fin, para que G7B quede **funcional y automático** con las ofertas del GitHub Student Developer Pack, y para que **Amatista, Geoda y G7B se alimenten entre sí**.
 

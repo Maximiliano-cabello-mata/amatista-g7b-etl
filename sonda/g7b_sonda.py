@@ -437,8 +437,8 @@ def correr(opciones, ruta=None):
                     "sin_ventana": bool(bpy.app.background)},
         "equipo": huella_equipo(opciones.nivel),
         # Dónde se midió y si la persona aceptó: sin las dos cosas, el cubo la trata como relativa.
-        "entorno": opciones.entorno,
-        "consentimiento": bool(opciones.consentimiento),
+        "entorno": getattr(opciones, "entorno", None) or "no_declarado",
+        "consentimiento": getattr(opciones, "consentimiento", False) is True,
         "escena": {"nombre": escena_nombre, **escena_cfg},
         "repeticiones": repeticiones,
         "calentamiento_descartado": calentar,
@@ -495,7 +495,8 @@ def leer_opciones(argv):
     p.add_argument("--repeticiones", type=int, default=3)
     p.add_argument("--nivel", choices=["N0", "N1", "N2", "N3", "N4"])
     p.add_argument("--entorno", default="no_declarado",
-                   choices=["no_declarado", "ci", "nube", "equipo_estudiante", "laboratorio_escolar"],
+                   choices=["no_declarado", "ci", "nube", "equipo_estudiante", "laboratorio_escolar",
+                            "github_actions", "laboratorio", "equipo_voluntario"],
                    help="dónde corre: solo equipo_estudiante y laboratorio_escolar dan mediciones directas")
     p.add_argument("--consentimiento", action="store_true",
                    help="la persona aceptó compartir la medición (docs/CONSENTIMIENTO_TELEMETRIA.md)")

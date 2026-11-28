@@ -161,9 +161,9 @@ class ZyteConTrabajos:
         zyte = self
 
         class Jobs:
-            def iter(self, spider, state):
+            def iter(self, state, meta):
                 assert state == ["pending", "running"]
-                return [{"key": k} for a, k in zyte.activos if a == spider]
+                return [{"key": k, "spider": a} for a, k in zyte.activos]
 
             def run(self, arana, job_args):
                 zyte.lanzados.append((arana, job_args))
@@ -209,10 +209,16 @@ def test_vigilar_pasa_las_versiones_y_no_lanza_dos_recorridos():
     assert bitacora[0]["accion"] == "zyte: trabajo 883618/2/1"
     arana, argumentos = zyte.lanzados[0]
     assert arana == "blender_docs" and json.loads(argumentos["versiones"]) == ["5.2", "4.5", "3.6"]
-    assert argumentos["max_por_version"] == "1200"
+    assert argumentos["max_por_version"] == "2500"
     # Y al otro día, sin cambios, nada.
     assert vigilar(_catalogo(), lago, obtener=servidor(inventarios), zyte=zyte, proyecto_id="883618",
                    ahora=HOY + timedelta(days=2), salida=lambda *_: None)[0]["accion"] == "nada nuevo"
+    # Si se amplía el alcance (con inventario en 304), relanza las versiones con alcance nuevo.
+    for v in lago.json[ESTADO]["blender-manual"]["versiones"].values():
+        v.pop("alcance", None)
+    relanzado = vigilar(_catalogo(), lago, obtener=servidor(inventarios), zyte=zyte, proyecto_id="883618",
+                        ahora=HOY + timedelta(days=3), salida=lambda *_: None)
+    assert relanzado[0]["accion"] == "zyte: trabajo 883618/2/2" and "alcance ampliado" in relanzado[0]["nota"]
 
 
 def test_el_embudo_anota_el_alias_sin_evaluar_texto():

@@ -26,6 +26,7 @@ import sys
 from collections import Counter
 from datetime import datetime, timedelta, timezone
 
+from g7b_telemetria import compatibilidad
 from g7b_ingesta import catalogo as cat
 from g7b_ingesta import red
 from g7b_ingesta.sensores import SENSORES
@@ -223,11 +224,11 @@ def colector_blender_open_data(fuente, lago, salida, limite, entrada=None, simul
     if simulacro:
         seleccion, nuevo, conteos = cap.seleccionar_opendata(registros, {}, limite)
         informe = cap.capturar(seleccion, "blender-open-data", Path(salida), len(seleccion)) if seleccion else {}
-        return {**informe, "seleccion": dict(conteos), "simulacro": True}
+        return {**informe, "seleccion": dict(conteos), "nada_nuevo": not seleccion, "simulacro": True}
     return cap.capturar_incremental(registros, lago, salida, limite)
 
 
-COLECTORES = {"blender_open_data": colector_blender_open_data}
+COLECTORES = {"blender_open_data": colector_blender_open_data, "caniuse_web3d": compatibilidad.capturar}
 
 
 def telemetria(catalogo, lago, salida="captura/telemetria", limite=20000, solo=None, entrada=None,
@@ -242,7 +243,8 @@ def telemetria(catalogo, lago, salida="captura/telemetria", limite=20000, solo=N
         r = {"fuente": f["id"], "colector": f["colector"]}
         try:
             r["informe"] = COLECTORES[f["colector"]](f, lago, os.path.join(salida, f["id"]), limite,
-                                                    entrada=entrada, simulacro=simulacro)
+                                                    entrada=entrada if solo or f["colector"] == "blender_open_data" else None,
+                                                    simulacro=simulacro)
             r["ok"] = True
         except Exception as error:  # una fuente rota no detiene a las demás
             r.update(ok=False, error=f"{type(error).__name__}: {str(error)[:200]}")

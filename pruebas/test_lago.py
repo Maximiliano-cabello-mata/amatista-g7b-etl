@@ -105,3 +105,9 @@ def test_mediciones_reales_y_sinteticas(lago, tmp_path):
     assert lago.listar("bronce/sonda/2026-11-01/") == ["bronce/sonda/2026-11-01/real.json"]
     assert lago.listar("sintetico/sonda/2026-11-01/") == ["sintetico/sonda/2026-11-01/falsa.json"]
     assert subir(str(tmp_path), lago, salida=lambda *_: None)["ya_existian"] == 2
+
+
+def test_jsonl_gz_conserva_separadores_unicode_dentro_de_cadenas(lago):
+    registro = {"id": "so-1", "texto_html": "<pre>a\u2028b\u2029c\x85d\x0be\x0cf</pre>"}
+    lago.subir_jsonl_gz("bronce/stackoverflow-web3d/2026-11-25/prueba.jsonl.gz", [registro])
+    assert lago.leer_jsonl_gz("bronce/stackoverflow-web3d/2026-11-25/prueba.jsonl.gz") == [registro]

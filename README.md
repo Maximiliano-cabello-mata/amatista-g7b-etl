@@ -1,51 +1,61 @@
 # G7B
 
-**El motor de datos del 3D libre.** G7B mide cómo corre el software 3D libre en ordenadores reales, de los más antiguos a los más potentes, y reúne lo que se sabe de él: documentación, técnicas, texturas y herramientas. Con eso decide cómo debe trabajar cada equipo. Cada dato lleva su fuente, su versión y su licencia.
+G7B measures how open-source 3D software runs on real computers, from older machines to high-end workstations. It collects documentation, techniques, textures and tools alongside those measurements. Geoda uses this evidence to choose settings for each machine. Each record carries its source, version and license.
 
-[Núcleo público de Geoda](docs/GEODA_NUCLEO.md): del equipo y la tarea al plan, sin red, con un paquete de conocimiento versionado (`publicacion/geoda_paquete.json`) que se construye cada semana desde el cubo del lago. Cada plan dice de dónde sale su evidencia y enlaza el manual de Blender.
+G7B is the sister project of **Amatista**, the platform for learning 3D with Blender and A-Frame. The projects have separate repositories and cloud infrastructure and exchange data through JSON contracts. G7B measures performance and selects settings. Amatista teaches, recommends settings and is the only project that stores personal data. [Amatista repository](https://github.com/Maximiliano-cabello-mata/amatista-recuperada-20261106)
 
-Es el proyecto hermano de **[Amatista](https://github.com/Maximiliano-cabello-mata/amatista)**, la plataforma que enseña 3D con Blender y A-Frame.
-- **Separados:** cada uno tiene su repositorio y sus nubes.
-- **Unidos por contratos JSON:** G7B mide y decide; Amatista enseña, recomienda y es la única que guarda datos de personas.
+| Data source | Path through G7B |
+|---|---|
+| Online sources | Geodar Radar → Azure data lake → quality checks → documents and catalogs in MongoDB |
+| Real computers | Performance probe → Azure data lake → DuckDB cube → Geoda → `perfiles.json` → Amatista |
 
-```text
-  internet ──► Geodar Radar ──► Azure (lago) ──► embudo ──► MongoDB (documentos y catálogos)
-  equipos  ──► sonda ──────────► Azure (lago) ──► cubo DuckDB ──► Geoda ──► perfiles.json ──► Amatista
-```
+This proposal builds the public Geoda knowledge package from the verified cube in the lake. The kernel can use the versioned package offline and report the evidence behind each plan. The laboratory planner is available as a separate command. [Geoda in Actions](docs/GEODA_KERNEL.md) · [Public kernel](docs/GEODA_NUCLEO.md)
+
+## Place in the Amatista base
+
+G7B is the data flow and warehouse of the Amatista project, and `geoda/` holds **Geoda**, the adaptive kernel. Approved data enters the cube through **Amatista IA**, the auditor, and Geoda reads only from the cube. Components, workflow and priorities: [official base](https://github.com/Maximiliano-cabello-mata/amatista-recuperada-20261106/blob/recuperacion/BASE.md) (in Spanish). Instructions for agents: [`AGENTS.md`](AGENTS.md).
 
 ## Hack4Edu
 
-Este repositorio participa en **Hack4Edu** junto con Amatista. La etiqueta de Git **`hack4edu`** marca el corte: lo anterior es lo que ya teníamos; lo posterior, lo trabajado en estos días. Evidencia y comandos para comprobarlo: **[docs/hack4edu/](docs/hack4edu/README.md)**.
+G7B and Amatista participate in Hack4Edu together. The `hack4edu` Git tag marks the starting point. To see what the team built during the event, run the command below. [Hack4Edu evidence and verification commands](docs/hack4edu/README.md)
 
 ```bash
-git log --oneline hack4edu..main      # lo trabajado durante Hack4Edu
+git log --oneline hack4edu..main
 ```
 
-## Las piezas
+<a id="las-piezas"></a>
 
-| Pieza | Qué hace | Carpeta | Estado |
+## Components
+
+| Component | Role | Directory | Recorded status |
 |---|---|---|---|
-| **Geodar Radar** | Vigila 33 fuentes de 3D en internet (foros, manuales, artículos, texturas CC0, herramientas libres, telemetría web) y enruta cada dato a su destino | `geodar/`, `g7b_ingesta/`, `fuentes/` | ✅ Pruebas en verde; probar en vivo con Actions antes de encender |
-| **Arañas** | El manual de Blender en 4 versiones y manuales Sphinx, en Zyte | `motor_extraccion/` | ✅ En producción: 987 documentos publicados |
-| **Lago** | Azure Blob: bronce (crudo) → plata → oro | `g7b_lago/`, `infra/azure/` | ✅ En producción |
-| **Embudo** | 5 etapas de calidad antes de MongoDB, con motivos | `g7b_ingesta/` | ✅ En producción |
-| **Sonda** | Mide Blender (vista 3D, edición, animación, render) en cualquier equipo | `sonda/` | ✅ v0.2 |
-| **Telemetría** | Sonda y Blender Open Data con controles numéricos → Azure | `g7b_telemetria/` | ✅ Verificada en Azure el 3-nov |
-| **Cubo** | Parquet + DuckDB versionado, seis dimensiones | `g7b_almacen/` | ✅ 3,003 mediciones, verificado en Azure |
-| **Geoda** | El kernel: nivel del equipo (N0–N4), perfiles con evidencia, costos y plan reversible | `geoda/` | 🟡 Cimientos (0.1.0) |
-| **Azure privado** | Jobs con identidad administrada, OIDC y catálogo de ofertas | `infra/azure/`, `infra/ofertas/` | 🟡 Laboratorio desplegado |
-| **Análisis** | Cuadernos de Deepnote (cubo y calidad documental) | `analisis/` | ✅ |
+| **Geodar Radar** | Monitors 33 online 3D sources, including forums, manuals, articles, CC0 textures, open-source tools and web telemetry. Routes each record to its destination. | `geodar/`, `g7b_ingesta/`, `fuentes/` | Automated tests pass. Run a live check in Actions before enabling a source. |
+| **Documentation spiders** | Crawl four versions of the Blender manual and other Sphinx manuals on Zyte. | `motor_extraccion/` | In production, with 987 documents published. |
+| **Data lake** | Stores raw records in the bronze layer of Azure Blob Storage, then processes them through silver and gold. | `g7b_lago/`, `infra/azure/` | In production. |
+| **Document quality checks** | Apply five quality checks before publication to MongoDB and record the reasons for each decision. | `g7b_ingesta/` | In production. |
+| **Performance probe** | Measures Blender viewport, editing, animation and rendering performance on individual machines. | `sonda/` | v0.2 |
+| **Telemetry** | Validates measurements from the probe and Blender Open Data and stores them in Azure. | `g7b_telemetria/` | Verified in Azure on November 3. |
+| **Data cube** | Stores six dimensions in a versioned Parquet and DuckDB cube. | `g7b_almacen/` | 3,003 measurements verified in Azure. |
+| **Geoda** | Classifies hardware into tiers N0–N4 and builds evidence-based profiles with costs and a reversible plan. | `geoda/` | Initial implementation (0.1.0). |
+| **Private Azure infrastructure** | Runs jobs with managed identity and OIDC and maintains a catalog of offers. | `infra/azure/`, `infra/ofertas/` | Lab deployed. |
+| **Analysis** | Provides Deepnote notebooks for exploring the cube and document quality. | `analisis/` | Available. |
 
-## Probarlo
+<a id="probarlo"></a>
+
+## Getting started
+
+Run these commands from the repository root. The command names and flags are in Spanish.
 
 ```bash
-pip install -r requirements-dev.txt          # incluye lo del lago, el cubo y las pruebas
-python -m pytest pruebas -q                  # pruebas automatizadas
-python -m geodar mapa                        # dónde están los sensores
-python -m geoda perfiles                     # perfiles por nivel (sin cubo: reglas base)
-python -m geoda decidir --huella equipo.json # el plan para un equipo
+pip install -r requirements-dev.txt          # Data lake, cube and test dependencies
+python -m pytest pruebas -q                  # Run the automated tests
+python -m geodar mapa                        # List the sensors and their locations
+python -m geoda perfiles                     # Show profiles by tier (uses baseline rules without a cube)
+python -m geoda decidir --huella equipo.json # Generate a plan for one machine
 ```
 
-## Documentos
+<a id="documentos"></a>
 
-Consulta la carpeta [`docs/`](docs/README.md) para el plan maestro, arquitectura de Azure, reportes y bitácoras.
+## Documentation
+
+For the two collection paths, start with the [Site 4.1 documentation spider](algoritmos/documentacion/site-4.md) and the [G7B telemetry standard](docs/ESTANDAR_TELEMETRIA.md). The [documentation index](docs/README.md) also covers the master plan, Azure architecture, reports and project logs.

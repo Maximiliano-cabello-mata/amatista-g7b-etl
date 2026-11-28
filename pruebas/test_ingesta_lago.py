@@ -59,6 +59,9 @@ class ZyteFalso:
         lanzados = self.lanzados
 
         class Jobs:
+            def iter(self, **_):
+                return []
+
             def run(self, arana, job_args):
                 lanzados.append((arana, job_args))
                 return type("Trabajo", (), {"key": f"883618/2/{len(lanzados)}"})()
@@ -93,7 +96,7 @@ def test_cadena_completa(lago):
     assert por_fuente["blender-manual"]["accion"].startswith("zyte: trabajo 883618/2/")
     arana, argumentos = zyte.lanzados[0]
     assert arana == "blender_docs" and argumentos == {
-        "fuente": "blender-manual", "max_paginas": "3000", "max_por_version": "1200",
+        "fuente": "blender-manual", "max_paginas": "7500", "max_por_version": "2500",
         "versiones": json.dumps(["5.2", "4.5", "3.6"])}
 
     # Recién revisadas: no se vuelven a revisar hasta que les toque.

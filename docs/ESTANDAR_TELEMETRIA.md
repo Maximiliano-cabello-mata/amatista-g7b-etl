@@ -1,31 +1,38 @@
-# Estándar de telemetría de G7B
+<a id="estándar-de-telemetría-de-g7b"></a>
 
-Fecha: 17 de noviembre de 2026. Este documento dice cómo debe verse cualquier cifra de equipos y rendimiento que entre a G7B, venga de donde venga: Blender Open Data, la sonda, los reportes de error de Blender o fuentes futuras como OpenBenchmarking o la encuesta de Steam. Así el cubo y Geoda comparan peras con peras.
+# G7B telemetry standard
 
-## 1. Quién trae la telemetría
+November 17, 2026. This standard defines how G7B represents hardware and performance data so the cube and Geoda can compare equivalent measurements. It covers Blender Open Data, the performance probe and Blender bug reports. It also applies to prospective sources such as OpenBenchmarking and the Steam Hardware Survey.
 
-Geodar tiene responsabilidades separadas, y el catálogo las hace cumplir (`g7b_ingesta/catalogo.py`, `validar`):
+<a id="1-quién-trae-la-telemetría"></a>
 
-| Herramienta | Qué trae | Cómo se corre |
+## 1. Telemetry collection
+
+The source catalog enforces Geodar’s routing rules through the `validar` function in `g7b_ingesta/catalogo.py`.
+
+| Tool | What it collects | How it runs |
 |---|---|---|
-| **Radar de telemetría** | Cifras de equipos y rendimiento | `python -m geodar telemetria` (colectores) y sensores directos con `destino: telemetria` |
-| **Arañas de documentación (Zyte)** | Manuales y notas de versión | `geodar vigilar` lanza la araña y `zyte_a_lago` la trae |
-| Sensores directos | Feeds, APIs y foros | `geodar vigilar` |
-| Gestores externos | La sonda y Amatista | Sus propias tareas |
+| **Telemetry radar** | Hardware specifications and performance measurements | `python -m geodar telemetria` runs the collectors. Direct sensors can also use `destino: telemetria`. |
+| **Documentation spiders on Zyte** | Manuals and release notes | `geodar vigilar` starts the spider and `zyte_a_lago` retrieves the results. |
+| Direct sensors | Feeds, APIs and forums | `geodar vigilar` |
+| External producers | Measurements from the probe and data from Amatista | Each runs its own jobs. |
 
-**Reglas del catálogo:**
-- Una fuente con `extractor: zyte` debe tener `destino: documentos`.
-- Una fuente con `destino: telemetria` usa `extractor: telemetria` (con un `colector`), `directo` o `externo`. Nunca una araña.
-- `colector: pendiente` significa que el colector aún no existe, normalmente porque falta confirmar la licencia. Una fuente así no puede estar activa.
+Catalog rules apply to every source.
 
-## 2. El equipo: `g7b.hardware/1`
+- A source with `extractor: zyte` must use `destino: documentos`.
+- A source with `destino: telemetria` must use `extractor: telemetria` with a `colector`, or use `directo` or `externo`.
+- The value `colector: pendiente` means the collector has yet to be implemented, usually because its license still needs confirmation. A source in that state must remain inactive.
 
-Cada medición o evento lleva un bloque `hardware` hecho por `g7b_telemetria/hardware.py` con la tabla propia [`fuentes/hardware.yml`](../fuentes/hardware.yml):
+<a id="2-el-equipo-g7bhardware1"></a>
+
+## 2. Hardware records (`g7b.hardware/1`)
+
+The `hardware` block describes the equipment for a measurement or event. The normalizer in `g7b_telemetria/hardware.py` uses G7B’s own lookup table. The `mide` field identifies a GPU benchmark (`gpu`), a CPU benchmark (`cpu`) or a failure event (`falla`). Field names and stored values below match the data contract. [Hardware lookup table](../fuentes/hardware.yml)
 
 ```json
 {
   "estandar": "g7b.hardware/1",
-  "mide": "gpu",                       // gpu | cpu | falla
+  "mide": "gpu",
   "so": "Windows",
   "gpus": [{"nombre": "NVIDIA GeForce RTX 3060 Laptop GPU", "nombre_original": "...",
             "fabricante": "nvidia", "clase": "dedicada", "vram_gb": 6, "regla": "rtx 3060 laptop"}],
@@ -34,79 +41,81 @@ Cada medición o evento lleva un bloque `hardware` hecho por `g7b_telemetria/har
 }
 ```
 
-- **Nombre:** se limpian «(R)», «(TM)» y «/PCIe/SSE2», y se conserva el original.
-- **Clase:** `integrada`, `dedicada`, `apple`, `servidor` o `desconocida`. Lo que la tabla no reconoce queda `desconocida` y **no recibe nivel**: no se adivina.
-- **Gama de las integradas** (desde el 17 de noviembre de 2026; la tabla pasa a la versión 2):
-  - `basica`: Intel UHD, HD, Iris Plus e Iris Xe, y Radeon Vega y 610M. No renderizan con Cycles en la GPU, así que Cycles usa el procesador, y su vista 3D es la más modesta.
-  - `moderna`: Arc de los Core Ultra, «Intel Graphics», Radeon 680M a 890M y 8060S. Sí corren Cycles en GPU.
-  - Vacía: el genérico «AMD Radeon Graphics», que va de Vega a RDNA 3.
+- **Name.** Normalization strips strings such as `(R)`, `(TM)` and `/PCIe/SSE2` while preserving the original name.
+- **GPU class.** The values are `integrada` (integrated), `dedicada` (discrete), `apple`, `servidor` (server) and `desconocida` (unknown). An unrecognized model receives `desconocida` and has no assigned tier.
+- **Integrated GPU families.** The lookup table distinguishes `basica` (Intel UHD, HD, Iris Plus, Iris Xe, Radeon Vega and 610M) from `moderna` (Core Ultra Arc and Radeon 680M through 890M and 8060S). The label "AMD Radeon Graphics" alone leaves the family unknown. Comparing GPU render scores across those families would misrepresent basic integrated GPUs. Intel Arc Pro B50, B60, B65 and B70 are discrete cards.
+- **CPU groups.** `geoda/cpu.py` groups CPU render measurements by vendor, class, generation and segment. For example, an i3-10110U maps to `intel-core-i3-g10-portatil`.
+- **VRAM.** The normalizer records capacity only when the model has one known configuration. The desktop RTX 3060 comes in both 8 GB and 12 GB versions, so its capacity is left empty.
+- **Hardware tier N0–N4.** The normalizer applies Geoda’s rules in `geoda/niveles.py` and records both confidence and the reasons for the assignment. When system RAM is unknown, the GPU determines the tier and confidence drops. A source such as a bug report can also provide the OpenGL version. An integrated GPU running OpenGL 3.3 drops to N1.
+- **CPU benchmarks.** A record with `mide: cpu` has no assigned tier because it does not identify the machine’s GPU.
 
-  Las dos gamas comparten nivel (N2), pero no comparación. En Open Data no aparece ninguna UHD, porque no pueden correr Cycles en GPU: compararlas con las integradas modernas haría creer que un i3 con UHD rinde como una Radeon 780M.
-- **Grupo del procesador** (`geoda/cpu.py`): marca, gama, generación y segmento. Por ejemplo, «Intel Core i3-10110U» queda como `intel-core-i3-g10-portatil`. Con este grupo se compara el render en CPU de los equipos con integradas básicas.
-- **Corrección:** las Intel Arc Pro B50, B60, B65 y B70 son tarjetas dedicadas; antes se leían como integradas e inflaban el N2.
-- **VRAM:** solo cuando el modelo tiene una sola cantidad. La RTX 3060 de escritorio viene con 8 o 12 GB, así que se deja vacía.
-- **Nivel N0–N4:** con las mismas reglas de Geoda (`geoda/niveles.py`), siempre con su **confianza** y sus **motivos**. Sin dato de RAM, decide la GPU y la confianza baja. Si la fuente trae la versión de OpenGL, como los reportes de error, se usa; una integrada con OpenGL 3.3 baja a N1.
-- **Benchmark de CPU:** `mide: cpu`, sin nivel, porque no dice qué GPU tiene el equipo.
+To add a GPU model, add a rule to `fuentes/hardware.yml` and a test to `pruebas/test_radar_telemetria.py`. Place more specific rules first. Maintain the project’s own table. The project excludes copies of third-party databases such as TechPowerUp, which prohibits extraction.
 
-**Agregar un modelo:** se añade una línea a `fuentes/hardware.yml`, lo más específico arriba, con una prueba en `pruebas/test_radar_telemetria.py`. Nunca se copian bases de terceros (TechPowerUp prohíbe la extracción).
+<a id="3-la-medición-g7btelemetria1"></a>
 
-## 3. La medición: `g7b.telemetria/1`
+## 3. Measurements (`g7b.telemetria/1`)
 
-Lo que entra a `plata/telemetria/<estado>/<fuente>/<lote>.jsonl.gz` y de ahí al cubo (`g7b_almacen/cubo.py`):
+Measurements enter the cube through `g7b_almacen/cubo.py` from `plata/telemetria/<estado>/<fuente>/<lote>.jsonl.gz`.
 
-| Campo | Qué es |
+| Field | Meaning |
 |---|---|
-| `contrato`, `sintetico` | `g7b.telemetria/1` y `false`. Nada sintético entra al cubo |
-| `id`, `huella_origen` | SHA-256 de la medición y del registro original |
-| `fuente`, `licencia`, `licencia_url` | De dónde viene y con qué licencia |
-| `fecha` | ISO 8601 con zona horaria |
-| `version`, `escena`, `prueba` | Programa medido y qué se midió |
-| `metrica`, `unidad`, `valor` | Unidades canónicas: `s`, `fps`, `samples/min`. El valor es positivo y finito |
-| `hardware` | El bloque `g7b.hardware/1` |
-| `estado`, `motivos` | `aceptado` o `revision`, con los motivos. Un benchmark público que G7B no reprodujo queda en `revision` |
-| `entorno`, `consentimiento` | Dónde se midió (`ci`, `nube`, `equipo_estudiante`, `laboratorio_escolar` o `no_declarado`) y si la persona aceptó. Deciden la clase de dato en el cubo |
+| `contrato`, `sintetico` | The contract is `g7b.telemetria/1`. The cube accepts records explicitly marked `false` for synthetic data. |
+| `id`, `huella_origen` | SHA-256 identifiers for the measurement and its source record |
+| `fuente`, `licencia`, `licencia_url` | Source and licensing information |
+| `fecha` | ISO 8601 timestamp with time zone |
+| `version`, `escena`, `prueba` | Software version, scene and operation measured |
+| `metrica`, `unidad`, `valor` | Metric, canonical unit (`s`, `fps` or `samples/min`) and a positive, finite value |
+| `hardware` | The `g7b.hardware/1` block |
+| `estado`, `motivos` | Quality status (`aceptado` or `revision`) and its reasons. Public benchmarks that G7B has yet to reproduce remain in `revision`. |
 
-En el cubo `g7b.cubo/2` ([CUBO.md](CUBO.md)), cada medición es **directa** (medida en el equipo de un estudiante o de un laboratorio escolar, con consentimiento) o **relativa** (todo lo demás). Las dos clases viven en tablas separadas y nunca se mezclan. Open Data es siempre relativa. La vista **`v_relativas_por_nivel`** agrupa su render por nivel, clase de GPU, backend, serie y escena, con mediana y cuartiles. Las filas viejas sin `hardware` quedan con nivel NULL: se ven, pero no se mezclan con las clasificadas.
+In the proposed `g7b.cubo/3` schema, the probe's `entorno` records where it ran, and `consentimiento` records explicit permission. Only `equipo_estudiante` or `laboratorio_escolar` with consent produce direct measurements. The importer also accepts the existing names `github_actions`, `laboratorio` and `equipo_voluntario`. Those names alone do not establish that the machine belongs to a student or school laboratory. Data from CI, cloud and Blender Open Data remain relative.
 
-Para que una medición de la sonda sea directa hay que declarar dónde corrió y si hubo consentimiento: `--entorno equipo_estudiante --consentimiento` (o `laboratorio_escolar`). En GitHub Actions corre con `--entorno ci`, así que es relativa.
+The `v_relativas_por_nivel` view groups relative rendering measurements by hardware tier, GPU class, backend, software series and scene. Older rows without `hardware` retain a NULL tier. For the tables and units of the proposed format, see [the cube contract](CUBO.md).
 
-## 4. Blender Open Data, completo y por tandas
+<a id="4-blender-open-data-completo-y-por-tandas"></a>
 
-Antes se tomaban los primeros 1.000 registros del archivo, que son los más viejos (marzo de 2022, Blender 3.0.1), y cada semana volvían a ser los mismos. Ahora (`seleccionar_opendata`):
+## 4. Processing the full Blender Open Data archive in batches
 
-1. Cada corrida lee el archivo completo una vez y se queda con una tanda de hasta `--limite` registros (20.000 en el flujo semanal).
-2. Primero entra **lo nuevo desde la última vez**. Con lo que sobra del límite, **sigue hacia atrás** desde donde se quedó, de lo más reciente a lo más viejo, sin huecos y sin repetir.
-3. El estado vive en el lago (`control/telemetria/blender-open-data.json`): el tramo `desde`–`hasta` ya capturado, los id del borde y si ya se llegó al principio (`completo_hacia_atras`). Se guarda **al final**: si algo falla antes, la tanda se repite.
-4. `geodar salud` revisa también al radar: si falla, aparece como `error`, y si pasan más de dos semanas sin captura, como `atrasada`.
+The old collector read the first 1,000 records every week. These were the oldest entries in the archive, from March 2022 and Blender 3.0.1. The `seleccionar_opendata` function now works through the archive as follows.
 
-**Prueba en vivo del 17 de noviembre** (simulacro en GitHub Actions, sin escribir en el lago, [corrida 44037096411](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44037096411)):
-- El archivo completo tiene **437.638 registros**. 87.848 usan esquemas viejos que no se convierten y **349.790** son del esquema actual.
-- La tanda de 2.000 registros dio 6.000 mediciones (3 escenas cada una), todas con su bloque `hardware`.
-- Con tandas de 20.000 por semana, el archivo actual se completa en unas 18 semanas. Si hace falta antes, se puede subir el límite hasta 50.000.
+1. Each run scans the full archive once and selects up to `--limite` records. The weekly workflow uses 20,000.
+2. New records since the previous run take priority. Any remaining capacity goes to older records, working backward from the last checkpoint without gaps or duplicates.
+3. The lake stores the checkpoint in `control/telemetria/blender-open-data.json`. It records the captured date range (`desde` to `hasta`), the IDs at its boundaries and whether the beginning of the archive has been reached (`completo_hacia_atras`). The collector writes the checkpoint at the end so it can retry the batch after a failure.
+4. The `geodar salud` command also checks the radar. It reports `error` after a failure and `atrasada` when more than two weeks have passed without a capture.
 
-## 5. Telemetría de fallas: los reportes de error de Blender
+A live dry run on November 17 read the official archive in GitHub Actions with lake writes disabled. [Run 44037096411](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44037096411)
 
-El sensor `gitea_issues` (fuente `blender-reportes`) lee los reportes de projects.blender.org por su API y saca de la plantilla:
-- el sistema operativo;
-- la tarjeta gráfica, con su nivel según `g7b.hardware/1`;
-- la versión de OpenGL;
-- la versión que falla y la que funcionaba;
-- las etiquetas del reporte (por ejemplo, el módulo afectado).
+- The archive contained **437,638 records**. Of these, 87,848 used older schemas that the collector skips and **349,790** used the current schema.
+- The batch of 2,000 records produced 6,000 measurements across three scenes per record. Each measurement included a `hardware` block.
+- At 20,000 records per week, the archive at that size would take about 18 weeks to process. The batch limit can be increased to 50,000.
 
-**El texto del reporte no se guarda**, porque es de su autor: solo esos campos, el título, el enlace y las fechas. Responde la pregunta P2 del plan: qué versión conviene en cada equipo.
+<a id="5-telemetría-de-fallas-los-reportes-de-error-de-blender"></a>
 
-Pide poco: solo los reportes actualizados desde la última vez y como mucho 3 páginas de 50 al día. La infraestructura de Blender ya tuvo incidentes por carga de arañas. Está **inactiva** hasta confirmar las condiciones de uso del sitio. Para probarla: `python -m geodar probar --fuente blender-reportes`, o el flujo «Geodar Radar (probar y revisar)».
+## 5. Failure telemetry from Blender bug reports
 
-**Pruebas en vivo del 17 de noviembre:**
-- **Sin ventanas** ([corrida 44036674216](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44036674216)): la API respondió con 150 reportes, y **131 traían la tarjeta gráfica (87 %)**. Pero eran de mediados de 2024: la API no los devuelve del más reciente al más viejo. Por eso el sensor ahora avanza por ventanas de tiempo («actualizados entre `desde` y `desde` + ventana») y no depende del orden.
-- **Con ventanas** ([corrida 44037092158](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44037092158)): recorrió 6 ventanas de 24 h, del 3 al 9 de noviembre, y encontró solo 5 reportes, 3 con GPU. Son pocos para el tráfico de Blender, y algunos son reportes antiguos que alguien actualizó. **Pendiente antes de activarla:** revisar si la etiqueta `Type/Report` es la que llevan los reportes nuevos y si `since`/`before` filtran por actualización, como dice la documentación de Gitea.
+The `gitea_issues` sensor for the `blender-reportes` source reads the projects.blender.org API. It extracts the following fields from the report template.
 
-## 6. Agregar una fuente de telemetría
+- Operating system
+- GPU and its tier under `g7b.hardware/1`
+- OpenGL version
+- The software version that failed and the version that worked
+- Issue labels, such as the affected module
 
-1. **En el catálogo:** `destino: telemetria`, `modo: agregados`, la licencia confirmada y las preguntas del plan que responde.
-2. **Elegir cómo entra:**
-   - Si la fuente es una API o un feed que ya trae el dato, un sensor directo.
-   - Si es un archivo grande o hace falta recorrerla por tandas, un colector en `geodar/__main__.py` (`COLECTORES`).
-3. **Normalizar el equipo** con `g7b_telemetria.hardware`; nunca con reglas propias de la fuente.
-4. **Unidades canónicas y estado:** lo que G7B no midió entra en `revision`.
-5. **Pruebas** con datos de ejemplo, y una prueba en vivo con `geodar probar` antes de activar.
+The report body belongs to its author. G7B keeps only the structured fields, title, link and dates. These records help answer research question P2 about which version works best on a given machine.
+
+Blender’s infrastructure has experienced incidents caused by crawler load. The sensor requests reports updated since the previous run. The November 17 guide described a limit of three pages of 50 reports per day. The catalog now caps each daily check at six requests, with up to 50 results per page. The source is **inactive** pending confirmation of the site’s terms. To test it, run `python -m geodar probar --fuente blender-reportes` or use the workflow named “Geodar Radar (probar y revisar)”. [Source configuration](../fuentes/catalogo.yml)
+
+Two live checks on November 17 illustrate why the query window matters.
+
+- **Without time windows**, the API returned 150 reports. **131 included GPU details (87%)**, but the records dated from mid-2024 because the API did not return the newest reports first. The sensor now advances through update windows from `desde` to `desde` plus the window length, independently of result order. [Run 44036674216](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44036674216)
+- **With time windows**, the sensor scanned six 24-hour windows from November 3 to 9 and found five reports, three with GPU details. The count was low for Blender’s traffic, and some results were older reports with recent updates. Before activation, check whether new reports carry the `Type/Report` label and whether `since` and `before` filter by update time as documented by Gitea. [Run 44037092158](https://github.com/Maximiliano-cabello-mata/amatista-g7b-etl/actions/runs/44037092158)
+
+<a id="6-agregar-una-fuente-de-telemetría"></a>
+
+## 6. Adding a telemetry source
+
+1. Register the source in the catalog with `destino: telemetria`, `modo: agregados`, its confirmed license and the research questions it answers.
+2. Choose the ingestion method. Use a direct sensor for an API or feed that already supplies the data. For a large archive or a source that requires batches, register a collector in `COLECTORES` in `geodar/__main__.py`.
+3. Normalize equipment with `g7b_telemetria.hardware` so that every source uses the same hardware rules.
+4. Use canonical units and assign a quality status. Measurements from outside G7B enter `revision`.
+5. Test with sample data, then run a live check with `geodar probar` before activating the source.

@@ -85,7 +85,8 @@ class Lago:
         if crudo[:2] == b"\x1f\x8b":
             crudo = gzip.decompress(crudo)
         texto = crudo.decode("utf-8")
-        return [json.loads(linea) for linea in texto.splitlines() if linea.strip()]
+        # split("\n"), no splitlines(): U+2028/U+2029/U+0085 dentro de cadenas JSON partirían el registro.
+        return [json.loads(linea) for linea in texto.split("\n") if linea.strip()]
 
     def leer_json(self, ruta, por_omision=None):
         try:

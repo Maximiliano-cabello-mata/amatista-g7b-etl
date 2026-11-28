@@ -1,5 +1,7 @@
 # Captura de telemetría G7B — 2026-11-03
 
+Para ejecutar la herramienta actual, consultar el [recolector manual de Amatista, las fuentes y sus ecuaciones](../algoritmos/telemetria/README.md). Lo que sigue conserva el registro de la implementación inicial.
+
 Implementa la prioridad de mediciones del PLAN. Por instrucción del propietario,
 el orden de esta entrega es captura y validación → cubo → Geoda. No implementa
 todavía Parquet, DuckDB, perfiles recomendados ni el kernel.

@@ -321,8 +321,9 @@ def test_geodar_telemetria_aisla_fallas_y_salud_las_ve(monkeypatch, tmp_path):
     lago = LagoMemoria()
     monkeypatch.setitem(g.COLECTORES, "blender_open_data",
                         lambda *a, **k: (_ for _ in ()).throw(RuntimeError("HTTP 403")))
+    monkeypatch.setitem(g.COLECTORES, "caniuse_web3d", lambda *a, **k: {"celdas": 6})
     resultados = g.telemetria(cat.cargar(), lago, str(tmp_path), imprimir=lambda *_: None)
-    assert resultados[0]["ok"] is False
+    assert {r["fuente"]: r["ok"] for r in resultados} == {"blender-open-data": False, "caniuse-web3d": True}
     estado = lago.json["control/telemetria/blender-open-data.json"]
     assert "HTTP 403" in estado["ultimo_error"]
     informe = g.salud(cat.cargar(), {}, telemetria={"blender-open-data": estado})

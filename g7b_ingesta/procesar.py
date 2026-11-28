@@ -35,6 +35,7 @@ from g7b_lago import Lago
 
 from . import catalogo as cat
 from . import texto as tx
+from . import calidad_documental as calidad
 from .embudo import ACEPTADO, RECHAZADO, REVISION, UMBRALES, VERSION_EMBUDO, Indice, evaluar
 
 PROCESADOS = "control/procesados.json"
@@ -121,7 +122,21 @@ def a_documento(registro, lago, fuente):
     url = registro.get("url") or registro.get("enlace")
     metadatos = {k: registro[k] for k in ("fecha", "autores", "autor", "autor_respuesta", "etiquetas", "categorias")
                  if registro.get(k)}
-    if registro.get("duplicado_de"):  # la araña ya vio esta página en otra ruta: solo anota el alias
+    if registro.get("documental", {}).get("modelo") in calidad.MODELOS:
+        modelo = registro["documental"]
+        fragmentos = {f["fragmento_id"]: f for f in registro.get("fragmentos", [])}
+        citas, partes = [], []
+        for e in modelo["eventos"]:
+            if e["decision"] != "candidato":
+                continue
+            f = fragmentos[e["fragmento"]]
+            bloque = f["bloques"][e["bloque"]]
+            citas.append({k: e[k] for k in ("id", "fragmento", "bloque", "url", "destinos")})
+            partes.append(f["titulo"] + "\n" + bloque["texto"])
+        texto = "\n\n".join(partes)
+        metadatos.update({"modelo_documental": modelo["modelo"], "citas": citas,
+                          "eventos": modelo["conteos"], "version": registro.get("version")})
+    elif registro.get("duplicado_de"):  # la araña ya vio esta página en otra ruta: solo anota el alias
         texto = ""
         metadatos.update({k: registro[k] for k in ("duplicado_de", "version", "seccion", "ruta", "canonica")
                           if registro.get(k)})
@@ -150,7 +165,7 @@ def a_documento(registro, lago, fuente):
 
 
 def pendientes_de(lago, fuentes, taxonomia, procesados, solo_fuente=None, lote=None, forzar=False,
-                  reevaluar=True):
+                  reevaluar=True, auditorias=None):
     """{ruta: motivo} de los archivos de bronce que toca evaluar ahora."""
     salida = {}
     for r in lago.listar("bronce/"):
@@ -166,6 +181,9 @@ def pendientes_de(lago, fuentes, taxonomia, procesados, solo_fuente=None, lote=N
             salida[r] = "nuevo"
         elif forzar:
             salida[r] = "forzado"
+        elif reevaluar and any(v != (auditorias or {}).get(f, {}).get("habilitada", False)
+                              for f, v in previo.get("calibraciones", {}).items()):
+            salida[r] = "calibración documental cambió"
         elif reevaluar and previo.get("reglas") != huella_reglas(fuentes.get(id_fuente), taxonomia):
             salida[r] = "reglas cambiaron"
     return salida
@@ -178,7 +196,8 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print, solo_fuen
     indice = Indice.desde_dict(lago.leer_json(INDICE))
     conteos = lago.leer_json(CONTEOS, por_omision={}) or {}
     publicados = lago.leer_json(PUBLICADOS, por_omision={}) or {}
-    por_procesar = pendientes_de(lago, fuentes, taxonomia, procesados, solo_fuente, lote, forzar, reevaluar)
+    auditorias = calidad.cargar()
+    por_procesar = pendientes_de(lago, fuentes, taxonomia, procesados, solo_fuente, lote, forzar, reevaluar, auditorias)
     pendientes = list(por_procesar)
     motivos_pasada = Counter(por_procesar.values())
     if motivos_pasada:
@@ -188,6 +207,7 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print, solo_fuen
     ejemplos = {}
     for ruta in sorted(pendientes):
         existian = [] if simulacro else _retirar_anterior(lago, ruta, indice, conteos)
+        calibradas = {}
         grupos = {ACEPTADO: [], REVISION: [], RECHAZADO: []}
         for registro in lago.leer_jsonl_gz(ruta):
             id_fuente = fuente_de(ruta, registro, fuentes)
@@ -198,6 +218,17 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print, solo_fuen
             else:
                 doc = a_documento(registro, lago, fuente)
                 r = evaluar(doc, fuente, taxonomia, indice)
+                meta = doc["metadatos"]
+                if meta.get("modelo_documental") in calidad.MODELOS:
+                    clave = calidad.clave(id_fuente, meta["modelo_documental"])
+                    habilitada = auditorias.get(clave, {}).get("habilitada", False)
+                    calibradas[clave] = habilitada
+                    if r.etapa != "entrada":
+                        if not meta["citas"] and any(meta["eventos"].get(k)
+                                for k in ("revision", "hipotesis", "conflicto")):
+                            r.estado, r.etapa, r.motivos = REVISION, "documental", ["consultar evidencia en bronce"]
+                        elif meta["citas"] and r.estado == ACEPTADO and not habilitada:
+                            r.estado, r.etapa, r.motivos = REVISION, "calibracion", ["precisión del 80 % pendiente"]
                 if r.estado == ACEPTADO:
                     indice.agregar(r.huella, r.simhash)
                 resultado = r.como_dict()
@@ -236,6 +267,7 @@ def procesar(lago, catalogo, taxonomia, simulacro=False, salida=print, solo_fuen
         previo = procesados.get(ruta) or {}
         procesados[ruta] = {"cuando": datetime.now(timezone.utc).isoformat(timespec="seconds"), **resumen,
                             "reglas": huella_reglas(fuentes.get(_fuente_de_ruta(ruta)), taxonomia),
+                            "calibraciones": calibradas,
                             "evaluaciones": previo.get("evaluaciones", 1 if previo else 0) + 1}
         lago.escribir_json(PROCESADOS, procesados)
     if motivos:

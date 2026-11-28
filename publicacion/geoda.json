@@ -1,17 +1,17 @@
 {
   "conocimiento": {
-    "documentos": 1029,
+    "documentos": 4047,
     "origen": "mongo_conocimiento_3d"
   },
   "contrato": "g7b.geoda.estado/1",
   "cubo": {
-    "aceptadas": 14,
-    "mediciones": 3018,
+    "aceptadas": 17,
+    "mediciones": 63019,
     "recomendaciones_habilitadas": false,
-    "revision": 3004,
-    "version": "20261117T031745Z-c317c1a7922f"
+    "revision": 63002,
+    "version": "20261120T005755Z-9c2cbae9428e"
   },
   "nota": "El conocimiento extraído no equivale a mediciones; se usan perfiles locales base.",
   "perfiles": [],
-  "version": "20261117T031745Z-c317c1a7922f"
+  "version": "20261120T005755Z-9c2cbae9428e"
 }

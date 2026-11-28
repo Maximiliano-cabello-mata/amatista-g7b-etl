@@ -59,6 +59,10 @@ def fecha(valor):
 def sonda(dato):
     if dato['contrato'] != 'g7b.medicion/1' or dato['sintetico'] is not False:
         raise ValueError('se requiere contrato de sonda y medición explícitamente real')
+    entorno = dato.get('entorno', 'no_declarado')
+    if entorno not in ('no_declarado', 'ci', 'nube', 'equipo_estudiante', 'laboratorio_escolar',
+                       'github_actions', 'laboratorio', 'equipo_voluntario'):
+        raise ValueError('entorno de sonda desconocido')
     base = {'fuente': 'sonda', 'fecha': fecha(dato['fecha']),
             'version': texto(dato['blender']['version']), 'escena': texto(dato['escena']['nombre']),
             # nivel y GPU: los necesita Geoda para clasificar el equipo (no identifican a nadie).
@@ -67,7 +71,7 @@ def sonda(dato):
             'sonda': texto(dato['sonda']), 'sin_ventana': dato['blender']['sin_ventana'],
             # Clase de dato (g7b_almacen/cubo.py, clase_de): solo un equipo de estudiante o de laboratorio
             # escolar, con consentimiento, da una medición directa. Lo no declarado queda relativo.
-            'entorno': dato.get('entorno') or 'no_declarado', 'consentimiento': dato.get('consentimiento') is True,
+            'entorno': entorno, 'consentimiento': dato.get('consentimiento') is True,
             'licencia': 'propia; publicación agregada', 'preguntas': ['P1', 'P2']}
     filas = []
     for r in dato['resultados']:
@@ -200,6 +204,8 @@ def seleccionar_opendata(registros, estado=None, limite=20000):
                 heapq.heapreplace(anteriores, entrada)
         else:
             conteos['ya_capturados'] += 1
+    if conteos['leidos'] == conteos['esquema_no_soportado'] + conteos['rechazados']:
+        raise ValueError('el snapshot no contiene registros v4 con fecha e identificador válidos')
     nuevos.sort(key=lambda x: (x[0], x[1]))
     tomados_nuevos = nuevos[:limite]
     conteos['pendientes_nuevos'] = len(nuevos) - len(tomados_nuevos)
@@ -292,7 +298,11 @@ def capturar_incremental(registros, lago, salida, limite=20000):
     """La siguiente tanda de Open Data, con su estado en el lago. El estado se guarda al final."""
     estado = lago.leer_json(ESTADO_OPENDATA, por_omision={}) or {}
     seleccion, nuevo, conteos = seleccionar_opendata(registros, estado, limite)
+    nuevo.pop('ultimo_error', None)
+    nuevo.pop('ultimo_error_en', None)
     if not seleccion:
+        nuevo['ultima_captura'] = datetime.now(timezone.utc).isoformat()
+        lago.escribir_json(ESTADO_OPENDATA, nuevo)
         informe = {'fuente': 'blender-open-data', 'nada_nuevo': True, 'seleccion': dict(conteos),
                    'completo_hacia_atras': nuevo.get('completo_hacia_atras')}
         Path(salida).mkdir(parents=True, exist_ok=True)
