@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import time
+from pathlib import Path
 
 from scrapinghub import ScrapinghubClient
 
@@ -41,15 +42,21 @@ def ejecutar(proyecto):
     if disponibles != NOMBRES:
         raise RuntimeError("El inventario remoto de la versión no coincide con la release")
     comprobar_trabajos(proyecto, 120)
+    ruta_cert = Path(__file__).resolve().parents[1] / "algoritmos" / "documentacion" / "resultados-site-4.1.json"
+    ya_calibrado_repo = ruta_cert.is_file() and json.loads(ruta_cert.read_text(encoding="utf-8")).get("modelo") == MODELO
     previo = next(iter(proyecto.jobs.iter(spider="paginas", state="finished", has_tag=TAG,
                                          meta=["close_reason", "items"], count=1)), {})
-    piloto = not (previo.get("close_reason") == "finished" and previo.get("items", 0))
+    piloto = not (ya_calibrado_repo or (previo.get("close_reason") == "finished" and previo.get("items", 0)))
     fuente = catalogo.por_id(catalogo.cargar())[FUENTE]
     semilla = fuente["sensor"]["url"]
     if not piloto:
-        anterior = proyecto.jobs.get(previo["key"])
-        semilla = next((i["url"] for i in anterior.items.iter()
-                        if i.get("documental", {}).get("conteos", {}).get("candidato")), semilla)
+        if previo.get("key"):
+            anterior = proyecto.jobs.get(previo["key"])
+            semilla = next((i["url"] for i in anterior.items.iter()
+                            if i.get("documental", {}).get("conteos", {}).get("candidato")), semilla)
+        elif ya_calibrado_repo:
+            evid = json.loads(ruta_cert.read_text(encoding="utf-8")).get("evidencia") or []
+            semilla = next((e["url"].split("#", 1)[0] for e in evid if e.get("url")), semilla)
     vistas_40 = set()
     if piloto:
         anterior_40 = next(iter(proyecto.jobs.iter(spider="paginas", state="finished",
