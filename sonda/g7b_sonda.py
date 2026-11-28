@@ -436,13 +436,14 @@ def correr(opciones, ruta=None):
         "blender": {"version": bpy.app.version_string, "hash": bpy.app.build_hash.decode(errors="replace"),
                     "sin_ventana": bool(bpy.app.background)},
         "equipo": huella_equipo(opciones.nivel),
+        # Dónde se midió y si la persona aceptó: sin las dos cosas, el cubo la trata como relativa.
+        "entorno": getattr(opciones, "entorno", None) or "no_declarado",
+        "consentimiento": getattr(opciones, "consentimiento", False) is True,
         "escena": {"nombre": escena_nombre, **escena_cfg},
         "repeticiones": repeticiones,
         "calentamiento_descartado": calentar,
         "resultados": resultados,
     }
-    if getattr(opciones, "entorno", None):
-        medicion["entorno"] = opciones.entorno
     if ruta is None:
         os.makedirs(opciones.salida, exist_ok=True)
         nombre = f"medicion_{medicion['fecha'][:10]}_{medicion['equipo']['huella'][:8]}_{int(time.time())}.json"
@@ -493,8 +494,12 @@ def leer_opciones(argv):
     p.add_argument("--perfiles", type=lambda s: [x for x in s.split(",") if x], default=list(PERFILES))
     p.add_argument("--repeticiones", type=int, default=3)
     p.add_argument("--nivel", choices=["N0", "N1", "N2", "N3", "N4"])
-    p.add_argument("--entorno", choices=["github_actions", "laboratorio", "equipo_voluntario"],
-                   help="procedencia declarada de esta medición")
+    p.add_argument("--entorno", default="no_declarado",
+                   choices=["no_declarado", "ci", "nube", "equipo_estudiante", "laboratorio_escolar",
+                            "github_actions", "laboratorio", "equipo_voluntario"],
+                   help="dónde corre: solo equipo_estudiante y laboratorio_escolar dan mediciones directas")
+    p.add_argument("--consentimiento", action="store_true",
+                   help="la persona aceptó compartir la medición (docs/CONSENTIMIENTO_TELEMETRIA.md)")
     p.add_argument("--sin-render", action="store_true")
     p.add_argument("--rapida", action="store_true")
     p.add_argument("--salir", action="store_true")

@@ -33,6 +33,8 @@ The guides are grouped by task. If two documents disagree, the master plan takes
 | [Official sources and cube review](investigacion/2026-11-17_cubo_documentacion_oficial.md) | Manuals, findings on record identity and redundancy, and proposed priorities and tests awaiting implementation |
 | [Geoda responsibilities](GEODA_RESPONSABILIDADES.md) | The agreed approach: AI knowledge and the adaptive engine as independent lines, with agents as consumers |
 | [Geoda](GEODA.md) | Kernel structure, contracts and implemented features |
+| [Public Geoda kernel](GEODA_NUCLEO.md) | The proposed offline API, knowledge package, conformance checks and publishing flow |
+| [Spider tasks](TAREAS_ARANAS.md) | Open documentation and telemetry work, with acceptance criteria |
 | [Performance theory and measurement criterion](investigacion/2026-11-22_teoria_rendimiento_y_criterio.md) (in Spanish) | A validated model that predicts samples/min for unmeasured device × version × scene combinations (13 % median error), an automatic measurement criterion (1 M measurements in 9 s), the Power BI project, and how to reproduce them. Research code in `analisis/teoria_rendimiento/`; not part of the pipeline |
 | [Developer Pack offers and GitHub](OFERTAS_Y_GITHUB.md) | What each offer and GitHub feature provides |
 | [Performance probe](../sonda/LEEME.md) | How to run a measurement on a computer |
@@ -58,11 +60,12 @@ These records preserve the project as it stood when they were written.
 
 | Document | What it records |
 |---|---|
-| [Daily logs](bitacoras/) | Work completed, errors encountered and next steps on November 1, 2 and 3 |
+| [Daily logs](bitacoras/) | Work completed, errors encountered and next steps on November 1–3 and [November 16–17](bitacoras/2026-11-17.md) |
 | [Original cloud architecture](historia/ARQUITECTURA_CLOUD.md) | The first Zyte and MongoDB deployment on October 31 |
-| [Reports](reportes/) | Proposals, outlook, offer reviews and quality findings |
+| [Reports](reportes/) | Proposals, outlook, offer reviews and the [November 17 flow and data audit](reportes/2026-11-17_auditoria_flujo_y_datos.md) |
 | [Audits](auditorias/) | The November 15 spider and Azure audit and the November 16 verification against the code and data lake |
 | [Sphinx manual spider](ARANA_MANUALES.md) | How the spider uses `objects.inv` to process each changed page once and measure coverage |
 | [Continuous operation](OPERACION_24_7.md) | The six-hour cycle, notifications, external scheduler, reprocessing and first live run |
 | [Research](investigacion/) | Prior work and Amatista integration. Three starting points from November 17 cover [sources and methods](investigacion/2026-11-17_nicho_fuentes_y_metodologia.md) (free APIs by research question and what to build), [spiders for specialized knowledge](investigacion/2026-11-17_aranas_nicho/README.md) (12 decisions and which have been tested) and [AI options](investigacion/2026-11-17_decision_ia.md) (local models and the free Gemini offering). |
+| [Browser telemetry review](investigacion/2026-11-17_aranas_telemetria_navegador/REVISION.md) · [Sources consulted](investigacion/2026-11-17_fuentes_consultadas.md) | Review of browser telemetry collectors and references |
 | [Professional placement](estadia/) | The Amatista and G7B placement proposal |

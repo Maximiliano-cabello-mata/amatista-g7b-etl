@@ -206,3 +206,26 @@ def test_snapshot_incompatible_y_carpeta_vacia_no_son_datos_al_dia(tmp_path):
         seleccionar_opendata([{"schema_version": "v5"}])
     resultado = recopilar(catalogo.cargar(), tmp_path / "captura", carpeta=tmp_path, solo=["sonda-g7b"])
     assert resultado["conteos"]["sin_entrada"] == 1
+
+
+@pytest.mark.parametrize("entorno,consiente,esperada", [
+    ("github_actions", True, "relativa"), ("ci", True, "relativa"), ("nube", True, "relativa"),
+    ("equipo_voluntario", True, "relativa"), ("laboratorio", True, "relativa"),
+    ("no_declarado", True, "relativa"), ("equipo_estudiante", True, "directa"),
+    ("laboratorio_escolar", False, "relativa"), ("laboratorio_escolar", True, "directa"),
+    ("equipo_estudiante", "true", "relativa"),
+])
+def test_procedencia_de_la_sonda_se_conserva_hasta_el_cubo(entorno, consiente, esperada):
+    from g7b_almacen.cubo import clase_de
+
+    medida = sonda(dict(medicion(), entorno=entorno, consentimiento=consiente))[0]
+    assert medida["entorno"] == entorno
+    assert clase_de(medida)[0] == esperada
+
+
+def test_entorno_ausente_y_entorno_desconocido():
+    from g7b_almacen.cubo import clase_de
+
+    assert clase_de(sonda(medicion())[0])[0] == "relativa"
+    with pytest.raises(ValueError, match="entorno"):
+        sonda(dict(medicion(), entorno="inesperado"))

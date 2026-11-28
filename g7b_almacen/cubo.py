@@ -1,4 +1,29 @@
-"""Cubo v1 sobre g7b.telemetria/1; no produce perfiles ni recomendaciones."""
+"""Cubo g7b.cubo/3: mediciones DIRECTAS y RELATIVAS, separadas, y VELOCIDAD y RENDIMIENTO, normalizados.
+
+Dos clases de dato que nunca se mezclan (docs/CUBO.md, sección 1):
+
+    directa   medida por G7B o Amatista en el equipo real de un estudiante o de un laboratorio
+              escolar, con consentimiento registrado. Es la única que puede alimentar a Geoda.
+    relativa  todo lo demás: benchmarks públicos (Blender Open Data), la sonda en servidores de
+              GitHub o en la nube, o cualquier medición sin entorno o consentimiento declarado.
+              Sirve para comparar niveles entre sí, nunca para recomendar ajustes.
+
+Lo que no declara su entorno y su consentimiento es relativo: la duda nunca sube de clase.
+
+Y dos naturalezas de medida, según la métrica (no según la fuente):
+
+    velocidad    cuánto tarda o cuánto produce un trabajo por lotes: render de Cycles, EEVEE o
+                 Workbench (Open Data, y las pruebas de render de la sonda).
+    rendimiento  cómo se siente trabajar: cuadros por segundo de la vista 3D y de la animación,
+                 tiempo de respuesta al editar y al evaluar modificadores (la sonda).
+
+Para ponerlas en una misma escala, cada medición lleva un índice sin unidades: su valor orientado
+(más es mejor) dividido entre la mediana geométrica de su grupo de comparación, dentro de su clase.
+1.0 es lo típico del grupo; 2.0, el doble de bueno. Directas y relativas se normalizan por separado.
+«sintetico» sigue significando otra cosa: datos inventados para pruebas, que nunca entran.
+
+No produce perfiles ni recomendaciones (eso es Geoda, solo sobre las directas).
+"""
 import argparse
 from collections import Counter
 from datetime import datetime, timezone
@@ -7,14 +32,38 @@ import json
 import math
 from pathlib import Path
 import re
+import tempfile
 from uuid import uuid4
 
 import duckdb
 
-CONTRATO = 'g7b.cubo/1'
+CONTRATO = 'g7b.cubo/3'
+CONTRATOS_LEGIBLES = ('g7b.cubo/1', 'g7b.cubo/2', 'g7b.cubo/3')   # los lectores aceptan los anteriores mientras se migra
+CONTRATOS_POR_CLASE = ('g7b.cubo/2', 'g7b.cubo/3')                   # con hechos_directos y hechos_relativos
 ACTUAL = 'control/cubo_actual.json'
 MAX_FILAS = 1_000_000
-DIMENSIONES = ('dispositivo', 'version', 'escena', 'perfil', 'tiempo', 'origen')
+CLASES = ('directa', 'relativa')
+ENTORNOS_DIRECTOS = {'equipo_estudiante', 'laboratorio_escolar'}
+# Diccionario de métricas: hacia dónde es mejor cada unidad (no se suman ni se comparan entre sí).
+MEJOR = {'s': 'menor', 'fps': 'mayor', 'samples/min': 'mayor'}
+# Naturaleza de cada métrica. Una métrica nueva sin entrada queda «sin_clasificar» y sin índice: se ve
+# en el manifiesto, pero no entra en ninguna comparación hasta que alguien la clasifique aquí.
+NATURALEZAS = ('velocidad', 'rendimiento')
+NATURALEZA = {
+    'samples_per_minute': 'velocidad',
+    'tiempo_render_cycles_cpu': 'velocidad',
+    'tiempo_render_cycles_gpu': 'velocidad',
+    'tiempo_render_eevee': 'velocidad',
+    'tiempo_render_workbench': 'velocidad',
+    'cuadros_por_segundo_vista3d': 'rendimiento',
+    'cuadros_por_segundo_animacion': 'rendimiento',
+    'tiempo_edicion': 'rendimiento',
+    'tiempo_primera_evaluacion': 'rendimiento',
+}
+# Grupo de comparación del índice: solo se comparan mediciones de la misma prueba, escena, métrica,
+# serie de Blender y perfil, de la misma fuente y la misma clase.
+GRUPO_INDICE = ('naturaleza', 'fuente', 'prueba', 'escena', 'metrica', 'serie', 'perfil')
+DIMENSIONES = ('fuente', 'equipo', 'version', 'prueba', 'perfil', 'tiempo')
 
 
 def serializar(dato):
@@ -35,6 +84,18 @@ def texto(valor):
     return valor
 
 
+def clase_de(f):
+    """(clase, motivo) de una medición. Directa solo con declaración explícita."""
+    if f['fuente'] == 'blender-open-data':
+        return 'relativa', 'benchmark público: no lo midieron G7B ni Amatista'
+    entorno = f.get('entorno') or 'no_declarado'
+    if entorno not in ENTORNOS_DIRECTOS:
+        return 'relativa', f'entorno «{entorno}»: no es el equipo de un estudiante ni un laboratorio escolar'
+    if f.get('consentimiento') is not True:
+        return 'relativa', 'sin consentimiento registrado'
+    return 'directa', f'medida por G7B en {entorno}, con consentimiento'
+
+
 def validar(f):
     if not isinstance(f, dict) or f.get('contrato') != 'g7b.telemetria/1' or f.get('sintetico') is not False:
         raise ValueError('contrato desconocido o dato sintético')
@@ -48,6 +109,12 @@ def validar(f):
         raise ValueError('valor inválido')
     for campo in ('version', 'escena', 'metrica', 'licencia'):
         texto(f.get(campo))
+    if f.get('unidad') not in MEJOR:
+        raise ValueError('unidad sin entrada en el diccionario de métricas')
+    if 'entorno' in f and f['entorno'] is not None:
+        texto(f['entorno'])
+    if 'consentimiento' in f and not isinstance(f['consentimiento'], bool):
+        raise ValueError('consentimiento debe ser verdadero o falso')
     instante = datetime.fromisoformat(texto(f.get('fecha')).replace('Z', '+00:00'))
     if instante.tzinfo is None: raise ValueError('fecha sin zona horaria')
     if not isinstance(f.get('motivos'), list): raise ValueError('faltan motivos de calidad')
@@ -69,99 +136,204 @@ def validar(f):
     return instante.astimezone(timezone.utc)
 
 
+def identidad_semantica(f):
+    """Qué observación es, sin depender del orden en la lista ni de su estado de calidad."""
+    origen = f.get('id_fuente') or f['huella_origen']
+    return (f['fuente'], origen, f['escena'], f.get('prueba') or 'render_cycles', f['metrica'], f.get('perfil'))
+
+
 def preparar(entradas):
     unicos, procedencia = {}, set()
+    semanticas, conteo = {}, Counter()
     leidos = 0
     for ruta, f in entradas:
         leidos += 1
-        if leidos > MAX_FILAS: raise ValueError('se excedió el límite de filas del cubo v1')
+        if leidos > MAX_FILAS: raise ValueError('se excedió el límite de filas del cubo')
         validar(f)
         # No elegir silenciosamente entre dos versiones de la misma medición.
         if f['id'] in unicos and serializar(f) != serializar(unicos[f['id']]):
             raise ValueError('id repetido con contenido contradictorio')
-        unicos[f['id']] = f
         procedencia.add((f['id'], ruta))
+        if f['id'] in unicos:
+            conteo['duplicados_exactos'] += 1
+            continue
+        # Solo donde la fuente da su propio id (Open Data): ahí una misma observación pudo capturarse
+        # con dos fórmulas de id. La sonda ya identifica por su contenido (huella_origen).
+        llave = identidad_semantica(f) if f.get('id_fuente') else None
+        previo = semanticas.get(llave) if llave else None
+        if previo is not None and previo != f['id']:
+            # La misma observación con otro id (p. ej. capturada con otra fórmula de id): se cuenta.
+            if unicos[previo]['valor'] != f['valor']:
+                raise ValueError('la misma observación trae valores distintos')
+            conteo['duplicados_semanticos'] += 1
+            continue
+        if llave:
+            semanticas[llave] = f['id']
+        unicos[f['id']] = f
     if not unicos: raise ValueError('no hay mediciones; se conserva la publicación anterior')
-    return [unicos[k] for k in sorted(unicos)], sorted(procedencia), leidos
+    return [unicos[k] for k in sorted(unicos)], sorted(procedencia), leidos, conteo
+
+
+def _equipo(f):
+    """Columnas tipadas del equipo (estándar g7b.hardware/1) y el JSON original para trazabilidad."""
+    from g7b_telemetria import hardware
+
+    if f['fuente'] == 'sonda':
+        e = f.get('equipo', {})
+        vista = e.get('gpu_vista')
+        gpu_texto = vista.get('modelo') if isinstance(vista, dict) else (vista if isinstance(vista, str) else None)
+        g = hardware.gpu(gpu_texto) if gpu_texto else {}
+        c = hardware.cpu(e.get('cpu'))
+        original = {'fuente': 'sonda', 'equipo': e}
+        return (('equipo', g.get('nombre'), g.get('fabricante'), g.get('clase'), g.get('gama'), g.get('vram_gb'),
+                 c['nombre'], c['familia'], c.get('grupo'), e.get('so'), None, e.get('nivel'),
+                 'estimado' if e.get('nivel_estimado') else ('declarado' if e.get('nivel') else None),
+                 serializar(original).decode()))
+    # El estándar se aplica AL CONSTRUIR, con la tabla vigente (fuentes/hardware.yml): si la tabla
+    # mejora, el cubo mejora sin volver a capturar. Lo que vino al capturar queda en equipo_json.
+    h = hardware.de_benchmark(f['dispositivos'], f['backend'], f['so'])
+    g = (h.get('gpus') or [{}])[0]
+    c = (h.get('cpus') or [{}])[0]
+    original = {'fuente': f['fuente'], 'dispositivos': sorted(f['dispositivos']), 'backend': f['backend'],
+                'so': f['so'], **({'hardware_capturado': f['hardware']} if f.get('hardware') else {})}
+    return ((h.get('mide') or 'sin_clasificar', g.get('nombre'), g.get('fabricante'), g.get('clase'), g.get('gama'),
+             g.get('vram_gb'), c.get('nombre'), c.get('familia'), c.get('grupo'), f['so'], f['backend'], h.get('nivel'),
+             h.get('confianza'), serializar(original).decode()))
+
+
+ESQUEMAS = {
+    'dim_fuente': {'clave_fuente': 'VARCHAR', 'fuente': 'VARCHAR', 'licencia': 'VARCHAR', 'entorno': 'VARCHAR',
+                   'clase_dato': 'VARCHAR'},
+    'dim_equipo': {'clave_equipo': 'VARCHAR', 'mide': 'VARCHAR', 'gpu': 'VARCHAR', 'gpu_fabricante': 'VARCHAR',
+                   'gpu_clase': 'VARCHAR', 'gpu_gama': 'VARCHAR', 'gpu_vram_gb': 'DOUBLE', 'cpu': 'VARCHAR',
+                   'cpu_familia': 'VARCHAR', 'cpu_grupo': 'VARCHAR',
+                   'so': 'VARCHAR', 'backend': 'VARCHAR', 'nivel': 'VARCHAR', 'nivel_confianza': 'VARCHAR',
+                   'equipo_json': 'VARCHAR'},
+    'dim_version': {'clave_version': 'VARCHAR', 'programa': 'VARCHAR', 'version': 'VARCHAR', 'serie': 'VARCHAR'},
+    'dim_prueba': {'clave_prueba': 'VARCHAR', 'fuente': 'VARCHAR', 'prueba': 'VARCHAR', 'escena': 'VARCHAR',
+                   'metrica': 'VARCHAR', 'unidad': 'VARCHAR', 'mejor': 'VARCHAR', 'naturaleza': 'VARCHAR'},
+    'dim_perfil': {'clave_perfil': 'VARCHAR', 'perfil': 'VARCHAR', 'version_sonda': 'VARCHAR'},
+    'dim_tiempo': {'clave_tiempo': 'VARCHAR', 'fecha': 'DATE', 'anio': 'INTEGER', 'mes': 'INTEGER', 'dia': 'INTEGER'},
+}
+HECHOS = {'id': 'VARCHAR', 'id_fuente': 'VARCHAR', 'clave_fuente': 'VARCHAR', 'clave_equipo': 'VARCHAR',
+          'clave_version': 'VARCHAR', 'clave_prueba': 'VARCHAR', 'clave_perfil': 'VARCHAR', 'clave_tiempo': 'VARCHAR',
+          'fecha': 'TIMESTAMPTZ', 'valor': 'DOUBLE', 'estado': 'VARCHAR', 'motivos_json': 'VARCHAR',
+          'motivo_clase': 'VARCHAR', 'variacion': 'DOUBLE', 'repeticiones': 'INTEGER', 'sin_ventana': 'BOOLEAN',
+          'huella_origen': 'VARCHAR'}
+TABLAS_HECHOS = {'directa': 'hechos_directos', 'relativa': 'hechos_relativos'}
+
+
+def _cargar(con, tabla, columnas, filas, carpeta):
+    """Carga masiva: escribe JSONL y lo lee con DuckDB (insertar fila por fila tardaba minutos)."""
+    ruta = Path(carpeta) / f'{tabla}.jsonl'
+    nombres = list(columnas)
+    with ruta.open('w', encoding='utf-8') as archivo:
+        for fila in filas:
+            archivo.write(json.dumps(dict(zip(nombres, fila)), ensure_ascii=False) + '\n')
+    tipos = ', '.join(f"'{n}': '{t}'" for n, t in columnas.items())
+    con.execute(f'CREATE TABLE {tabla} ({", ".join(f"{n} {t}" for n, t in columnas.items())})')
+    if filas:
+        con.execute(f"INSERT INTO {tabla} SELECT {', '.join(nombres)} FROM read_json(?, format='newline_delimited', "
+                    f"columns={{{tipos}}})", [str(ruta)])
 
 
 def modelo(con, filas, procedencia):
     dimensiones = {d: {} for d in DIMENSIONES}
-    hechos = []
+    hechos = {c: [] for c in CLASES}
     for f in filas:
         fecha = validar(f)
-        equipo = f.get('equipo', {})
-        dispositivo = {'fuente': f['fuente'], 'equipo': equipo} if f['fuente'] == 'sonda' else {
-            'fuente': f['fuente'], 'dispositivos': sorted(f['dispositivos']), 'backend': f['backend'], 'so': f['so']}
-        if f.get('hardware'):  # estándar g7b.hardware/1 (g7b_telemetria/hardware.py): clase y nivel del equipo
-            dispositivo['hardware'] = f['hardware']
+        clase, motivo = clase_de(f)
+        serie = '.'.join(f['version'].split('.')[:2])
         datos = {
-            'dispositivo': (serializar(dispositivo).decode(),),
-            'version': ('blender', f['version']),
-            'escena': (f['fuente'], f['escena']),
-            'perfil': (f['fuente'], f.get('perfil') or 'no_aplica', f.get('sonda') or 'no_aplica'),
+            'fuente': (f['fuente'], f['licencia'], f.get('entorno') or 'no_declarado', clase),
+            'equipo': _equipo(f),
+            'version': ('blender', f['version'], serie),
+            'prueba': (f['fuente'], f.get('prueba', 'render_cycles'), f['escena'], f['metrica'], f['unidad'],
+                       MEJOR[f['unidad']], NATURALEZA.get(f['metrica'], 'sin_clasificar')),
+            'perfil': (f.get('perfil') or 'no_aplica', f.get('sonda') or 'no_aplica'),
             'tiempo': (fecha.date().isoformat(), fecha.year, fecha.month, fecha.day),
-            'origen': (f['fuente'], f.get('entorno', 'no_declarado'), f['licencia']),
         }
         claves = []
         for dimension, atributos in datos.items():
             k = clave([dimension, atributos])
             dimensiones[dimension][k] = atributos
             claves.append(k)
-        hechos.append([f['id'], *claves, fecha.isoformat(), f['fuente'],
-                       f.get('prueba', 'render_cycles'), f['metrica'], f['unidad'], f['valor'],
-                       f['estado'], serializar(f['motivos']).decode(), f.get('variacion'),
-                       len(f.get('valores', [])) or None, f.get('sin_ventana'), f['huella_origen']])
-    esquemas = {
-        'dispositivo': 'atributos_json VARCHAR',
-        'version': 'programa VARCHAR, version VARCHAR',
-        'escena': 'fuente VARCHAR, escena VARCHAR',
-        'perfil': 'fuente VARCHAR, perfil VARCHAR, version_sonda VARCHAR',
-        'tiempo': 'fecha DATE, anio INTEGER, mes INTEGER, dia INTEGER',
-        'origen': 'fuente VARCHAR, entorno VARCHAR, licencia VARCHAR',
-    }
+        hechos[clase].append([f['id'], f.get('id_fuente'), *claves, fecha.isoformat(), f['valor'], f['estado'],
+                              json.dumps(f['motivos'], ensure_ascii=False), motivo, f.get('variacion'),
+                              len(f.get('valores', [])) or None, f.get('sin_ventana'), f['huella_origen']])
+    with tempfile.TemporaryDirectory() as carpeta:
+        for d in DIMENSIONES:
+            tabla = 'dim_' + d
+            _cargar(con, tabla, ESQUEMAS[tabla], [[k, *v] for k, v in sorted(dimensiones[d].items())], carpeta)
+        for clase, tabla in TABLAS_HECHOS.items():
+            _cargar(con, tabla, HECHOS, hechos[clase], carpeta)
+        _cargar(con, 'procedencia', {'id': 'VARCHAR', 'archivo': 'VARCHAR'}, procedencia, carpeta)
     for d in DIMENSIONES:
-        con.execute(f'CREATE TABLE dim_{d} (clave_{d} VARCHAR PRIMARY KEY, {esquemas[d]})')
-        datos = [[k, *v] for k, v in sorted(dimensiones[d].items())]
-        con.executemany(f'INSERT INTO dim_{d} VALUES ({",".join("?" for _ in datos[0])})', datos)
-    claves_sql = ', '.join(f'clave_{d} VARCHAR NOT NULL REFERENCES dim_{d}(clave_{d})' for d in DIMENSIONES)
-    con.execute(f'''CREATE TABLE mediciones (
-        id VARCHAR PRIMARY KEY, {claves_sql}, fecha TIMESTAMPTZ, fuente VARCHAR,
-        prueba VARCHAR, metrica VARCHAR, unidad VARCHAR, valor DOUBLE,
-        estado VARCHAR, motivos_json VARCHAR, variacion DOUBLE, repeticiones INTEGER,
-        sin_ventana BOOLEAN, huella_origen VARCHAR)''')
-    con.executemany(f'INSERT INTO mediciones VALUES ({",".join("?" for _ in hechos[0])})', hechos)
-    con.execute('CREATE TABLE procedencia (id VARCHAR, archivo VARCHAR, PRIMARY KEY(id, archivo))')
-    con.executemany('INSERT INTO procedencia VALUES (?, ?)', procedencia)
-    con.execute("CREATE TABLE hechos_medicion AS SELECT * FROM mediciones WHERE fuente='sonda'")
-    con.execute("CREATE TABLE hechos_render AS SELECT * FROM mediciones WHERE fuente='blender-open-data'")
-    con.execute('''CREATE VIEW v_exploracion AS
-        SELECT m.*, v.programa, v.version, e.escena, p.perfil, p.version_sonda,
-               d.atributos_json AS dispositivo, o.entorno, o.licencia
-        FROM mediciones m JOIN dim_version v USING(clave_version)
-        JOIN dim_escena e USING(clave_escena) JOIN dim_perfil p USING(clave_perfil)
-        JOIN dim_dispositivo d USING(clave_dispositivo) JOIN dim_origen o USING(clave_origen)''')
-    con.execute("CREATE VIEW v_mediciones_aceptadas AS SELECT * FROM v_exploracion WHERE estado='aceptado'")
-    con.execute('''CREATE VIEW v_resumen AS
-        SELECT fuente, entorno, dispositivo, version, escena, perfil, version_sonda,
-               prueba, metrica, unidad, estado, sin_ventana, count(*) AS mediciones,
-               median(valor) AS mediana, min(valor) AS minimo, max(valor) AS maximo
-        FROM v_exploracion GROUP BY ALL''')
-    con.execute('CREATE VIEW v_calidad AS SELECT fuente, estado, count(*) AS mediciones FROM mediciones GROUP BY ALL')
-    # Render público por nivel de equipo (estándar g7b.hardware/1). Las filas viejas, sin bloque
-    # «hardware», quedan con nivel NULL: se ven, pero no se mezclan con las clasificadas.
-    con.execute('''CREATE VIEW v_render_por_nivel AS
-        SELECT json_extract_string(dispositivo, '$.hardware.nivel') AS nivel,
-               json_extract_string(dispositivo, '$.hardware.mide') AS mide,
-               json_extract_string(dispositivo, '$.hardware.gpus[0].clase') AS clase_gpu,
-               json_extract_string(dispositivo, '$.backend') AS backend,
-               version, escena, count(*) AS mediciones, median(valor) AS mediana_samples_min,
-               quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75
-        FROM v_exploracion WHERE fuente = 'blender-open-data' GROUP BY ALL''')
+        con.execute(f'ALTER TABLE dim_{d} ADD PRIMARY KEY (clave_{d})')
+    for tabla in TABLAS_HECHOS.values():
+        con.execute(f'ALTER TABLE {tabla} ADD PRIMARY KEY (id)')
+    for clase, tabla in TABLAS_HECHOS.items():
+        vista = 'v_directas' if clase == 'directa' else 'v_relativas'
+        grupo = ', '.join(GRUPO_INDICE)
+        # valor_orientado: más es mejor (los tiempos se invierten: 1/s). indice: frente a la mediana
+        # geométrica de su grupo, calculada solo con las mediciones que sirven de referencia (las
+        # aceptadas; en Open Data, que nunca se acepta una por una, todas las de su grupo).
+        con.execute(f'''CREATE VIEW {vista} AS
+            WITH base AS (
+              SELECT h.*, f.fuente, f.licencia, f.entorno, f.clase_dato, e.mide, e.gpu, e.gpu_fabricante, e.gpu_clase,
+                     e.gpu_gama, e.gpu_vram_gb, e.cpu, e.cpu_familia, e.cpu_grupo, e.so, e.backend, e.nivel, e.nivel_confianza,
+                     e.equipo_json AS dispositivo, v.programa, v.version, v.serie, p.prueba, p.escena, p.metrica,
+                     p.unidad, p.mejor, p.naturaleza, pf.perfil, pf.version_sonda,
+                     CASE WHEN p.mejor = 'menor' THEN 1.0 / h.valor ELSE h.valor END AS valor_orientado,
+                     (h.estado = 'aceptado' OR f.fuente = 'blender-open-data') AND p.naturaleza <> 'sin_clasificar'
+                       AS referencia
+              FROM {tabla} h JOIN dim_fuente f USING(clave_fuente) JOIN dim_equipo e USING(clave_equipo)
+              JOIN dim_version v USING(clave_version) JOIN dim_prueba p USING(clave_prueba)
+              JOIN dim_perfil pf USING(clave_perfil) JOIN dim_tiempo t USING(clave_tiempo)),
+            grupos AS (
+              SELECT {grupo}, count(*) AS n_grupo, median(ln(valor_orientado)) AS ln_referencia
+              FROM base WHERE referencia GROUP BY ALL)
+            SELECT b.*, g.n_grupo, exp(ln(b.valor_orientado) - g.ln_referencia) AS indice
+            FROM base b LEFT JOIN grupos g USING({grupo})''')
+        # Velocidad y rendimiento juntos, por equipo: la base para calibrar una con la otra (docs/CUBO.md).
+        con.execute(f'''CREATE VIEW v_equipos_{vista[2:]} AS
+            SELECT clave_equipo, any_value(gpu) AS gpu, any_value(gpu_clase) AS gpu_clase, any_value(gpu_gama) AS gpu_gama,
+                   any_value(cpu_grupo) AS cpu_grupo,
+                   any_value(nivel) AS nivel, any_value(mide) AS mide,
+                   count(*) FILTER (WHERE naturaleza = 'velocidad') AS mediciones_velocidad,
+                   exp(avg(ln(indice)) FILTER (WHERE naturaleza = 'velocidad')) AS indice_velocidad,
+                   count(*) FILTER (WHERE naturaleza = 'rendimiento') AS mediciones_rendimiento,
+                   exp(avg(ln(indice)) FILTER (WHERE naturaleza = 'rendimiento')) AS indice_rendimiento
+            FROM {vista} WHERE referencia AND indice IS NOT NULL GROUP BY clave_equipo''')
+        con.execute(f'''CREATE VIEW v_resumen_{vista[2:]} AS
+            SELECT fuente, entorno, nivel, gpu_clase, gpu_gama, backend, serie, version, escena, perfil, prueba, metrica,
+                   unidad, mejor, naturaleza, estado, sin_ventana, count(*) AS mediciones, median(valor) AS mediana,
+                   quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75,
+                   min(valor) AS minimo, max(valor) AS maximo, median(indice) AS indice_mediana
+            FROM {vista} GROUP BY ALL''')
+        con.execute(f'''CREATE VIEW v_naturaleza_por_nivel_{vista[2:]} AS
+            SELECT naturaleza, nivel, gpu_clase, gpu_gama, fuente, count(*) AS mediciones, count(DISTINCT clave_equipo) AS equipos,
+                   median(indice) AS indice_mediana, quantile_cont(indice, 0.25) AS indice_p25,
+                   quantile_cont(indice, 0.75) AS indice_p75
+            FROM {vista} WHERE referencia AND indice IS NOT NULL GROUP BY ALL''')
+    # Lo único que lee Geoda: directas y aceptadas. Las relativas nunca entran aquí.
+    con.execute("CREATE VIEW v_mediciones_aceptadas AS SELECT * FROM v_directas WHERE estado = 'aceptado'")
+    # Comparación relativa entre niveles: solo con las relativas, por serie de versión y escena.
+    con.execute('''CREATE VIEW v_relativas_por_nivel AS
+        SELECT nivel, mide, gpu_clase, gpu_gama, backend, serie, escena, metrica, unidad, naturaleza, count(*) AS mediciones,
+               median(valor) AS mediana, quantile_cont(valor, 0.25) AS p25, quantile_cont(valor, 0.75) AS p75
+        FROM v_relativas WHERE fuente = 'blender-open-data' GROUP BY ALL''')
+    con.execute('''CREATE VIEW v_calidad AS
+        SELECT 'directa' AS clase_dato, f.fuente, h.estado, count(*) AS mediciones
+          FROM hechos_directos h JOIN dim_fuente f USING(clave_fuente) GROUP BY ALL
+        UNION ALL
+        SELECT 'relativa', f.fuente, h.estado, count(*)
+          FROM hechos_relativos h JOIN dim_fuente f USING(clave_fuente) GROUP BY ALL''')
+    return {c: len(v) for c, v in hechos.items()}
 
 
 def construir(entradas, destino):
-    filas, procedencia, leidos = preparar(entradas)
+    filas, procedencia, leidos, duplicados = preparar(entradas)
     destino = Path(destino)
     destino.mkdir(parents=True, exist_ok=True)
     if any(destino.iterdir()): raise ValueError('la carpeta de salida debe estar vacía')
@@ -171,33 +343,45 @@ def construir(entradas, destino):
     con = duckdb.connect(str(db))
     try:
         con.execute("SET TimeZone='UTC'")
-        modelo(con, filas, procedencia)
-        tablas = ['mediciones', 'hechos_medicion', 'hechos_render', 'procedencia'] + ['dim_' + d for d in DIMENSIONES]
+        por_clase = modelo(con, filas, procedencia)
+        tablas = list(TABLAS_HECHOS.values()) + ['procedencia'] + ['dim_' + d for d in DIMENSIONES]
         for tabla in tablas:
-            nombre = 'plata/mediciones.parquet' if tabla == 'mediciones' else f'oro/parquet/{tabla}.parquet'
-            con.execute(f'COPY (SELECT * FROM {tabla} ORDER BY 1) TO ? (FORMAT PARQUET, COMPRESSION ZSTD)', [str(destino / nombre)])
-        con.execute('COPY (SELECT * FROM v_resumen ORDER BY ALL) TO ? (FORMAT CSV, HEADER)', [str(destino / 'oro/resumen.csv')])
-        conteos = dict(con.execute('SELECT estado, count(*) FROM mediciones GROUP BY estado').fetchall())
+            nombre = (f'plata/{tabla}.parquet' if tabla.startswith('hechos_') else f'oro/parquet/{tabla}.parquet')
+            con.execute(f'COPY (SELECT * FROM {tabla} ORDER BY 1) TO ? (FORMAT PARQUET, COMPRESSION ZSTD)',
+                        [str(destino / nombre)])
+        for vista in ('directas', 'relativas'):
+            con.execute(f'COPY (SELECT * FROM v_resumen_{vista} ORDER BY ALL) TO ? (FORMAT CSV, HEADER)',
+                        [str(destino / f'oro/resumen_{vista}.csv')])
+        def conteos(tabla):
+            return dict(con.execute(f'SELECT estado, count(*) FROM {tabla} GROUP BY estado').fetchall())
+        directas, relativas = conteos('hechos_directos'), conteos('hechos_relativos')
+        naturaleza = {clase: dict(con.execute(f'SELECT naturaleza, count(*) FROM v_{clase} GROUP BY 1').fetchall())
+                      for clase in ('directas', 'relativas')}
+        calidad = Counter(directas) + Counter(relativas)
         resumen = {'contrato': CONTRATO, 'leidos': leidos, 'mediciones': len(filas),
-                   'duplicados_eliminados': leidos - len(filas), 'calidad': conteos,
-                   'hechos_medicion': con.execute('SELECT count(*) FROM hechos_medicion').fetchone()[0],
-                   'hechos_render': con.execute('SELECT count(*) FROM hechos_render').fetchone()[0],
+                   'duplicados_eliminados': leidos - len(filas), **{k: duplicados.get(k, 0) for k in
+                                                                     ('duplicados_exactos', 'duplicados_semanticos')},
+                   'directas': directas, 'relativas': relativas, 'calidad': dict(calidad),
+                   'naturaleza': naturaleza,
                    'huella_datos': clave(filas), 'duckdb': duckdb.__version__,
                    'recomendaciones_habilitadas': False}
-        if con.execute('SELECT count(*) FROM v_exploracion').fetchone()[0] != len(filas):
+        vistas = sum(con.execute(f'SELECT count(*) FROM {v}').fetchone()[0] for v in ('v_directas', 'v_relativas'))
+        if vistas != len(filas) or sum(por_clase.values()) != len(filas):
             raise ValueError('los joins alteran la cardinalidad')
         con.execute('CHECKPOINT')
     finally:
         con.close()
     # Validar el archivo cerrado y el Parquet, no solo la conexión de construcción.
     with duckdb.connect(str(db), read_only=True) as verificar:
-        if verificar.execute('SELECT count(*) FROM mediciones').fetchone()[0] != len(filas):
+        for tabla in TABLAS_HECHOS.values():
+            parquet = str(destino / f'plata/{tabla}.parquet')
+            diferencia = verificar.execute(f'''SELECT count(*) FROM (
+                (SELECT * FROM {tabla} EXCEPT ALL SELECT * FROM read_parquet(?))
+                UNION ALL (SELECT * FROM read_parquet(?) EXCEPT ALL SELECT * FROM {tabla}))''',
+                [parquet, parquet]).fetchone()[0]
+            if diferencia: raise ValueError(f'Parquet y DuckDB difieren en {tabla}')
+        if sum(verificar.execute(f'SELECT count(*) FROM {t}').fetchone()[0] for t in TABLAS_HECHOS.values()) != len(filas):
             raise ValueError('cubo cerrado inconsistente')
-        diferencia = verificar.execute('''SELECT count(*) FROM (
-            (SELECT * FROM mediciones EXCEPT ALL SELECT * FROM read_parquet(?))
-            UNION ALL (SELECT * FROM read_parquet(?) EXCEPT ALL SELECT * FROM mediciones))''',
-            [str(destino / 'plata/mediciones.parquet')] * 2).fetchone()[0]
-        if diferencia: raise ValueError('Parquet y DuckDB difieren')
     (destino / 'oro/resumen.json').write_bytes(serializar(resumen))
     archivos = {f.relative_to(destino).as_posix(): {'sha256': sha(f.read_bytes()), 'bytes': f.stat().st_size}
                 for f in sorted(destino.rglob('*')) if f.is_file()}

@@ -13,6 +13,7 @@ class LagoFalso:
         self.manifiesto = {
             "contrato": CONTRATO, "estado": "verificado", "version": self.version,
             "mediciones": 3003, "calidad": {"aceptado": 3, "revision": 3000},
+            "directas": {"aceptado": 3}, "relativas": {"revision": 3000},
             "recomendaciones_habilitadas": False,
             "archivos": {"oro/cubo.duckdb": {
                 "ruta": f"oro/cubos/{self.version}/cubo.duckdb", "sha256": "a" * 64,
@@ -43,6 +44,7 @@ def test_publicacion_usa_solo_conteos_y_no_inventa_perfiles():
     assert feed["cubo"] == {
         "version": "20261103T202349Z-prueba", "mediciones": 3003,
         "aceptadas": 3, "revision": 3000, "recomendaciones_habilitadas": False,
+        "directas": 3, "directas_aceptadas": 3, "relativas": 3000,
     }
     assert feed["conocimiento"]["documentos"] == 992
     assert feed["perfiles"] == []
@@ -79,3 +81,16 @@ def test_no_publica_si_se_desvia_puntero():
     lago.puntero["manifiesto"] = "../secreto"
     with pytest.raises(ValueError, match="ruta"):
         estado_del_cubo(lago)
+
+
+def test_lee_el_cubo_anterior_mientras_se_migra():
+    lago = LagoFalso(contrato="g7b.cubo/1")
+    lago.puntero["contrato"] = "g7b.cubo/1"
+    lago.datos = json.dumps({**lago.manifiesto}).encode()
+    lago.puntero["sha256"] = sha(lago.datos)
+    assert "directas" not in estado_del_cubo(lago)
+
+
+def test_no_publica_si_las_clases_no_suman():
+    with pytest.raises(ValueError, match="clase de dato"):
+        estado_del_cubo(LagoFalso(relativas={"revision": 2999}))

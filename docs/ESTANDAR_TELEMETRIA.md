@@ -42,7 +42,9 @@ The `hardware` block describes the equipment for a measurement or event. The nor
 ```
 
 - **Name.** Normalization strips strings such as `(R)`, `(TM)` and `/PCIe/SSE2` while preserving the original name.
-- **GPU class.** The values are `integrada` (integrated), `dedicada` (discrete) and `desconocida` (unknown). An unrecognized model receives `desconocida` and has no assigned tier.
+- **GPU class.** The values are `integrada` (integrated), `dedicada` (discrete), `apple`, `servidor` (server) and `desconocida` (unknown). An unrecognized model receives `desconocida` and has no assigned tier.
+- **Integrated GPU families.** The lookup table distinguishes `basica` (Intel UHD, HD, Iris Plus, Iris Xe, Radeon Vega and 610M) from `moderna` (Core Ultra Arc and Radeon 680M through 890M and 8060S). The label "AMD Radeon Graphics" alone leaves the family unknown. Comparing GPU render scores across those families would misrepresent basic integrated GPUs. Intel Arc Pro B50, B60, B65 and B70 are discrete cards.
+- **CPU groups.** `geoda/cpu.py` groups CPU render measurements by vendor, class, generation and segment. For example, an i3-10110U maps to `intel-core-i3-g10-portatil`.
 - **VRAM.** The normalizer records capacity only when the model has one known configuration. The desktop RTX 3060 comes in both 8 GB and 12 GB versions, so its capacity is left empty.
 - **Hardware tier N0–N4.** The normalizer applies Geoda’s rules in `geoda/niveles.py` and records both confidence and the reasons for the assignment. When system RAM is unknown, the GPU determines the tier and confidence drops. A source such as a bug report can also provide the OpenGL version. An integrated GPU running OpenGL 3.3 drops to N1.
 - **CPU benchmarks.** A record with `mide: cpu` has no assigned tier because it does not identify the machine’s GPU.
@@ -66,7 +68,9 @@ Measurements enter the cube through `g7b_almacen/cubo.py` from `plata/telemetria
 | `hardware` | The `g7b.hardware/1` block |
 | `estado`, `motivos` | Quality status (`aceptado` or `revision`) and its reasons. Public benchmarks that G7B has yet to reproduce remain in `revision`. |
 
-The cube view `v_render_por_nivel` groups public rendering measurements by hardware tier, GPU class, backend, software version and scene, and reports medians and quartiles. Older rows without `hardware` remain visible with a NULL tier, separate from classified measurements.
+In the proposed `g7b.cubo/3` schema, the probe's `entorno` records where it ran, and `consentimiento` records explicit permission. Only `equipo_estudiante` or `laboratorio_escolar` with consent produce direct measurements. The importer also accepts the existing names `github_actions`, `laboratorio` and `equipo_voluntario`. Those names alone do not establish that the machine belongs to a student or school laboratory. Data from CI, cloud and Blender Open Data remain relative.
+
+The `v_relativas_por_nivel` view groups relative rendering measurements by hardware tier, GPU class, backend, software series and scene. Older rows without `hardware` retain a NULL tier. For the tables and units of the proposed format, see [the cube contract](CUBO.md).
 
 <a id="4-blender-open-data-completo-y-por-tandas"></a>
 

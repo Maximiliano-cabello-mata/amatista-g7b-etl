@@ -6,6 +6,8 @@ La [decisión de responsabilidades de Geoda](GEODA_RESPONSABILIDADES.md) rige la
 
 Esta actualización reemplaza la lectura de un único ciclo obligatorio para ambos frentes en las secciones 1 y 2: pueden desarrollarse y evaluarse independientemente, intercambiando solamente artefactos aprobados y evidencia trazable. Conserva las reglas operativas, no activa servicios ni acredita capacidades nuevas en producción.
 
+La propuesta del PR #26 implementa `g7b.cubo/3` con mediciones directas y relativas en tablas separadas. El contrato publicado en `main` sigue siendo `g7b.cubo/1` mientras se decide la migración. [Modelo y consultas de la propuesta](CUBO.md).
+
 Fecha: 2026-11-02. Un solo camino, de principio a fin, para que G7B quede **funcional y automático** con las ofertas del GitHub Student Developer Pack, y para que **Amatista, Geoda y G7B se alimenten entre sí**.
 
 - **Reúne** lo que se construyó con los dos agentes (PR #1 a #10): ingesta de texto, lago, warehouse, publicación segura, Azure privado y catálogo de ofertas.

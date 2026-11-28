@@ -22,7 +22,16 @@ from g7b_telemetria.capturar import capturar_incremental, opendata, seleccionar_
     ("Intel(R) Arc(TM) A770 Graphics", "dedicada", None, "intel"),
     ("AMD Radeon 780M", "integrada", None, "amd"),
     ("AMD Radeon(TM) Graphics", "integrada", None, "amd"),
-    ("Apple M1", "integrada", None, "apple"),
+    ("Apple M1", "apple", None, "apple"),              # Apple Silicon: clase propia, no infla el N2
+    ("Apple M5 Max (GPU - 40 cores)", "apple", None, "apple"),
+    ("Intel Graphics", "integrada", None, "intel"),
+    ("AMD Radeon 8060S Graphics", "integrada", None, "amd"),
+    ("Tesla V100-SXM2-16GB", "servidor", None, "nvidia"),
+    ("NVIDIA GeForce RTX 5090", "dedicada", 32, "nvidia"),
+    ("NVIDIA GeForce RTX 5070 Ti", "dedicada", 16, "nvidia"),
+    ("NVIDIA GeForce RTX 5080 Laptop GPU", "dedicada", 16, "nvidia"),
+    ("NVIDIA GeForce RTX 5060 Ti", "dedicada", None, "nvidia"),   # 8 o 16 GB
+    ("AMD Radeon RX 9070 XT", "dedicada", 16, "amd"),
     ("NVIDIA GeForce RTX 3060 Laptop GPU", "dedicada", 6, "nvidia"),
     ("NVIDIA GeForce RTX 3060", "dedicada", None, "nvidia"),   # 8 o 12 GB: no se adivina
     ("NVIDIA GeForce RTX 4090", "dedicada", 24, "nvidia"),
@@ -35,6 +44,43 @@ def test_gpu_se_lee_igual_venga_de_donde_venga(nombre, clase, vram, fabricante):
     g = hardware.gpu(nombre)
     assert (g["clase"], g["vram_gb"], g["fabricante"]) == (clase, vram, fabricante)
     assert "(R)" not in g["nombre"] and "(TM)" not in g["nombre"]
+
+
+@pytest.mark.parametrize("nombre, clase, gama", [
+    ("Intel(R) UHD Graphics 620", "integrada", "basica"),      # sin Cycles en GPU
+    ("Intel(R) UHD Graphics", "integrada", "basica"),
+    ("Intel(R) Iris(R) Xe Graphics", "integrada", "basica"),
+    ("Intel(R) HD Graphics 520", "integrada", "basica"),
+    ("AMD Radeon(TM) Vega 8 Graphics", "integrada", "basica"),
+    ("AMD Radeon 610M", "integrada", "basica"),
+    ("Intel Arc 140V GPU (16GB)", "integrada", "moderna"),
+    ("Intel Graphics", "integrada", "moderna"),
+    ("AMD Radeon 780M Graphics", "integrada", "moderna"),
+    ("AMD Radeon 8060S Graphics", "integrada", "moderna"),
+    ("AMD Radeon Graphics", "integrada", None),                  # genérico: no se adivina
+    ("Intel Arc Pro B50 Graphics", "dedicada", None),            # antes se leía como integrada
+    ("Intel Arc Pro B70 Graphics", "dedicada", None),
+    ("Intel Arc A770 Graphics", "dedicada", None),
+])
+def test_gama_de_las_integradas(nombre, clase, gama):
+    g = hardware.gpu(nombre)
+    assert (g["clase"], g["gama"]) == (clase, gama)
+
+
+@pytest.mark.parametrize("nombre, grupo", [
+    ("Intel Core i3-10110U CPU @ 2.10GHz", "intel-core-i3-g10-portatil"),
+    ("Intel Core i3-1005G1 CPU @ 1.20GHz", "intel-core-i3-g10-portatil"),
+    ("11th Gen Intel(R) Core(TM) i3-1115G4", "intel-core-i3-g11-portatil"),
+    ("Intel Core i3-1215U", "intel-core-i3-g12-portatil"),
+    ("Intel Core i3-10100F CPU @ 3.60GHz", "intel-core-i3-g10-escritorio"),
+    ("Intel Core i7-4790K", "intel-core-i7-g4-escritorio"),
+    ("AMD Ryzen 5 5600U with Radeon Graphics", "amd-ryzen-5-g5-portatil"),
+    ("AMD Ryzen 7 7800X3D 8-Core Processor", "amd-ryzen-7-g7-escritorio"),
+    ("Apple M2", None),
+    ("Intel Xeon 6975P-C", None),
+])
+def test_grupo_de_procesador(nombre, grupo):
+    assert hardware.cpu(nombre)["grupo"] == grupo
 
 
 def test_nivel_con_las_reglas_de_geoda():
@@ -150,8 +196,11 @@ def test_el_cubo_agrupa_el_render_por_nivel(tmp_path):
     entradas = [(ruta, f) for ruta, fs in lago.archivos.items() if ruta.startswith("plata/") for f in fs]
     construir(entradas, tmp_path / "cubo")
     with duckdb.connect(str(tmp_path / "cubo/oro/cubo.duckdb"), read_only=True) as con:
-        niveles = dict(con.execute("SELECT nivel, sum(mediciones) FROM v_render_por_nivel GROUP BY 1").fetchall())
-    assert niveles == {"N3": 3, "N2": 1}
+        niveles = dict(con.execute("SELECT nivel, sum(mediciones) FROM v_relativas_por_nivel GROUP BY 1").fetchall())
+        # Open Data es relativa: nunca llega a lo que lee Geoda.
+        assert con.execute("SELECT count(*) FROM v_mediciones_aceptadas").fetchone()[0] == 0
+        gpu = con.execute("SELECT DISTINCT gpu_clase FROM v_relativas WHERE nivel = 'N2'").fetchall()
+    assert niveles == {"N3": 3, "N2": 1} and gpu == [("integrada",)]
 
 
 # --- Reportes de error de Blender (telemetría de fallas) ----------------------------------------

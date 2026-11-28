@@ -2,6 +2,10 @@
 
 Mide qué tan bien trabaja Blender en una computadora, con la misma escena y los mismos ajustes en todas. Así los resultados se pueden comparar entre equipos. Corre **dentro de Blender**: no instala nada y no descarga nada, porque la escena se genera ahí mismo. El resultado es un archivo JSON con el contrato `g7b.medicion/1`.
 
+## Vigía: la sonda continua
+
+`g7b_vigia.py` acompaña un render largo de Blender. Cada 5 minutos guarda una ventana (`g7b.ventana/1`) con los tiempos por cuadro y el estado del equipo, la compara con la primera y con la anterior, y la sube al lago con una firma que solo permite crear archivos. Corre con Python, fuera de Blender. Las instrucciones para instalarlo, pensadas para un agente de IA o para una persona, están en [INSTALAR_VIGIA.txt](INSTALAR_VIGIA.txt).
+
 ## Correrla en tu computadora
 
 1. Instala Blender, de preferencia la LTS vigente (5.2 LTS). Para comparar versiones, puedes instalar varias.

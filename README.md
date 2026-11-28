@@ -2,14 +2,14 @@
 
 G7B measures how open-source 3D software runs on real computers, from older machines to high-end workstations. It collects documentation, techniques, textures and tools alongside those measurements. Geoda uses this evidence to choose settings for each machine. Each record carries its source, version and license.
 
-G7B is the sister project of **Amatista**, the platform for learning 3D with Blender and A-Frame. The projects have separate repositories and cloud infrastructure and exchange data through JSON contracts. G7B measures performance and selects settings. Amatista teaches, recommends settings and is the only project that stores personal data. [Amatista repository](https://github.com/Maximiliano-cabello-mata/amatista)
+G7B is the sister project of **Amatista**, the platform for learning 3D with Blender and A-Frame. The projects have separate repositories and cloud infrastructure and exchange data through JSON contracts. G7B measures performance and selects settings. Amatista teaches, recommends settings and is the only project that stores personal data. [Amatista repository](https://github.com/Maximiliano-cabello-mata/amatista-recuperada-20261106)
 
 | Data source | Path through G7B |
 |---|---|
 | Online sources | Geodar Radar → Azure data lake → quality checks → documents and catalogs in MongoDB |
 | Real computers | Performance probe → Azure data lake → DuckDB cube → Geoda → `perfiles.json` → Amatista |
 
-After each successful cube build, the Geoda lab planner processes the verified cube in GitHub Actions. The workflow stores its results as artifacts separate from Amatista’s public status data. [Geoda on GitHub Actions](docs/GEODA_KERNEL.md)
+This proposal builds the public Geoda knowledge package from the verified cube in the lake. The kernel can use the versioned package offline and report the evidence behind each plan. The laboratory planner is available as a separate command. [Geoda in Actions](docs/GEODA_KERNEL.md) · [Public kernel](docs/GEODA_NUCLEO.md)
 
 ## Place in the Amatista base
 
