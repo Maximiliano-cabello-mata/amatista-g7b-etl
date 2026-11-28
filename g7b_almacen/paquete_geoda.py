@@ -18,8 +18,8 @@ import duckdb
 
 from geoda import paquete as paq
 
-from .cubo import ACTUAL
-from .descargar import descargar
+from .descargar import descargar_con_manifiesto
+from .esquema_cubo import hechos_separados
 
 PUNTERO = "control/geoda_paquete_actual.json"
 
@@ -52,9 +52,9 @@ def construir_desde_lago(lago, trabajo, verificar_manual=True):
     base = trabajo / "cubo.duckdb"
     if base.exists():
         base.unlink()
-    descarga = descargar(lago, base)
-    puntero = lago.leer_json(ACTUAL)
-    manifiesto = json.loads(lago.contenedor.download_blob(puntero["manifiesto"]).readall())
+    descarga, manifiesto = descargar_con_manifiesto(lago, base)
+    if manifiesto["contrato"] == "g7b.cubo/2" and not hechos_separados(manifiesto):
+        raise ValueError("el cubo /2 canónico carece de clasificación para el paquete de Geoda")
     cubo = {"contrato": manifiesto.get("contrato"), "version": descarga["version"], "sha256": descarga["sha256"],
             **{k: manifiesto.get(k) for k in ("generado", "mediciones", "directas", "relativas")}}
     inventarios = paq.inventarios_manual() if verificar_manual else None

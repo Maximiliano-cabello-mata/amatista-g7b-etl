@@ -10,6 +10,7 @@ import os
 from pathlib import Path
 
 from .cubo import ACTUAL, CONTRATOS_LEGIBLES, sha
+from .esquema_cubo import hechos_separados
 
 CONTRATO_GEODA = "g7b.geoda.estado/1"
 LIMITE_MANIFIESTO = 256_000
@@ -50,7 +51,7 @@ def estado_del_cubo(lago):
         raise ValueError("G7B: estado de recomendaciones desconocido; revisar contrato")
     estado = {"version": version, "mediciones": total, "aceptadas": aceptadas,
               "revision": revision, "recomendaciones_habilitadas": False}
-    if manifiesto.get("contrato") in ("g7b.cubo/2", "g7b.cubo/3"):
+    if hechos_separados(manifiesto):
         # Separación de clases: lo directo (estudiantes y laboratorios, con consentimiento) y lo relativo.
         directas, relativas = manifiesto.get("directas"), manifiesto.get("relativas")
         if not isinstance(directas, dict) or not isinstance(relativas, dict) or \
