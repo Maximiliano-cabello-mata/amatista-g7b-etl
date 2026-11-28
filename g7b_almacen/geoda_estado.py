@@ -39,6 +39,12 @@ def estado_del_cubo(lago):
     cubo = manifiesto.get("archivos", {}).get("oro/cubo.duckdb", {})
     if cubo.get("ruta") != puntero.get("cubo") or not cubo.get("sha256"):
         raise ValueError("G7B: cubo y manifiesto incompatibles")
+    kernel = manifiesto.get("kernel")
+    if (not isinstance(kernel, dict) or kernel.get("contrato") != "g7b.geoda.ejecucion/1"
+            or kernel.get("cubo_sha256") != cubo["sha256"]
+            or kernel.get("mediciones") != manifiesto.get("mediciones")
+            or kernel.get("calidad") != manifiesto.get("calidad")):
+        raise ValueError("G7B: falta una ejecución de Geoda que corresponda al cubo vigente")
     total = manifiesto.get("mediciones")
     calidad = manifiesto.get("calidad", {})
     aceptadas, revision = calidad.get("aceptado", 0), calidad.get("revision", 0)

@@ -18,6 +18,10 @@ class LagoFalso:
                 "ruta": f"oro/cubos/{self.version}/cubo.duckdb", "sha256": "a" * 64,
             }},
         }
+        self.manifiesto["kernel"] = {
+            "contrato": "g7b.geoda.ejecucion/1", "cubo_sha256": "a" * 64, "mediciones": 3003,
+            "calidad": {"aceptado": 3, "revision": 3000},
+        }
         self.manifiesto.update(cambios)
         self.datos = json.dumps(self.manifiesto).encode()
         self.puntero = {
@@ -57,6 +61,8 @@ def test_no_publica_cuando_el_manifiesto_cambia():
 
 
 @pytest.mark.parametrize("cambios", [
+    {"kernel": None},
+    {"kernel": {"contrato": "g7b.geoda.ejecucion/1", "cubo_sha256": "b" * 64}},
     {"estado": "pendiente"},
     {"version": "otra"},
     {"mediciones": 500},

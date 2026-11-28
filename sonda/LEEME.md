@@ -68,3 +68,15 @@ En servidores Linux sin GPU, Workbench y EEVEE quedan como `no_disponible` (falt
 ## Probado
 
 En un servidor Linux sin GPU (4 núcleos Xeon, 16 GB) con Blender 5.2.3 LTS como módulo de Python, sin ventana, dos corridas seguidas: edición, animación y Cycles en CPU difieren menos de 4 % entre corridas; la primera evaluación, cerca de 15 %. **La prueba con ventana y las de GPU todavía no se han probado en una computadora real.**
+
+## Ensayo de aceptación en una vista 3D N1 o N2
+
+Preparar una instancia nueva de Blender con `--factory-startup` y una escena de práctica copiada. Guardar en una carpeta local la copia, la versión de Blender y el artefacto de la corrida de **Cubo G7B**. Registrar el ID de Actions, la versión en `publicacion.json` y el SHA-256 de `oro/cubo.duckdb`. Comprobar que coincide con `kernel.cubo_sha256` y con el campo `cubo` de `geoda/perfiles_laboratorio.json`. Conservar el estado de evidencia que declara el perfil, incluso si dice `base`.
+
+1. Elegir un equipo N1 o N2 identificado por la sonda y anotar RAM, GPU y versión del controlador. Fijar escena, fotograma, cámara, resolución, modo de sombreado y tamaño de ventana antes de ver los resultados. Elegir una operación de vista 3D. Para el primer ensayo usar un redibujo de la misma vista con una malla subdividida visible.
+2. **A, referencia.** Anotar el valor de Simplify y el límite de subdivisión de vista. Medir 30 redibujos en el área VIEW_3D, con el mismo método de `prueba_vista3d` en `g7b_sonda.py`. Descartar una ronda de calentamiento y guardar cinco valores de FPS. Capturar la vista con **View → Viewport Render Image**, sin superposiciones y con la malla ocupando el encuadre. Guardar el PNG de referencia.
+3. **B, ajuste.** Usar el límite de subdivisión del plan de Geoda para esa versión y ese equipo. Activar Simplify si la acción lo pide. Mantener la misma escena cargada y repetir la medición y captura, con la misma resolución. Registrar por separado cualquier propiedad que no admita la versión de Blender.
+4. **A, restauración.** Restaurar exactamente ambos valores de la referencia. Repetir la medición y la captura. Comprobar que las propiedades coinciden, que vuelve la imagen de referencia y que las medianas de ambas fases A difieren como máximo un 10 %. Si la referencia deriva, repetir el ensayo.
+5. Comparar las imágenes A y B sobre una región de la malla elegida antes de aplicar el ajuste. Usar las mismas coordenadas en ambas imágenes. Como medida reproducible para este piloto, usar SSIM de luminancia con escala de 0 a 1. Conservar la región, ambas imágenes y el algoritmo empleado. Un encuadre vacío o una captura de distinto tamaño invalida la comparación.
+
+Registrar la mediana y la dispersión de cada fase, la acción y sus valores anterior y nuevo, el nivel y la evidencia del perfil, la versión y huella del cubo, SSIM y el resultado de restauración. El objetivo de la base se comprueba cuando A está por debajo de 15 FPS, B llega a 30 FPS o más y SSIM alcanza 0.80, con reversión verificada. Un resultado por debajo de cualquiera de estos umbrales también se conserva. La ejecución sin ventana carece de la medida de vista 3D.

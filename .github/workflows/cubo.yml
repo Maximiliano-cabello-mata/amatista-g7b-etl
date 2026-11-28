@@ -1,11 +1,18 @@
 name: Cubo G7B
+run-name: ${{ inputs.semana && format('Cubo semanal G7B {0}', inputs.semana) || 'Cubo G7B' }}
 
 on:
   workflow_dispatch:
+    inputs:
+      semana:
+        description: Martes UTC del período de telemetría (lo envía el ciclo)
+        type: string
+        required: false
   push:
     branches: [main]
     paths:
       - 'g7b_almacen/**'
+      - 'geoda/**'
       - 'requirements-cubo.txt'
       - '.github/workflows/cubo.yml'
   # Sin workflow_run: el ciclo (ciclo.yml) lo lanza después de la telemetría y espera su resultado.
@@ -42,4 +49,5 @@ jobs:
         with:
           name: cubo-${{ github.run_id }}
           path: resultado-cubo/
+          if-no-files-found: error
           retention-days: 14

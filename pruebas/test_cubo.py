@@ -81,6 +81,9 @@ def test_publicacion_no_promueve_si_falla_y_descarga_verifica(tmp_path):
     puntero = publicar(lago, local, informe)
     assert lago.leer_json(ACTUAL) == puntero
     resultado = descargar(lago, tmp_path / 'copia.duckdb')
+    recibo = json.loads((local / 'publicacion.json').read_bytes())
+    assert recibo['version'] == resultado['version']
+    assert recibo['kernel']['cubo_sha256'] == resultado['sha256']
     assert resultado['mediciones'] == 1
     with pytest.raises(ValueError): descargar(lago, tmp_path / 'copia.duckdb')
     lago.archivos[puntero['cubo']] = b'alterado'
